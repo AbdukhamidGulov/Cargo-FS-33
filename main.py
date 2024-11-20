@@ -20,7 +20,7 @@ dp.include_routers(gi, states)
 database = {}
 
 
-@dp.message(CommandStart)
+@dp.message(CommandStart())
 async def start_command(message: Message):
     await message.answer('Вас приветствует Telegram-бот карго компании <b>FS-33</b> 🚚')
     if message.from_user.id in database:
@@ -40,11 +40,6 @@ async def help_command(message: Message):
 async def create_db_command(message: Message):
     await create_users_table()
     await message.answer("База данных пользователей успешно создана!")
-
-
-@dp.message()
-async def send_echo(message: Message):
-    await message.answer('Простите! Введена неверная команда')
 
 
 async def main():
