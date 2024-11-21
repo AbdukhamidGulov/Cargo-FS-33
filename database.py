@@ -28,3 +28,11 @@ async def add_user_info(tg_id, username, name, number=None, city=None):
         cursor = await db.execute("SELECT id FROM users WHERE tg_id = ?", (tg_id,))
         result = await cursor.fetchone()
         return result[0] if result else None
+
+import aiosqlite
+
+async def get_user_by_tg_id(tg_id: int):
+    async with aiosqlite.connect("database.db") as db:
+        cursor = await db.execute("SELECT * FROM users WHERE tg_id = ?", (tg_id,))
+        user = await cursor.fetchone()
+        return user

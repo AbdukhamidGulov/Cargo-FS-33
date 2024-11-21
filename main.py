@@ -9,7 +9,7 @@ from aiogram.types import Message
 from get_information import gi
 from registration_process import states
 from keyboards import main_keyboard, reg_keyboard
-from database import create_users_table
+from database import create_users_table, get_user_by_tg_id
 
 load_dotenv()
 TELEGRAM_BOT_TOKEN = getenv('BOT_TOKEN')
@@ -17,13 +17,13 @@ TELEGRAM_BOT_TOKEN = getenv('BOT_TOKEN')
 bot = Bot(token=TELEGRAM_BOT_TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
 dp = Dispatcher()
 dp.include_routers(gi, states)
-database = {}
 
 
 @dp.message(CommandStart())
 async def start_command(message: Message):
     await message.answer('Вас приветствует Telegram-бот карго компании <b>FS-33</b> 🚚')
-    if message.from_user.id in database:
+    user = await get_user_by_tg_id(message.from_user.id)
+    if user:
         await message.answer('Я помогу вам найти адреса складов, проверить трек-код и ознакомить с ценами',
                              reply_markup=main_keyboard)
     else:
