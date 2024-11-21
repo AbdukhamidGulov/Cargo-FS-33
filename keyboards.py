@@ -30,3 +30,5 @@ reg_keyboard = create_inline_keyboard([[pass_reg_btn, do_reg_btn]])
 my_profile_keyboard = create_inline_keyboard([[change_name_btn, change_number_btn],
                                               [change_address_btn, my_track_code_btn],
                                               [main_menu_btn]])
+
+back_to_menu_keyboard = create_inline_keyboard([[main_menu_btn]])

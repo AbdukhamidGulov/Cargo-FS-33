@@ -37,9 +37,9 @@ async def get_user_by_tg_id(tg_id: int):
         user = await cursor.fetchone()
         return user
 
-async def get_info_profil(tg_id):
+async def get_info_profile(tg_id):
     async with aiosqlite.connect("database.db") as db:
-        cursor = await db.execute("SELECT * FROM users WHERE tg_id = ?", (tg_id,))
-        user = await cursor.fetchone()
-        return user
-        # Нужно дописать
+        db.row_factory = aiosqlite.Row
+        async with db.execute("SELECT * FROM users WHERE tg_id = ?", (tg_id,)) as cursor:
+            row = await cursor.fetchone()
+            return dict(row) if row else None

@@ -1,8 +1,8 @@
 from aiogram.types import CallbackQuery
 from aiogram import F, Router, Bot
 
-from database import get_info_profil
-from keyboards import my_profile_keyboard
+from database import get_info_profile
+from keyboards import my_profile_keyboard, back_to_menu_keyboard
 
 gi = Router()
 
@@ -27,6 +27,14 @@ async def add_raper(callback: CallbackQuery):
     await callback.message.answer(pd)
 
 @gi.callback_query(F.data == "my_profile")
-async def add_raper(callback: CallbackQuery):
-    info_profil = get_info_profil(callback.from_user.id)
-    await callback.message.answer("Мой профиль👤", reply_markup=my_profile_keyboard)
+async def my_profile(callback: CallbackQuery):
+    inf = await get_info_profile(callback.from_user.id)
+    print(inf)
+    if not inf: await callback.message.answer("Профиль не найден.", reply_markup=back_to_menu_keyboard)
+    no = "<i>Не заполнено</i>"
+    await callback.message.answer(
+        f"Номер для заказов: <code>FS{inf.get('id', '0000'):04d}</code>\n"
+        f"Имя: {inf.get('name', no)}\n"
+        f"Номер: {inf.get('number', no)}\n"
+        f"Адрес: {inf.get('city', no)}\n"
+        f"Трек коды: {inf.get('track_codes', "Нет трек кодов")}\n", reply_markup=my_profile_keyboard)
