@@ -1,6 +1,9 @@
 from aiogram.types import CallbackQuery
 from aiogram import F, Router, Bot
 
+from database import get_info_profil
+from keyboards import my_profile_keyboard
+
 gi = Router()
 
 @gi.callback_query(F.data == "checking_track_code")
@@ -25,4 +28,5 @@ async def add_raper(callback: CallbackQuery):
 
 @gi.callback_query(F.data == "my_profile")
 async def add_raper(callback: CallbackQuery):
-    await callback.message.answer("Мой профиль👤")
+    info_profil = get_info_profil(callback.from_user.id)
+    await callback.message.answer("Мой профиль👤", reply_markup=my_profile_keyboard)
