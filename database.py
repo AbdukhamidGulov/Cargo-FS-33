@@ -33,9 +33,9 @@ import aiosqlite
 
 async def get_user_by_tg_id(tg_id: int):
     async with aiosqlite.connect("database.db") as db:
-        cursor = await db.execute("SELECT * FROM users WHERE tg_id = ?", (tg_id,))
+        cursor = await db.execute("SELECT id FROM users WHERE tg_id = ?", (tg_id,))
         user = await cursor.fetchone()
-        return user
+        return user[0]
 
 async def get_info_profile(tg_id):
     async with aiosqlite.connect("database.db") as db:

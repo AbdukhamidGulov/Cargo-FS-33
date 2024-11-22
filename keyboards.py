@@ -1,3 +1,5 @@
+from random import sample
+
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 def create_button(text: str, callback_data: str = None, url: str = None) -> InlineKeyboardButton:
@@ -8,7 +10,7 @@ def create_inline_keyboard(buttons: list[list[InlineKeyboardButton]]) -> InlineK
 
 checking_track_code_btn = create_button("️Проверка трек кода🔎", "checking_track_code")
 price_btn = create_button("️Цены 💲", "price")
-warehouse_address_btn = create_button("️Адрес складов🗺", "warehouse_address")
+warehouse_address_btn = create_button("️Адрес склада🗺", "warehouse_address")
 prohibited_goods_btn = create_button("️Запрещённые товары ❌", "prohibited_goods")
 my_profile_btn = create_button("️Мой профиль👤", "my_profile")
 
@@ -21,6 +23,11 @@ change_address_btn = create_button("️Изменит адрес", "change_addre
 my_track_code_btn = create_button("️Мои трек коды", "my_track_code")
 main_menu_btn = create_button("️Назад в главное меню", "main_menu")
 
+simple_1688_btn = create_button("️Образец 1688", "simple_1688")
+simple_Taobao_btn = create_button("️Образец Taobao", "simple_Taobao")
+simple_Pinduoduo_btn = create_button("️Образец Pinduoduo", "simple_Pinduoduo")
+simple_Poizon_btn = create_button("️Образец Poizon", "simple_Poizon")
+
 main_keyboard = create_inline_keyboard([[checking_track_code_btn],
                                         [price_btn, warehouse_address_btn],
                                         [prohibited_goods_btn, my_profile_btn]])
@@ -32,3 +39,11 @@ my_profile_keyboard = create_inline_keyboard([[change_name_btn, change_number_bt
                                               [main_menu_btn]])
 
 back_to_menu_keyboard = create_inline_keyboard([[main_menu_btn]])
+
+samples_keyboard = create_inline_keyboard([[simple_1688_btn, simple_Taobao_btn],
+                                           [simple_Pinduoduo_btn, simple_Poizon_btn],
+                                           [main_menu_btn]])
+samples_1688_keyboard = create_inline_keyboard([[simple_Taobao_btn, simple_Pinduoduo_btn], [simple_Poizon_btn, main_menu_btn]])
+samples_Taobao_keyboard = create_inline_keyboard([[simple_1688_btn, simple_Pinduoduo_btn], [simple_Poizon_btn, main_menu_btn]])
+samples_Pinduoduo_keyboard = create_inline_keyboard([[simple_1688_btn, simple_Taobao_btn], [simple_Poizon_btn, main_menu_btn]])
+samples_Poizon_keyboard = create_inline_keyboard([[simple_1688_btn, simple_Taobao_btn], [simple_Pinduoduo_btn, main_menu_btn]])

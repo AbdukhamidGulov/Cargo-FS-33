@@ -52,3 +52,8 @@ async def main():
 
 if __name__ == "__main__":
     run(main())
+
+
+# @dp.message(F.photo)
+# async def photo(message: Message):
+#     await message.answer(message.photo[0].file_id)
