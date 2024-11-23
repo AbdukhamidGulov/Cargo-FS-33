@@ -1,9 +1,7 @@
-from sqlite3 import Row
-
-from aiosqlite import connect
+from aiosqlite import connect, Row
 
 # Создание таблицы пользователей
-async def recreate_users_table():
+async def create_users_table():
     async with connect("database.db") as db:
         await db.execute("DROP TABLE IF EXISTS users")
         await db.execute("""
@@ -18,6 +16,12 @@ async def recreate_users_table():
         """)
         await db.commit()
 
+async def drop_users_table():
+    async with connect("database.db") as db:
+        await db.execute("DROP TABLE IF EXISTS users")
+        await db.commit()
+
+
 # Добавление пользователя
 async def add_user_info(tg_id, username, name, phone=None, address=None):
     async with connect("database.db") as db:
@@ -26,11 +30,7 @@ async def add_user_info(tg_id, username, name, phone=None, address=None):
             VALUES (?, ?, ?, ?, ?)
         """, (tg_id, name, username, phone, address))
         await db.commit()
-
-        # Получение автоматически созданного ID
-        cursor = await db.execute("SELECT id FROM users WHERE tg_id = ?", (tg_id,))
-        result = await cursor.fetchone()
-        return result[0] if result else None
+        return await get_user_by_tg_id(tg_id)
 
 
 async def get_user_by_tg_id(tg_id: int):

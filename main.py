@@ -6,17 +6,18 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message
 
-from get_information import gi
+from change_processor import change
+from get_information import get_info
 from registration_process import states
 from keyboards import main_keyboard, reg_keyboard
-from database import recreate_users_table, get_user_by_tg_id
+from database import create_users_table, get_user_by_tg_id, drop_users_table
 
 load_dotenv()
 TELEGRAM_BOT_TOKEN = getenv('BOT_TOKEN')
 
 bot = Bot(token=TELEGRAM_BOT_TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
 dp = Dispatcher()
-dp.include_routers(gi, states)
+dp.include_routers(get_info, change, states)
 
 
 @dp.message(CommandStart())
@@ -38,7 +39,8 @@ async def help_command(message: Message):
 
 @dp.message(Command(commands=["recreate_db"]))
 async def create_db_command(message: Message):
-    await recreate_users_table()
+    await drop_users_table()
+    await create_users_table()
     await message.answer("База данных пользователей успешно песоздана!")
 
 
@@ -50,7 +52,7 @@ async def photo(message: Message):
 
 async def main():
     try:
-        await recreate_users_table()
+        await create_users_table()
         print("Бот запущен")
         await dp.start_polling(bot)
     finally:

@@ -43,10 +43,8 @@ async def add_user_name(message: Message, state: FSMContext):
     new_user_id = await add_user_info(message.from_user.id, message.from_user.username,
                                       data["name"], data["number"], data["city"])
     await message.answer("Спасибо за регистрацию!")
-    await message.answer(
-        f"Ваш персональный номер для совершения заказов: <code>FS{new_user_id:04d}</code>\nСохраните его где-нибудь.")
+    await message.answer(f"Ваш персональный номер для совершения заказов: <code>FS{new_user_id[0]:04d}</code>")
     await message.answer("Как я могу вам помочь?", reply_markup=main_keyboard)
-
 
 # Функция для получении данных с телеграмма, если пользователь нажмёт "Пропустит"
 @states.callback_query(F.data == "pass_reg")
@@ -55,7 +53,8 @@ async def pass_reg(callback: CallbackQuery):
     first_name = callback.from_user.first_name
     username = callback.from_user.username
     await callback.message.delete()
-    await add_user_info(user_id, username, first_name)
+    new_user_id = await add_user_info(user_id, username, first_name)
+    await callback.message.answer(f"Ваш персональный номер для совершения заказов: <code>FS{new_user_id[0]:04d}</code>")
     await callback.message.answer("Как я могу вам помочь?", reply_markup=main_keyboard)
 
 

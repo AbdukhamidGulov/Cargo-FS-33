@@ -5,22 +5,22 @@ from database import get_info_profile, get_user_by_tg_id, update_user_info
 from keyboards import my_profile_keyboard, back_to_menu_keyboard, samples_keyboard, samples_1688_keyboard, \
     samples_Taobao_keyboard, samples_Pinduoduo_keyboard, samples_Poizon_keyboard, main_keyboard, data_updated_keyboard
 
-gi = Router()
+get_info = Router()
 
 
-@gi.callback_query(F.data == "checking_track_code")
+@get_info.callback_query(F.data == "checking_track_code")
 async def checking_track_code(callback: CallbackQuery, bot: Bot):
     await bot.send_message(callback.from_user.id, "Проверка трек кода🔎")
 
 
-@gi.callback_query(F.data == "price")
+@get_info.callback_query(F.data == "price")
 async def price(callback: CallbackQuery, bot: Bot):
     await callback.message.answer_photo(
         "AgACAgIAAxkBAAPbZztu_WMs7OrFwLEW9wPUzWKoyJYAAvnqMRv6E-FJIrIRnk8frsgBAAMCAANzAAM2BA", "2,5$/КГ\n230/Куб")
 
 
 # ВСЯ ОБРАБОТКА ДЛЯ АДРЕСА СКЛАДА И ОБРАЗЦОВ
-@gi.callback_query(F.data == "warehouse_address")
+@get_info.callback_query(F.data == "warehouse_address")
 async def warehouse_address(callback: CallbackQuery):
     user_id = await get_user_by_tg_id(callback.from_user.id)
     await callback.message.delete()
@@ -31,7 +31,7 @@ async def warehouse_address(callback: CallbackQuery):
     await callback.message.answer("Нажмите чтобы увидеть образцы", reply_markup=samples_keyboard)
 
 
-@gi.callback_query(F.data.startswith("simple_"))
+@get_info.callback_query(F.data.startswith("simple_"))
 async def handle_simple(callback: CallbackQuery):
     await callback.message.delete()
     samples = {
@@ -55,7 +55,7 @@ async def handle_simple(callback: CallbackQuery):
 
 
 # ОБРАБОТЧИК - ЗАРЕЩЁННЫЕ ВЕЩЕСТВА
-@gi.callback_query(F.data == "prohibited_goods")
+@get_info.callback_query(F.data == "prohibited_goods")
 async def prohibited_goods(callback: CallbackQuery):
     pd = ("    <b>НАШЕ КАРГО НЕ ПРИНИМАЕТ СЛЕДУЮЩИЕ ВИДЫ ПОСЫЛОК!</b>\n\n"
           "1. <b>Лекарства</b> (порошки, таблетки, лекарства в виде жидкостей).\n\n"
@@ -65,7 +65,7 @@ async def prohibited_goods(callback: CallbackQuery):
 
 
 # ОБРАБОТЧИК КОМАНДЫ "my_profile"
-@gi.callback_query(F.data == "my_profile")
+@get_info.callback_query(F.data == "my_profile")
 async def my_profile(callback: CallbackQuery):
     inf = await get_info_profile(callback.from_user.id)
     if not inf: await callback.message.answer("Профиль не найден.", reply_markup=back_to_menu_keyboard)
@@ -79,23 +79,9 @@ async def my_profile(callback: CallbackQuery):
         f"Трек коды: {inf.get('track_codes') or '<i>Нет трек кодов</i>'}\n")
     await callback.message.answer("Нажмите чтобы изменит данные...", reply_markup=my_profile_keyboard)
 
-# ОБРАБОТЧИК ИЗМЕНЕННЫЙ
-@gi.callback_query(F.data.startswith("change_"))
-async def change_info(callback: CallbackQuery):
-    await callback.message.delete()
-    field = callback.data.split("_")[-1]  # name, number, address
-    d = {"name": "новое имя", "number": "новый номер телефона", "address": "новый адрес"}
-    await callback.message.answer(f"Введите {d[field]}:")
-
-    @gi.message()
-    async def process_new_name(message: Message):
-        new_name = message.text
-        await update_user_info(message.from_user.id, field, new_name)
-        await message.answer("Успешно обновлено.", reply_markup=data_updated_keyboard)
-
 
 # ОБРАБОТЧИК КОМАНДЫ НАЗАД В ГЛАВНОЕ МЕНЮ
-@gi.callback_query(F.data == "main_menu")
+@get_info.callback_query(F.data == "main_menu")
 async def back_to_menu(callback: CallbackQuery):
     await callback.message.delete()
     await callback.message.answer("Как я могу вам помочь?", reply_markup=main_keyboard)
