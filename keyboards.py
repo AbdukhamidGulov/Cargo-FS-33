@@ -12,6 +12,7 @@ checking_track_code_btn = create_button("️Проверка трек кода�
 price_btn = create_button("️Цены 💲", "price")
 warehouse_address_btn = create_button("️Адрес склада🗺", "warehouse_address")
 prohibited_goods_btn = create_button("️Запрещённые товары ❌", "prohibited_goods")
+calculator_btn = create_button("Рассчитать стоимость 💸", "calculator")
 my_profile_btn = create_button("️Мой профиль👤", "my_profile")
 
 pass_reg_btn = create_button("️Пропустить", "pass_reg")
@@ -30,7 +31,8 @@ simple_Poizon_btn = create_button("️Образец Poizon", "simple_Poizon")
 
 main_keyboard = create_inline_keyboard([[checking_track_code_btn],
                                         [price_btn, warehouse_address_btn],
-                                        [prohibited_goods_btn, my_profile_btn]])
+                                        [prohibited_goods_btn, calculator_btn],
+                                        [my_profile_btn]])
 
 reg_keyboard = create_inline_keyboard([[pass_reg_btn, do_reg_btn]])
 

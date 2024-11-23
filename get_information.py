@@ -31,33 +31,27 @@ async def warehouse_address(callback: CallbackQuery):
     await callback.message.answer("Нажмите чтобы увидеть образцы", reply_markup=samples_keyboard)
 
 
-@gi.callback_query(F.data == "simple_1688")
-async def simple_1688(callback: CallbackQuery):
+@gi.callback_query(F.data.startswith("simple_"))
+async def handle_simple(callback: CallbackQuery):
     await callback.message.delete()
-    await callback.message.answer_photo(
-        "AgACAgIAAxkBAAIBimc_ZKt4RFZIx-jpBI116ulY13LAAAKq7DEbu-rwSQ6olox6fGduAQADAgADcwADNgQ", "Образец 1688")
-    await callback.message.answer("Нажмите чтобы увидеть другие образцы", reply_markup=samples_1688_keyboard)
+    samples = {
+        "1688": {
+            "photo_id": "AgACAgIAAxkBAAIBimc_ZKt4RFZIx-jpBI116ulY13LAAAKq7DEbu-rwSQ6olox6fGduAQADAgADcwADNgQ",
+            "caption": "Образец 1688", "keyboard": samples_1688_keyboard},
+        "Taobao": {
+            "photo_id": "AgACAgIAAxkBAAIBjGc_ZR4880Smla-5Bgd2Sjnn_AbyAAKt7DEbu-rwSXoONn0x9TuXAQADAgADcwADNgQ",
+            "caption": "Образец Taobao", "keyboard": samples_Taobao_keyboard},
+        "Pinduoduo": {
+            "photo_id": "AgACAgIAAxkBAAIBjmc_ZYPMxuT9j_Zb5UgVlsb_l3H0AAKu7DEbu-rwSdaIN5anq7SqAQADAgADcwADNgQ",
+            "caption": "Образец Pinduoduo", "keyboard": samples_Pinduoduo_keyboard},
+        "Poizon": {
+            "photo_id": "AgACAgIAAxkBAAIBkGc_ZdXomhwB_-CBUdPwO5bsAswkAAJD5zEbrMfxSV5EjAkSWiH9AQADAgADcwADNgQ",
+            "caption": "Образец poizon", "keyboard": samples_Poizon_keyboard}}
 
-@gi.callback_query(F.data == "simple_Taobao")
-async def simple_taobao(callback: CallbackQuery):
-    await callback.message.delete()
-    await callback.message.answer_photo(
-        "AgACAgIAAxkBAAIBjGc_ZR4880Smla-5Bgd2Sjnn_AbyAAKt7DEbu-rwSXoONn0x9TuXAQADAgADcwADNgQ", "Образец Taobao")
-    await callback.message.answer("Нажмите чтобы увидеть другие образцы", reply_markup=samples_Taobao_keyboard)
-
-@gi.callback_query(F.data == "simple_Pinduoduo")
-async def simple_pinduoduo(callback: CallbackQuery):
-    await callback.message.delete()
-    await callback.message.answer_photo(
-        "AgACAgIAAxkBAAIBjmc_ZYPMxuT9j_Zb5UgVlsb_l3H0AAKu7DEbu-rwSdaIN5anq7SqAQADAgADcwADNgQ", "Образец Pinduoduo")
-    await callback.message.answer("Нажмите чтобы увидеть другие образцы", reply_markup=samples_Pinduoduo_keyboard)
-
-@gi.callback_query(F.data == "simple_Poizon")
-async def simple_poizon(callback: CallbackQuery):
-    await callback.message.delete()
-    await callback.message.answer_photo(
-        "AgACAgIAAxkBAAIBkGc_ZdXomhwB_-CBUdPwO5bsAswkAAJD5zEbrMfxSV5EjAkSWiH9AQADAgADcwADNgQ", "Образец poizon")
-    await callback.message.answer("Нажмите чтобы увидеть другие образцы", reply_markup=samples_Poizon_keyboard)
+    key = callback.data.split("_")[-1]
+    sample = samples[key]
+    await callback.message.answer_photo(sample["photo_id"], sample["caption"])
+    await callback.message.answer("Нажмите чтобы увидеть другие образцы", reply_markup=sample["keyboard"])
 
 
 # ОБРАБОТЧИК - ЗАРЕЩЁННЫЕ ВЕЩЕСТВА
@@ -85,7 +79,7 @@ async def my_profile(callback: CallbackQuery):
         f"Трек коды: {inf.get('track_codes') or '<i>Нет трек кодов</i>'}\n")
     await callback.message.answer("Нажмите чтобы изменит данные...", reply_markup=my_profile_keyboard)
 
-# ОБРАБОТЧИК ИЗМЕНЕНЫЙ
+# ОБРАБОТЧИК ИЗМЕНЕННЫЙ
 @gi.callback_query(F.data.startswith("change_"))
 async def change_info(callback: CallbackQuery):
     await callback.message.delete()
