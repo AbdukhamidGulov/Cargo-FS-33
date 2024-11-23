@@ -47,3 +47,5 @@ samples_1688_keyboard = create_inline_keyboard([[simple_Taobao_btn, simple_Pindu
 samples_Taobao_keyboard = create_inline_keyboard([[simple_1688_btn, simple_Pinduoduo_btn], [simple_Poizon_btn, main_menu_btn]])
 samples_Pinduoduo_keyboard = create_inline_keyboard([[simple_1688_btn, simple_Taobao_btn], [simple_Poizon_btn, main_menu_btn]])
 samples_Poizon_keyboard = create_inline_keyboard([[simple_1688_btn, simple_Taobao_btn], [simple_Pinduoduo_btn, main_menu_btn]])
+
+data_updated_keyboard = create_inline_keyboard([[my_profile_btn], [main_menu_btn]])

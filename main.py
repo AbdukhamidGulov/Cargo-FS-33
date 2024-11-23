@@ -1,7 +1,7 @@
 from os import getenv
 from asyncio import run
 from dotenv import load_dotenv
-from aiogram import Bot, Dispatcher
+from aiogram import Bot, Dispatcher, F
 from aiogram.client.default import DefaultBotProperties
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message
@@ -9,7 +9,7 @@ from aiogram.types import Message
 from get_information import gi
 from registration_process import states
 from keyboards import main_keyboard, reg_keyboard
-from database import create_users_table, get_user_by_tg_id
+from database import recreate_users_table, get_user_by_tg_id
 
 load_dotenv()
 TELEGRAM_BOT_TOKEN = getenv('BOT_TOKEN')
@@ -36,10 +36,16 @@ async def help_command(message: Message):
     await message.answer('Команда хелп')
 
 
-@dp.message(Command(commands=["create_db"]))
+@dp.message(Command(commands=["recreate_db"]))
 async def create_db_command(message: Message):
-    await create_users_table()
-    await message.answer("База данных пользователей успешно создана!")
+    await recreate_users_table()
+    await message.answer("База данных пользователей успешно песоздана!")
+
+
+@dp.message(F.photo)
+async def photo(message: Message):
+    await message.answer(print_token_photo := message.photo[0].file_id)
+    print(print_token_photo)
 
 
 async def main():
@@ -53,7 +59,3 @@ async def main():
 if __name__ == "__main__":
     run(main())
 
-
-# @dp.message(F.photo)
-# async def photo(message: Message):
-#     await message.answer(message.photo[0].file_id)

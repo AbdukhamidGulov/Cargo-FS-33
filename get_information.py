@@ -1,9 +1,9 @@
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, Message
 from aiogram import F, Router, Bot
 
-from database import get_info_profile, get_user_by_tg_id
+from database import get_info_profile, get_user_by_tg_id, update_user_info
 from keyboards import my_profile_keyboard, back_to_menu_keyboard, samples_keyboard, samples_1688_keyboard, \
-    samples_Taobao_keyboard, samples_Pinduoduo_keyboard, samples_Poizon_keyboard, main_keyboard
+    samples_Taobao_keyboard, samples_Pinduoduo_keyboard, samples_Poizon_keyboard, main_keyboard, data_updated_keyboard
 
 gi = Router()
 
@@ -79,18 +79,46 @@ async def my_profile(callback: CallbackQuery):
     await callback.message.delete()
     await callback.message.answer(
         f"Номер для заказов: <code>FS{inf.get('id'):04d}</code>\n"
-        f"Имя: {inf.get('name', no)}\n"
-        f"Номер: {inf.get('number', no)}\n"
-        f"Адрес доставки: {inf.get('city', no)}\n"
-        f"Трек коды: {inf.get('track_codes', "Нет трек кодов")}\n")
+        f"Имя: {inf.get('name') or no}\n"
+        f"Номер: {inf.get('phone') or no}\n"
+        f"Адрес доставки: {inf.get('address') or no}\n"
+        f"Трек коды: {inf.get('track_codes') or '<i>Нет трек кодов</i>'}\n")
     await callback.message.answer("Нажмите чтобы изменит данные...", reply_markup=my_profile_keyboard)
 
+@gi.callback_query(F.data == "change_name")
+async def change_name(callback: CallbackQuery):
+    await callback.message.delete()
+    await callback.message.answer("Введите новое имя:")
 
-change_name_btn = create_button("Изменит имя и фамилию", "change_name")
-change_number_btn = create_button("️Изменить телефон", "change_number")
-change_address_btn = create_button("️Изменит адрес", "change_address")
-my_track_code_btn = create_button("️Мои трек коды", "my_track_code")
-main_menu_btn = create_button("️Назад в главное меню", "main_menu")
+    @gi.message()
+    async def process_new_name(message: Message):
+        new_name = message.text
+        await update_user_info(message.from_user.id, "name", new_name)
+        await message.answer("Ваше имя успешно обновлено.", reply_markup=data_updated_keyboard)
+
+@gi.callback_query(F.data == "change_number")
+async def change_number(callback: CallbackQuery):
+    await callback.message.delete()
+    await callback.message.answer("Введите новый номер телефона:")
+
+    @gi.message()
+    async def process_new_number(message: Message):
+        new_number = message.text
+        await update_user_info(message.from_user.id, "phone", new_number)
+        await message.answer("Ваш номер успешно обновлен.", reply_markup=data_updated_keyboard)
+
+
+@gi.callback_query(F.data == "change_address")
+async def change_address(callback: CallbackQuery):
+    await callback.message.delete()
+    await callback.message.answer("Введите новый адрес:")
+
+    @gi.message()
+    async def process_new_address(message: Message):
+        new_address = message.text
+        await update_user_info(message.from_user.id, "address", new_address)
+        await message.answer("Ваш адрес успешно обновлен.", reply_markup=data_updated_keyboard)
+
 
 
 
