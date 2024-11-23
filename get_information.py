@@ -24,9 +24,9 @@ async def price(callback: CallbackQuery, bot: Bot):
 async def warehouse_address(callback: CallbackQuery):
     user_id = await get_user_by_tg_id(callback.from_user.id)
     await callback.message.delete()
-    await callback.message.answer(f"   <u>Адрес склада</u>\n收件人：<code>FS{user_id:04d}</code>\n"
+    await callback.message.answer(f"   <u>Адрес склада</u>\n收件人：<code>FS{user_id[0]:04d}</code>\n"
                                   f"电话号码：<code>15116957545</code>\n"
-                                  f"地址：<code>佛山市南海区大沥镇黄岐泌冲凤秀岗工业区凤秀大楼18号3档  FS{user_id:04d} "
+                                  f"地址：<code>佛山市南海区大沥镇黄岐泌冲凤秀岗工业区凤秀大楼18号3档  FS{user_id[0]:04d} "
                                   f"发货一定要写名字，麦头，不然仓库不收</code>")
     await callback.message.answer("Нажмите чтобы увидеть образцы", reply_markup=samples_keyboard)
 
@@ -85,42 +85,19 @@ async def my_profile(callback: CallbackQuery):
         f"Трек коды: {inf.get('track_codes') or '<i>Нет трек кодов</i>'}\n")
     await callback.message.answer("Нажмите чтобы изменит данные...", reply_markup=my_profile_keyboard)
 
-@gi.callback_query(F.data == "change_name")
-async def change_name(callback: CallbackQuery):
+# ОБРАБОТЧИК ИЗМЕНЕНЫЙ
+@gi.callback_query(F.data.startswith("change_"))
+async def change_info(callback: CallbackQuery):
     await callback.message.delete()
-    await callback.message.answer("Введите новое имя:")
+    field = callback.data.split("_")[-1]  # name, number, address
+    d = {"name": "новое имя", "number": "новый номер телефона", "address": "новый адрес"}
+    await callback.message.answer(f"Введите {d[field]}:")
 
     @gi.message()
     async def process_new_name(message: Message):
         new_name = message.text
-        await update_user_info(message.from_user.id, "name", new_name)
-        await message.answer("Ваше имя успешно обновлено.", reply_markup=data_updated_keyboard)
-
-@gi.callback_query(F.data == "change_number")
-async def change_number(callback: CallbackQuery):
-    await callback.message.delete()
-    await callback.message.answer("Введите новый номер телефона:")
-
-    @gi.message()
-    async def process_new_number(message: Message):
-        new_number = message.text
-        await update_user_info(message.from_user.id, "phone", new_number)
-        await message.answer("Ваш номер успешно обновлен.", reply_markup=data_updated_keyboard)
-
-
-@gi.callback_query(F.data == "change_address")
-async def change_address(callback: CallbackQuery):
-    await callback.message.delete()
-    await callback.message.answer("Введите новый адрес:")
-
-    @gi.message()
-    async def process_new_address(message: Message):
-        new_address = message.text
-        await update_user_info(message.from_user.id, "address", new_address)
-        await message.answer("Ваш адрес успешно обновлен.", reply_markup=data_updated_keyboard)
-
-
-
+        await update_user_info(message.from_user.id, field, new_name)
+        await message.answer("Успешно обновлено.", reply_markup=data_updated_keyboard)
 
 
 # ОБРАБОТЧИК КОМАНДЫ НАЗАД В ГЛАВНОЕ МЕНЮ

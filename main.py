@@ -50,6 +50,7 @@ async def photo(message: Message):
 
 async def main():
     try:
+        await recreate_users_table()
         print("Бот запущен")
         await dp.start_polling(bot)
     finally:
