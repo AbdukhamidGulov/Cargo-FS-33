@@ -1,7 +1,7 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-def create_button(text: str, callback_data: str = None, url: str = None) -> InlineKeyboardButton:
-    return InlineKeyboardButton(text=text, callback_data=callback_data, url=url)
+def create_button(text: str, callback_data: str = None) -> InlineKeyboardButton:
+    return InlineKeyboardButton(text=text, callback_data=callback_data)
 
 def create_inline_keyboard(buttons: list[list[InlineKeyboardButton]]) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=buttons)

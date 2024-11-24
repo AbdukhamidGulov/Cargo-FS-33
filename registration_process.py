@@ -58,6 +58,6 @@ async def pass_reg(callback: CallbackQuery):
     await callback.message.answer("Как я могу вам помочь?", reply_markup=main_keyboard)
 
 
-@states.message()
-async def send_echo(message: Message):
-    await message.answer('Простите! Введена неверная команда')
+# @states.message()
+# async def send_echo(message: Message):
+#     await message.answer('Простите! Введена неверная команда')

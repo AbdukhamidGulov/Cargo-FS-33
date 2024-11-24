@@ -3,7 +3,6 @@ from aiosqlite import connect, Row
 # Создание таблицы пользователей
 async def create_users_table():
     async with connect("database.db") as db:
-        await db.execute("DROP TABLE IF EXISTS users")
         await db.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,

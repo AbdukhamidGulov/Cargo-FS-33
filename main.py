@@ -9,6 +9,8 @@ from aiogram.types import Message
 from change_processor import change
 from get_information import get_info
 from registration_process import states
+from calculator.calc_handlers import calc
+from calculator.calc_volume import calc_volume
 from keyboards import main_keyboard, reg_keyboard
 from database import create_users_table, get_user_by_tg_id, drop_users_table
 
@@ -17,7 +19,7 @@ TELEGRAM_BOT_TOKEN = getenv('BOT_TOKEN')
 
 bot = Bot(token=TELEGRAM_BOT_TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
 dp = Dispatcher()
-dp.include_routers(get_info, change, states)
+dp.include_routers(get_info, change, states, calc, calc_volume)
 
 
 @dp.message(CommandStart())
@@ -61,4 +63,5 @@ async def main():
 
 if __name__ == "__main__":
     run(main())
+
 
