@@ -12,14 +12,14 @@ from registration_process import states
 from calculator.calc_handlers import calc
 from calculator.calc_volume import calc_volume
 from keyboards import main_keyboard, reg_keyboard
-from database import create_users_table, get_user_by_tg_id, drop_users_table
+from database import create_users_table, get_user_by_tg_id, drop_users_table, create_track_numbers_table
 
 load_dotenv()
 TELEGRAM_BOT_TOKEN = getenv('BOT_TOKEN')
 
 bot = Bot(token=TELEGRAM_BOT_TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
 dp = Dispatcher()
-dp.include_routers(get_info, change, states, calc, calc_volume)
+dp.include_routers(get_info, change, states, track_numbers, calc, calc_volume)
 
 
 @dp.message(CommandStart())
@@ -55,6 +55,7 @@ async def photo(message: Message):
 async def main():
     try:
         await create_users_table()
+        await create_track_numbers_table()
         print("Бот запущен")
         await dp.start_polling(bot)
     finally:

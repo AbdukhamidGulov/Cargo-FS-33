@@ -15,9 +15,24 @@ async def create_users_table():
         """)
         await db.commit()
 
+
 async def drop_users_table():
     async with connect("database.db") as db:
         await db.execute("DROP TABLE IF EXISTS users")
+        await db.commit()
+
+
+# Создание таблицы track_numbers
+async def create_track_numbers_table():
+    async with connect("database.db") as db:
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS track_numbers (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                track_number VARCHAR
+                status VARCHAR
+                tg_id INTEGER 
+            )
+        """)
         await db.commit()
 
 
@@ -50,3 +65,12 @@ async def update_user_info(tg_id: int, field: str, value: str):
         query = f"UPDATE users SET {field} = ? WHERE tg_id = ?"
         await db.execute(query, (value, tg_id))
         await db.commit()
+
+
+# Получение всех трек номеров
+async def get_track_codes_list():
+    async with connect("database.db") as db:
+        db.row_factory = Row
+        async with db.execute("SELECT track_number, status FROM track_numbers") as cursor:
+            row = await cursor.fetchone()
+            return dict(row) if row else None

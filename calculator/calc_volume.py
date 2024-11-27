@@ -63,9 +63,7 @@ async def input_height(message: Message, state: FSMContext):
 # Обработка веса и вывод результата
 @calc_volume.message(CargoCalculator.weight)
 async def input_weight(message: Message, state: FSMContext):
-    if not message.text.isdigit():
-        await message.answer("Введите числовое значение веса.")
-    else:
+    try:
         weight = float(message.text)
         data = await state.get_data()
         volume = data["length"] * data["width"] * data["height"] / 1000000
@@ -77,6 +75,8 @@ async def input_weight(message: Message, state: FSMContext):
             f"Плотность груза: {density:.2f} кг/м³",
             reply_markup=calc_back_menu_keyboard)
         await state.clear()
+    except ValueError:
+        await message.answer("Введите числовое значение веса.")
 
 # # Обработка кнопок
 # @calc_volume.callback_query(F.data == "main_menu")
