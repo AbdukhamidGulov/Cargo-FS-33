@@ -1,9 +1,9 @@
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery
 from aiogram import F, Router, Bot
 
-from database import get_info_profile, get_user_by_tg_id, update_user_info
+from database import get_info_profile, get_user_by_tg_id
 from keyboards import my_profile_keyboard, back_to_menu_keyboard, samples_keyboard, samples_1688_keyboard, \
-    samples_Taobao_keyboard, samples_Pinduoduo_keyboard, samples_Poizon_keyboard, main_keyboard, data_updated_keyboard
+    samples_Taobao_keyboard, samples_Pinduoduo_keyboard, samples_Poizon_keyboard, main_keyboard
 
 get_info = Router()
 

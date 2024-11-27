@@ -28,8 +28,8 @@ async def create_track_numbers_table():
         await db.execute("""
             CREATE TABLE IF NOT EXISTS track_numbers (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                track_number VARCHAR
-                status VARCHAR
+                track_number VARCHAR UNIQUE,
+                status VARCHAR,
                 tg_id INTEGER 
             )
         """)
@@ -67,10 +67,40 @@ async def update_user_info(tg_id: int, field: str, value: str):
         await db.commit()
 
 
-# Получение всех трек номеров
-async def get_track_codes_list():
+# # Получение всех трек-номеров
+# async def get_track_codes_list():
+#     async with connect("database.db") as db:
+#         db.row_factory = Row
+#         async with db.execute("SELECT track_number, status FROM track_numbers") as cursor:
+#             rows = await cursor.fetchall()
+#             return {row["track_number"]: row["status"] for row in rows} if rows else {}
+
+
+# Добавление трек-кодов списком (для администратора)
+async def add_track_codes_list(track_codes: list[str], status: str = "in_stock"):
+    async with connect("database.db") as db:
+        for track in track_codes:
+            await db.execute("""
+                INSERT INTO track_numbers (track_number, status, tg_id)
+                VALUES (?, ?, NULL)
+                ON CONFLICT(track_number) DO UPDATE SET status=excluded.status
+            """, (track, status))
+        await db.commit()
+
+
+# Проверка или добавление трек-кода для пользователя
+async def check_or_add_track_code(track_number: str, tg_id: int):
     async with connect("database.db") as db:
         db.row_factory = Row
-        async with db.execute("SELECT track_number, status FROM track_numbers") as cursor:
+        async with db.execute("SELECT * FROM track_numbers WHERE track_number = ?", (track_number,)) as cursor:
             row = await cursor.fetchone()
-            return dict(row) if row else None
+
+        if row:
+            return row["status"]  # Вернуть статус, если трек-код уже есть
+        else:
+            await db.execute("""
+                INSERT INTO track_numbers (track_number, status, tg_id)
+                VALUES (?, ?, ?)
+            """, (track_number, "out_of_stock", tg_id))
+            await db.commit()
+            return "out_of_stock"
