@@ -6,20 +6,24 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message
 
+from filters import IsAdmin
 from change_processor import change
 from get_information import get_info
+from track_numbers import track_code
 from registration_process import states
 from calculator.calc_handlers import calc
 from calculator.calc_volume import calc_volume
 from keyboards import main_keyboard, reg_keyboard
-from database import create_users_table, get_user_by_tg_id, drop_users_table, create_track_numbers_table
+from database import create_users_table, get_user_by_tg_id, drop_users_table, create_track_numbers_table, \
+    drop_track_numbers_table
 
 load_dotenv()
 TELEGRAM_BOT_TOKEN = getenv('BOT_TOKEN')
+admin_ids: list[int] = [5302111687]
 
 bot = Bot(token=TELEGRAM_BOT_TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
 dp = Dispatcher()
-dp.include_routers(get_info, change, states, track_numbers, calc, calc_volume)
+dp.include_routers(get_info, change, states, track_code, calc, calc_volume)
 
 
 @dp.message(CommandStart())
@@ -34,16 +38,38 @@ async def start_command(message: Message):
                              'Хотите зарегистрироваться?', reply_markup=reg_keyboard)
 
 
+@dp.message(Command(commands=['admin']), IsAdmin(admin_ids))
+async def admin_command(message: Message):
+    await message.answer('    <u>Список доступных команд:</u>\n'
+                         '/add_track_codes - Для добавление трек кодов (списком)\n\n'
+                         '/recreate_db - Удаление и пересоздание таблицы пользователей\n\n'
+                         '/recreate_tc - Удаление и пересоздание таблицы трек-кодов')
+
+
+@dp.message(Command(commands=['admin']))
+async def admin_command(message: Message):
+    await message.answer('Вы не явяетесь админом')
+    await bot.send_message(admin_ids[0], text=f"Пользоватеь c id {message.from_user.id} нажал на команду <b>admin</b>")
+    print("message.from_user.id")
+
+
 @dp.message(Command(commands=['help']))
 async def help_command(message: Message):
     await message.answer('Команда хелп')
 
 
-@dp.message(Command(commands=["recreate_db"]))
-async def create_db_command(message: Message):
+@dp.message(Command(commands=['recreate_db']), IsAdmin(admin_ids))
+async def recreate_db_command(message: Message):
     await drop_users_table()
     await create_users_table()
-    await message.answer("База данных пользователей успешно песоздана!")
+    await message.answer('База данных пользователей успешно песоздана!')
+
+
+@dp.message(Command(commands=['recreate_tc']), IsAdmin(admin_ids))
+async def recreate_track_codes_db(message: Message):
+    await drop_track_numbers_table()
+    await create_track_numbers_table()
+    await message.answer('База данных Трек-номеров успешно песоздана!')
 
 
 @dp.message(F.photo)
@@ -56,11 +82,11 @@ async def main():
     try:
         await create_users_table()
         await create_track_numbers_table()
-        print("Бот запущен")
+        print('Бот запущен')
         await dp.start_polling(bot)
     finally:
         await bot.session.close()
-        print("Сессия бота закрыта")
+        print('Сессия бота закрыта')
 
 if __name__ == "__main__":
     run(main())
