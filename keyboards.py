@@ -10,12 +10,12 @@ def create_button(text: str, callback_data: str = None) -> InlineKeyboardButton:
 def create_inline_keyboard(buttons: list[list[InlineKeyboardButton]]) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
-checking_track_code_btn = create_keyboard_button("Проверка трек-кода🔎")
-price_btn = create_keyboard_button("️Цены 💲")
-warehouse_address_btn = create_keyboard_button("️Адрес склада🗺")
-prohibited_goods_btn = create_keyboard_button("️Запрещённые товары ❌")
-calculator_btn = create_keyboard_button("Рассчитать стоимость 💸")
-my_profile_btn = create_keyboard_button("️Мой профиль👤")
+checking_track_code_btn = create_keyboard_button("Проверка трек-кода")
+price_btn = create_keyboard_button("️Цены")
+warehouse_address_btn = create_keyboard_button("️Адрес склада")
+prohibited_goods_btn = create_keyboard_button("️Запрещённые товары")
+calculator_btn = create_keyboard_button("Рассчитать стоимость")
+my_profile_btn = create_keyboard_button("️Мой профиль")
 
 pass_reg_btn = create_button("️Пропустить", "pass_reg")
 do_reg_btn = create_button("️Пройти регистрацию", "do_reg")

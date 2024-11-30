@@ -9,11 +9,7 @@ calculate_shipping_btn = create_button(text="Рассчитать доставк
 # _btn = create_button(text="", callback_data="")
 # _btn = create_button(text="", callback_data="")
 
-
-calc_main_menu_btn = create_button(text="Назад в меню расчётов", callback_data="calculator")
 # back_btn = create_button(text="Назад", callback_data="back")
-
 
 calc_main_menu_keyboard = create_inline_keyboard([[calculate_volume_btn],
                                                   [calculate_shipping_btn]])  # [calculate_redemption_btn],
-calc_back_menu_keyboard = create_inline_keyboard([[calc_main_menu_btn]])

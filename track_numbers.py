@@ -12,7 +12,7 @@ track_code = Router()
 class TrackCode(StatesGroup):
     track_code = State()
 
-@track_code.message(F.text == "Проверка трек-кода🔎")
+@track_code.message(F.text == "Проверка трек-кода")
 async def check_track_code(message: Message, state: FSMContext):
     await message.answer("Вставьте ваш скопированный трек-код для проверки:")
     await state.set_state(TrackCode.track_code)

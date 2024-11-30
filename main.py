@@ -29,7 +29,9 @@ dp.include_routers(get_info, change, states, track_code, calc, calc_volume, calc
 
 @dp.message(CommandStart())
 async def start_command(message: Message):
-    await message.answer('Вас приветствует Telegram-бот карго компании <b>FS-33</b> 🚚')
+    await message.answer_photo(
+        'AgACAgIAAxkBAAIElGdLMwTg5ryGW34KC5nWUmfQEjlgAAL65TEb4nBYSpjvLhbFuxviAQADAgADcwADNgQ',
+        'Вас приветствует Telegram-бот карго компании <b>FS-33</b> 🚚')
     user = await get_user_by_tg_id(message.from_user.id)
     if user:
         await message.answer('Я помогу вам найти адреса складов, проверить трек-код и ознакомить с ценами',
@@ -89,5 +91,3 @@ async def main():
 
 if __name__ == "__main__":
     run(main())
-
-

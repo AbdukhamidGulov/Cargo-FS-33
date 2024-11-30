@@ -8,14 +8,14 @@ from keyboards import (my_profile_keyboard, samples_keyboard, samples_1688_keybo
 get_info = Router()
 
 
-@get_info.message(F.text == "️Цены 💲")
+@get_info.message(F.text == "️Цены")
 async def price(message: Message):
     await message.answer_photo(
         "AgACAgIAAxkBAAPbZztu_WMs7OrFwLEW9wPUzWKoyJYAAvnqMRv6E-FJIrIRnk8frsgBAAMCAANzAAM2BA", "2,5$/КГ\n230/Куб")
 
 
 # ВСЯ ОБРАБОТКА ДЛЯ АДРЕСА СКЛАДА И ОБРАЗЦОВ
-@get_info.message(F.text == "️Адрес склада🗺")
+@get_info.message(F.text == "️Адрес склада")
 async def address(message: Message):
     user_id = await get_user_by_tg_id(message.from_user.id)
     await message.answer(f"   <u>Адрес склада</u>\n收件人：<code>FS{user_id[0]:04d}</code>\n"
@@ -49,17 +49,18 @@ async def handle_simple(callback: CallbackQuery):
 
 
 # ОБРАБОТЧИК - ЗАРЕЩЁННЫЕ ВЕЩЕСТВА
-@get_info.message(F.text == "️Запрещённые товары ❌")
+@get_info.message(F.text == "️Запрещённые товары")
 async def x_tovar(message: Message):
     pd = ("    <b>НАШЕ КАРГО НЕ ПРИНИМАЕТ СЛЕДУЮЩИЕ ВИДЫ ПОСЫЛОК!</b>\n\n"
           "1. <b>Лекарства</b> (порошки, таблетки, лекарства в виде жидкостей).\n\n"
           "2. <b>Все виды холодного оружия</b> (ножи, электрошокеры, биты и другое данного характера) "
-          "полностью запрещены.\n\n3. <b>Техника</b> (Мобильные телефоны, планшеты, ноутбуки и т.д)")
+          "полностью запрещены.\n\n"
+          "3. <b>Всё что запрещено на РФ</b> (Военные товары, химия, растения, семена, газ, электронные сигареты)")
     await message.answer(pd)
 
 
 # ОБРАБОТЧИК КОМАНДЫ "my_profile"
-@get_info.message(F.text == "️Мой профиль👤")
+@get_info.message(F.text == "️Мой профиль")
 async def profile(message: Message):
     inf = await get_info_profile(message.from_user.id)
     if not inf: await message.answer("Профиль не найден.")
