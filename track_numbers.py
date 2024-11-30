@@ -6,7 +6,6 @@ from aiogram.types import CallbackQuery, Message
 
 from database import check_or_add_track_code, add_track_codes_list
 from filters import IsAdmin
-from main import admin_ids
 
 track_code = Router()
 
@@ -40,9 +39,9 @@ class TrackCodeStates(StatesGroup):
     waiting_for_track_codes = State()
 
 # Хэндлер для команды /add_track_codes (только для администраторов)
-@track_code.message(Command(commands=["add_track_codes"]), IsAdmin(admin_ids))
-async def start_add_track_codes(message: Message, state: FSMContext):
-    await message.answer("Пожалуйста, отправьте список трек-кодов \n"
+@track_code.callback_query(F.data == "add_track_codes")
+async def checking_track_code(callback: CallbackQuery, state: FSMContext):
+    await callback.message.answer("Пожалуйста, отправьте список трек-кодов \n"
                          "<i>(каждый трек-код с новой строки или через пробел)</i>.")
     await state.set_state(TrackCodeStates.waiting_for_track_codes)
 

@@ -4,16 +4,16 @@ from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher, F
 from aiogram.client.default import DefaultBotProperties
 from aiogram.filters import CommandStart, Command
-from aiogram.types import Message
+from aiogram.types import Message, CallbackQuery
 
 from filters import IsAdmin
 from change_processor import change
-from get_information import get_info
 from track_numbers import track_code
+from get_information import get_info
 from registration_process import states
 from calculator.calc_handlers import calc
 from calculator.calc_volume import calc_volume
-from keyboards import main_keyboard, reg_keyboard
+from keyboards import main_keyboard, reg_keyboard, admin_keyboard
 from database import create_users_table, get_user_by_tg_id, drop_users_table, create_track_numbers_table, \
     drop_track_numbers_table
 
@@ -40,16 +40,14 @@ async def start_command(message: Message):
 
 @dp.message(Command(commands=['admin']), IsAdmin(admin_ids))
 async def admin_command(message: Message):
-    await message.answer('    <u>Список доступных команд:</u>\n'
-                         '/add_track_codes - Для добавление трек кодов (списком)\n\n'
-                         '/recreate_db - Удаление и пересоздание таблицы пользователей\n\n'
-                         '/recreate_tc - Удаление и пересоздание таблицы трек-кодов')
+    await message.answer('  <u>Список доступных команд:</u>\n', reply_markup=admin_keyboard)
 
 
 @dp.message(Command(commands=['admin']))
 async def admin_command(message: Message):
     await message.answer('Вы не явяетесь админом')
-    await bot.send_message(admin_ids[0], text=f"Пользоватеь c id {message.from_user.id} нажал на команду <b>admin</b>")
+    await bot.send_message(admin_ids[0], text=f"Пользоватеь {message.from_user.username} "
+                                              f"c id {message.from_user.id} нажал на команду <b>admin</b>")
     print("message.from_user.id")
 
 
@@ -58,18 +56,18 @@ async def help_command(message: Message):
     await message.answer('Команда хелп')
 
 
-@dp.message(Command(commands=['recreate_db']), IsAdmin(admin_ids))
-async def recreate_db_command(message: Message):
+@dp.callback_query(F.data == "add_track_codes")
+async def checking_track_code(callback: CallbackQuery):
     await drop_users_table()
     await create_users_table()
-    await message.answer('База данных пользователей успешно песоздана!')
+    await callback.message.answer('База данных пользователей успешно песоздана!')
 
 
-@dp.message(Command(commands=['recreate_tc']), IsAdmin(admin_ids))
-async def recreate_track_codes_db(message: Message):
+@dp.callback_query(F.data == "add_track_codes")
+async def checking_track_code(callback: CallbackQuery):
     await drop_track_numbers_table()
     await create_track_numbers_table()
-    await message.answer('База данных Трек-номеров успешно песоздана!')
+    await callback.message.answer('База данных Трек-номеров успешно песоздана!')
 
 
 @dp.message(F.photo)

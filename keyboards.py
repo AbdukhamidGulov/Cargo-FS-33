@@ -27,6 +27,11 @@ simple_Taobao_btn = create_button("️Образец Taobao", "simple_Taobao")
 simple_Pinduoduo_btn = create_button("️Образец Pinduoduo", "simple_Pinduoduo")
 simple_Poizon_btn = create_button("️Образец Poizon", "simple_Poizon")
 
+add_track_codes_btn = create_button("️", "add_track_codes")
+track_codes_list_btn = create_button("️", "track_codes_list")
+recreate_db_btn = create_button("️", "recreate_db")
+recreate_tc_btn = create_button("️", "recreate_tc")
+
 main_keyboard = create_inline_keyboard([[checking_track_code_btn],
                                         [price_btn, warehouse_address_btn],
                                         [prohibited_goods_btn, calculator_btn],
@@ -49,3 +54,6 @@ samples_Pinduoduo_keyboard = create_inline_keyboard([[simple_1688_btn, simple_Ta
 samples_Poizon_keyboard = create_inline_keyboard([[simple_1688_btn, simple_Taobao_btn], [simple_Pinduoduo_btn, main_menu_btn]])
 
 data_updated_keyboard = create_inline_keyboard([[my_profile_btn], [main_menu_btn]])
+
+admin_keyboard = create_inline_keyboard([[add_track_codes_btn], [track_codes_list_btn],
+                                         [recreate_db_btn], [recreate_tc_btn]])
