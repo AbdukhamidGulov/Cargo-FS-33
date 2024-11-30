@@ -72,8 +72,8 @@ async def input_weight(message: Message, state: FSMContext):
         await message.answer_photo(
             "AgACAgIAAxkBAAIDEmdDRPPKCM_q0ZJ49T9-5h1z9f7LAALR5zEbI2PQSQZ_9fnuXY76AQADAgADcwADNgQ",
             f"Объём груза: {volume:.2f} м³\n"
-            f"Плотность груза: {density:.2f} кг/м³",
-            reply_markup=calc_back_menu_keyboard)
+            f"Плотность груза: {density:.2f} кг/м³")
+        await message.answer("Что хотите сделать ещё?", reply_markup=calc_back_menu_keyboard)
         await state.clear()
     except ValueError:
         await message.answer("Введите числовое значение веса.")

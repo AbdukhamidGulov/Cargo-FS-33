@@ -4,7 +4,6 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, Message
 
 from database import update_user_info
-from keyboards import data_updated_keyboard
 
 change = Router()
 
@@ -27,6 +26,6 @@ async def process_new_value(message: Message, state: FSMContext):
     field = data.get("field")
     await update_user_info(message.from_user.id, field, new_value)
     await state.clear()
-    await message.answer("Успешно обновлено.", reply_markup=data_updated_keyboard)
+    await message.answer("Успешно обновлено.")
 
 

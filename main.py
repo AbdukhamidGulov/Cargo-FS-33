@@ -13,6 +13,7 @@ from get_information import get_info
 from registration_process import states
 from calculator.calc_handlers import calc
 from calculator.calc_volume import calc_volume
+from calculator.calculate_shipping import calc_shipping
 from keyboards import main_keyboard, reg_keyboard, admin_keyboard
 from database import create_users_table, get_user_by_tg_id, drop_users_table, create_track_numbers_table, \
     drop_track_numbers_table
@@ -23,7 +24,7 @@ admin_ids: list[int] = [5302111687]
 
 bot = Bot(token=TELEGRAM_BOT_TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
 dp = Dispatcher()
-dp.include_routers(get_info, change, states, track_code, calc, calc_volume)
+dp.include_routers(get_info, change, states, track_code, calc, calc_volume, calc_shipping)
 
 
 @dp.message(CommandStart())

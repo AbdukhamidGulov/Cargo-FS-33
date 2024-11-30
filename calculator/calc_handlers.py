@@ -13,7 +13,7 @@ async def calculator(callback: CallbackQuery):
 
 
 #
-# @calc_volume.callback_query(F.data == "calculate_shipping")
-# async def calculate_shipping(callback: CallbackQuery):
+# @calc_volume.callback_query(F.data == "calc_shipping")
+# async def calc_shipping(callback: CallbackQuery):
 #     await callback.message.answer("?", reply_markup=calc_main_menu_keyboard)
 #

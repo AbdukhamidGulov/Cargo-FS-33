@@ -1,34 +1,28 @@
-from aiogram.types import CallbackQuery
-from aiogram import F, Router, Bot
+from aiogram.types import CallbackQuery, Message
+from aiogram import F, Router
 
 from database import get_info_profile, get_user_by_tg_id
-from keyboards import my_profile_keyboard, back_to_menu_keyboard, samples_keyboard, samples_1688_keyboard, \
-    samples_Taobao_keyboard, samples_Pinduoduo_keyboard, samples_Poizon_keyboard, main_keyboard
+from keyboards import (my_profile_keyboard, samples_keyboard, samples_1688_keyboard, samples_Taobao_keyboard,\
+                       samples_Pinduoduo_keyboard, samples_Poizon_keyboard, main_keyboard, change_data_keyboard)
 
 get_info = Router()
 
 
-@get_info.callback_query(F.data == "checking_track_code")
-async def checking_track_code(callback: CallbackQuery, bot: Bot):
-    await bot.send_message(callback.from_user.id, "Проверка трек кода🔎")
-
-
-@get_info.callback_query(F.data == "price")
-async def price(callback: CallbackQuery, bot: Bot):
-    await callback.message.answer_photo(
+@get_info.message(F.text == "️Цены 💲")
+async def price(message: Message):
+    await message.answer_photo(
         "AgACAgIAAxkBAAPbZztu_WMs7OrFwLEW9wPUzWKoyJYAAvnqMRv6E-FJIrIRnk8frsgBAAMCAANzAAM2BA", "2,5$/КГ\n230/Куб")
 
 
 # ВСЯ ОБРАБОТКА ДЛЯ АДРЕСА СКЛАДА И ОБРАЗЦОВ
-@get_info.callback_query(F.data == "warehouse_address")
-async def warehouse_address(callback: CallbackQuery):
-    user_id = await get_user_by_tg_id(callback.from_user.id)
-    await callback.message.delete()
-    await callback.message.answer(f"   <u>Адрес склада</u>\n收件人：<code>FS{user_id[0]:04d}</code>\n"
+@get_info.message(F.text == "️Адрес склада🗺")
+async def price(message: Message):
+    user_id = await get_user_by_tg_id(message.from_user.id)
+    await message.answer(f"   <u>Адрес склада</u>\n收件人：<code>FS{user_id[0]:04d}</code>\n"
                                   f"电话号码：<code>15116957545</code>\n"
                                   f"地址：<code>佛山市南海区大沥镇黄岐泌冲凤秀岗工业区凤秀大楼18号3档  FS{user_id[0]:04d} "
                                   f"发货一定要写名字，麦头，不然仓库不收</code>")
-    await callback.message.answer("Нажмите чтобы увидеть образцы", reply_markup=samples_keyboard)
+    await message.answer("Нажмите чтобы увидеть образцы", reply_markup=samples_keyboard)
 
 
 @get_info.callback_query(F.data.startswith("simple_"))
@@ -55,29 +49,39 @@ async def handle_simple(callback: CallbackQuery):
 
 
 # ОБРАБОТЧИК - ЗАРЕЩЁННЫЕ ВЕЩЕСТВА
-@get_info.callback_query(F.data == "prohibited_goods")
-async def prohibited_goods(callback: CallbackQuery):
+@get_info.message(F.text == "️Запрещённые товары ❌")
+async def price(message: Message):
     pd = ("    <b>НАШЕ КАРГО НЕ ПРИНИМАЕТ СЛЕДУЮЩИЕ ВИДЫ ПОСЫЛОК!</b>\n\n"
           "1. <b>Лекарства</b> (порошки, таблетки, лекарства в виде жидкостей).\n\n"
           "2. <b>Все виды холодного оружия</b> (ножи, электрошокеры, биты и другое данного характера) "
           "полностью запрещены.\n\n3. <b>Техника</b> (Мобильные телефоны, планшеты, ноутбуки и т.д)")
-    await callback.message.answer(pd)
+    await message.answer(pd)
+    await message.answer("  <i>Другие пункты меню</i>")
 
 
 # ОБРАБОТЧИК КОМАНДЫ "my_profile"
-@get_info.callback_query(F.data == "my_profile")
-async def my_profile(callback: CallbackQuery):
-    inf = await get_info_profile(callback.from_user.id)
-    if not inf: await callback.message.answer("Профиль не найден.", reply_markup=back_to_menu_keyboard)
+@get_info.message(F.text == "️Мой профиль👤")
+async def price(message: Message):
+    inf = await get_info_profile(message.from_user.id)
+    if not inf: await message.answer("Профиль не найден.")
     no = "<i>Не заполнено</i>"
-    await callback.message.delete()
-    await callback.message.answer(
+    await message.answer(
         f"Номер для заказов: <code>FS{inf.get('id'):04d}</code>\n"
         f"Имя: {inf.get('name') or no}\n"
         f"Номер: {inf.get('phone') or no}\n"
         f"Адрес доставки: {inf.get('address') or no}\n"
         f"Трек коды: {inf.get('track_codes') or '<i>Нет трек кодов</i>'}\n")
-    await callback.message.answer("Нажмите чтобы изменит данные...", reply_markup=my_profile_keyboard)
+    await message.answer("Что нужно сделать ещё?", reply_markup=my_profile_keyboard)
+
+@get_info.callback_query(F.data == "change_profile_data")
+async def change_profile_data(callback: CallbackQuery):
+    await callback.message.delete()
+    await callback.message.answer("Что хотите изменить?", reply_markup=change_data_keyboard)
+
+@get_info.callback_query(F.data == "my_track_codes")
+async def my_track_codes(callback: CallbackQuery):
+    await callback.message.delete()
+    await callback.message.answer("")
 
 
 # ОБРАБОТЧИК КОМАНДЫ НАЗАД В ГЛАВНОЕ МЕНЮ
