@@ -1,15 +1,15 @@
 from aiogram import F, Router
-from aiogram.types import CallbackQuery
+from aiogram.types import Message
 
 from calculator.calc_keyboards import calc_main_menu_keyboard
 
 calc = Router()
 
 
-@calc.callback_query(F.data == "calculator")
-async def calculator(callback: CallbackQuery):
-    await callback.message.delete()
-    await callback.message.answer("Что хотите рассчитать?", reply_markup=calc_main_menu_keyboard)
+@calc.message(F.text == "Рассчитать стоимость 💸")
+async def calculator(message: Message):
+    await message.delete()
+    await message.answer("Что хотите рассчитать?", reply_markup=calc_main_menu_keyboard)
 
 
 #

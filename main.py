@@ -2,9 +2,9 @@ from os import getenv
 from asyncio import run
 from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher, F
-from aiogram.client.default import DefaultBotProperties
-from aiogram.filters import CommandStart, Command
 from aiogram.types import Message, CallbackQuery
+from aiogram.filters import CommandStart, Command
+from aiogram.client.default import DefaultBotProperties
 
 from filters import IsAdmin
 from change_processor import change

@@ -4,7 +4,6 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import CallbackQuery, Message
 
 from database import check_or_add_track_code, add_track_codes_list
-from keyboards import new_check
 
 track_code = Router()
 
@@ -13,9 +12,9 @@ track_code = Router()
 class TrackCode(StatesGroup):
     track_code = State()
 
-@track_code.callback_query(F.data == "main_menu")
-async def back_to_menu(callback: CallbackQuery, state: FSMContext):
-    await callback.message.answer("Вставьте ваш скопированный трек-код для проверки:")
+@track_code.message(F.text == "Проверка трек-кода🔎")
+async def check_track_code(message: Message, state: FSMContext):
+    await message.answer("Вставьте ваш скопированный трек-код для проверки:")
     await state.set_state(TrackCode.track_code)
 
 @track_code.message(TrackCode.track_code)
@@ -23,11 +22,11 @@ async def process_track_code(message: Message, state: FSMContext):
     tg_id = message.from_user.id
     status = await check_or_add_track_code(message.text.strip(), tg_id)
     if status == "in_stock":
-        await message.answer("Ваш товар уже на складе.", reply_markup=new_check)
+        await message.answer("Ваш товар уже на складе.")
     elif status == "out_of_stock":
-        await message.answer("Ваш товар ещё не прибыл на склад.", reply_markup=new_check)
+        await message.answer("Ваш товар ещё не прибыл на склад.")
     else:
-        await message.answer("Произошла ошибка. Попробуйте позже.", reply_markup=new_check)
+        await message.answer("Произошла ошибка. Попробуйте позже.")
 
     await state.clear()
 

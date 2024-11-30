@@ -1,4 +1,4 @@
-from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, KeyboardButton, ReplyKeyboardMarkup
 
 
 def create_keyboard_button(text: str) -> KeyboardButton:
@@ -10,7 +10,7 @@ def create_button(text: str, callback_data: str = None) -> InlineKeyboardButton:
 def create_inline_keyboard(buttons: list[list[InlineKeyboardButton]]) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
-checking_track_code_btn = create_keyboard_button("️Проверка трек-кода🔎")
+checking_track_code_btn = create_keyboard_button("Проверка трек-кода🔎")
 price_btn = create_keyboard_button("️Цены 💲")
 warehouse_address_btn = create_keyboard_button("️Адрес склада🗺")
 prohibited_goods_btn = create_keyboard_button("️Запрещённые товары ❌")
@@ -31,8 +31,6 @@ simple_1688_btn = create_button("️Образец 1688", "simple_1688")
 simple_Taobao_btn = create_button("️Образец Taobao", "simple_Taobao")
 simple_Pinduoduo_btn = create_button("️Образец Pinduoduo", "simple_Pinduoduo")
 simple_Poizon_btn = create_button("️Образец Poizon", "simple_Poizon")
-
-checking_another_track_code_btn = create_button("️Проверка другого трек-кода🔎", "checking_track_code")
 
 add_track_codes_btn = create_button("️Добавить трек-коды", "add_track_codes")
 track_codes_list_btn = create_button("️Список трек-кодов", "track_codes_list")
@@ -58,8 +56,6 @@ samples_1688_keyboard = create_inline_keyboard([[simple_Taobao_btn], [simple_Pin
 samples_Taobao_keyboard = create_inline_keyboard([[simple_1688_btn], [simple_Pinduoduo_btn], [simple_Poizon_btn]])
 samples_Pinduoduo_keyboard = create_inline_keyboard([[simple_1688_btn], [simple_Taobao_btn], [simple_Poizon_btn]])
 samples_Poizon_keyboard = create_inline_keyboard([[simple_1688_btn], [simple_Taobao_btn], [simple_Pinduoduo_btn]])
-
-new_check = create_inline_keyboard([[checking_another_track_code_btn]])
 
 admin_keyboard = create_inline_keyboard([[add_track_codes_btn], [track_codes_list_btn],
                                          [recreate_db_btn], [recreate_tc_btn]])

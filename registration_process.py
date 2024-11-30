@@ -9,7 +9,6 @@ from keyboards import main_keyboard
 
 states = Router()
 
-
 class Registration(StatesGroup):
     name = State()
     number = State()

@@ -16,7 +16,7 @@ async def price(message: Message):
 
 # ВСЯ ОБРАБОТКА ДЛЯ АДРЕСА СКЛАДА И ОБРАЗЦОВ
 @get_info.message(F.text == "️Адрес склада🗺")
-async def price(message: Message):
+async def address(message: Message):
     user_id = await get_user_by_tg_id(message.from_user.id)
     await message.answer(f"   <u>Адрес склада</u>\n收件人：<code>FS{user_id[0]:04d}</code>\n"
                                   f"电话号码：<code>15116957545</code>\n"
@@ -50,18 +50,17 @@ async def handle_simple(callback: CallbackQuery):
 
 # ОБРАБОТЧИК - ЗАРЕЩЁННЫЕ ВЕЩЕСТВА
 @get_info.message(F.text == "️Запрещённые товары ❌")
-async def price(message: Message):
+async def x_tovar(message: Message):
     pd = ("    <b>НАШЕ КАРГО НЕ ПРИНИМАЕТ СЛЕДУЮЩИЕ ВИДЫ ПОСЫЛОК!</b>\n\n"
           "1. <b>Лекарства</b> (порошки, таблетки, лекарства в виде жидкостей).\n\n"
           "2. <b>Все виды холодного оружия</b> (ножи, электрошокеры, биты и другое данного характера) "
           "полностью запрещены.\n\n3. <b>Техника</b> (Мобильные телефоны, планшеты, ноутбуки и т.д)")
     await message.answer(pd)
-    await message.answer("  <i>Другие пункты меню</i>")
 
 
 # ОБРАБОТЧИК КОМАНДЫ "my_profile"
 @get_info.message(F.text == "️Мой профиль👤")
-async def price(message: Message):
+async def profile(message: Message):
     inf = await get_info_profile(message.from_user.id)
     if not inf: await message.answer("Профиль не найден.")
     no = "<i>Не заполнено</i>"
@@ -69,8 +68,7 @@ async def price(message: Message):
         f"Номер для заказов: <code>FS{inf.get('id'):04d}</code>\n"
         f"Имя: {inf.get('name') or no}\n"
         f"Номер: {inf.get('phone') or no}\n"
-        f"Адрес доставки: {inf.get('address') or no}\n"
-        f"Трек коды: {inf.get('track_codes') or '<i>Нет трек кодов</i>'}\n")
+        f"Адрес доставки: {inf.get('address') or no}\n")
     await message.answer("Что нужно сделать ещё?", reply_markup=my_profile_keyboard)
 
 @get_info.callback_query(F.data == "change_profile_data")
@@ -89,3 +87,4 @@ async def my_track_codes(callback: CallbackQuery):
 async def back_to_menu(callback: CallbackQuery):
     await callback.message.delete()
     await callback.message.answer("Как я могу вам помочь?", reply_markup=main_keyboard)
+
