@@ -118,6 +118,14 @@ async def check_or_add_track_code(track_code: str, tg_id: int):
             row = await cursor.fetchone()
 
         if row:
+            # Если трек-код уже существует, обновляем tg_id
+            if row["tg_id"] is None:  # Если tg_id ещё не задан
+                await db.execute("""
+                    UPDATE track_codes
+                    SET tg_id = ?
+                    WHERE track_code = ?
+                """, (tg_id, track_code))
+                await db.commit()
             return row["status"]
         else:
             await db.execute("""

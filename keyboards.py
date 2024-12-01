@@ -23,7 +23,7 @@ insurance_btn = create_keyboard_button("Страховка")
 goods_check_btn = create_keyboard_button("Проверка товаров")
 consolidation_btn = create_keyboard_button("Консолидация")
 check_track_number_btn = create_keyboard_button("Проверка трек-кода")
-delivery_cost_calc_btn = create_keyboard_button("Рассчитать стоимость доставки")  # Проверка нокарда
+delivery_cost_calc_btn = create_keyboard_button("Рассчитать стоимость доставки")
 forbidden_goods_btn = create_keyboard_button("Запрещённые товары")
 alipay_exchange_rate_btn = create_keyboard_button("Курс Alipay")
 cargo_chat_btn = create_keyboard_button("Чат Карго FS-33")
@@ -36,7 +36,7 @@ add_track_codes_btn = create_keyboard_button("️Добавить трек-ко�
 track_codes_list_btn = create_keyboard_button("️Список трек-кодов")
 recreate_db_btn = create_keyboard_button("️Пересоздать БД пользователей")
 recreate_tc_btn = create_keyboard_button("️Пересоздать БД трек-номеров")
-back_to_main_menu_btn = create_keyboard_button("Вернутся в главное меню")
+back_to_main_menu_btn = create_keyboard_button("Вернуться в главное меню")
 
 pass_reg_btn = create_inline_button("️Пропустить", "pass_reg")
 do_reg_btn = create_inline_button("️Пройти регистрацию", "do_reg")
