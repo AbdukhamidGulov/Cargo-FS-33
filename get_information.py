@@ -18,20 +18,6 @@ async def address(message: Message):
                                   f"发货一定要写名字，麦头，不然仓库不收</code>")
     await message.answer("Нажмите чтобы увидеть образцы", reply_markup=samples_keyboard)
 
-
-@get_info.message(F.text == "Бланк для заказа")
-async def send_order_form(message: Message):
-    await message.answer_document(document="BQACAgIAAxkBAAIFOGdMdX50fhlJbYDkoijeDvetdoJiAAJLPgACq454SXUIYnLcX1a5NgQ",
-                                  caption="Вот ваш бланк для заказа. Заполните его и отправьте нам!")
-
-
-@get_info.message(F.text == "️Цены")
-async def price(message: Message):
-    await message.answer_photo(
-        "AgACAgIAAxkBAAPbZztu_WMs7OrFwLEW9wPUzWKoyJYAAvnqMRv6E-FJIrIRnk8frsgBAAMCAANzAAM2BA",
-        "2,5$/КГ\n230/Куб")
-
-
 @get_info.callback_query(F.data.startswith("simple_"))
 async def handle_simple(callback: CallbackQuery):
     await callback.message.delete()
@@ -55,15 +41,84 @@ async def handle_simple(callback: CallbackQuery):
     await callback.message.answer("Нажмите чтобы увидеть другие образцы", reply_markup=sample["keyboard"])
 
 
-# ОБРАБОТЧИК - ЗАРЕЩЁННЫЕ ВЕЩЕСТВА
-@get_info.message(F.text == "️Запрещённые товары")
+# Обрабтчик для отправения БЛАНКА
+@get_info.message(F.text == "Бланк для заказа")
+async def send_order_form(message: Message):
+    await message.answer_document(document="BQACAgIAAxkBAAIFOGdMdX50fhlJbYDkoijeDvetdoJiAAJLPgACq454SXUIYnLcX1a5NgQ",
+                                  caption="Вот ваш бланк для заказа. Заполните его и отправьте нам!")
+
+
+# Обрабтчик для отправения ИНФОРМАЦИИ о том Где брать трек-номер
+@get_info.message(F.text == "Где брать трек-номер")
+async def send_order_form(message: Message):
+    await message.answer("⬇️ <b>Где брать трек номер.</b>")
+    await message.answer_photo("AgACAgIAAxkBAAIFRGdMfYbh30o5AeHeq3M421ylzr5cAAIb4jEbd4JoSz82D2nJhJjpAQADAgADcwADNgQ")
+    await message.answer_photo(
+        "AgACAgIAAxkBAAIFRmdMfbGjsYmbP6dvqpw1pagB8OWqAAIa4jEbd4JoS2OOutkxjRHwAQADAgADcwADNgQ"," 💴 1688" )
+    await message.answer("Taobao.\nPoizon.\nPinduoduo.")
+
+
+@get_info.message(F.text == "Самовыкуп")
+async def send_order_form(message: Message):
+    await message.answer('<a href="https://t.me/cargoFS33/78">Нажмите чтобы узнать о Самовыкупе</a>')
+
+
+@get_info.message(F.text == "Тарифы")
+async def send_order_form(message: Message):
+    await message.answer('<a href="https://t.me/cargoFS33/84">Нажмите чтобы узнать о Тарифах</a>')
+
+
+@get_info.message(F.text == "Страховка")
+async def send_order_form(message: Message):
+    await message.answer('<a href="https://t.me/cargoFS33/97">Нажмите чтобы узнать о Страховке</a>')
+
+
+@get_info.message(F.text == "Проверка товаров")
+async def send_order_form(message: Message):
+    await message.answer('<a href="https://t.me/cargoFS33/2241">Нажмите чтобы узнать о Проверке товаров</a>')
+
+
+@get_info.message(F.text == "Консолидация")
+async def send_order_form(message: Message):
+    await message.answer('<a href="https://t.me/cargoFS33/107">Нажмите чтобы узнать о Консолидации</a>')
+
+
+@get_info.message(F.text == "Запрещённые товары")
 async def x_tovar(message: Message):
-    pd = ("    <b>НАШЕ КАРГО НЕ ПРИНИМАЕТ СЛЕДУЮЩИЕ ВИДЫ ПОСЫЛОК!</b>\n\n"
+    pd = ("<b>НАШЕ КАРГО НЕ ПРИНИМАЕТ СЛЕДУЮЩИЕ ВИДЫ ПОСЫЛОК!</b>\n\n"
           "1. <b>Лекарства</b> (порошки, таблетки, лекарства в виде жидкостей).\n\n"
           "2. <b>Все виды холодного оружия</b> (ножи, электрошокеры, биты и другое данного характера) "
           "полностью запрещены.\n\n"
           "3. <b>Всё что запрещено на РФ</b> (Военные товары, химия, растения, семена, газ, электронные сигареты)")
     await message.answer(pd)
+
+
+@get_info.message(F.text == "Курс Alipay")
+async def send_order_form(message: Message):
+    await message.answer('<a href="https://t.me/Alipay_Chat_ru">Нажмите чтобы узнать о "Курсе Alipay"</a>')
+
+
+@get_info.message(F.text == "Чат Карго FS-33")
+async def send_order_form(message: Message):
+    await message.answer('<a href="https://t.me/cargoFS33">Нажмите чтобы войти в Чат Карго FS-33"</a>')
+
+
+@get_info.message(F.text == "Админ")
+async def send_order_form(message: Message):
+    await message.answer('<a href="https://t.me/fir2201">Нажмите чтобы связатся с админом</a>')
+
+
+@get_info.message(F.text == "Упаковка")
+async def send_order_form(message: Message):
+    await message.answer('<a href="https://t.me/cargoFS33/70">Нажмите чтобы узнать об Упаковке</a>')
+
+
+@get_info.message(F.text == "️Цены")  # Нету кнопки
+async def price(message: Message):
+    await message.answer_photo(
+        "AgACAgIAAxkBAAPbZztu_WMs7OrFwLEW9wPUzWKoyJYAAvnqMRv6E-FJIrIRnk8frsgBAAMCAANzAAM2BA",
+        "2,5$/КГ\n230/Куб")
+
 
 
 # ОБРАБОТЧИК КОМАНДЫ "Мой профиль"
