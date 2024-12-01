@@ -22,7 +22,7 @@ dp.include_routers(admin,  get_info, change, states, track_code, calc, calc_volu
 
 
 @dp.message(CommandStart())
-@dp.message(F.text == "Вернутся в гавное меню")
+@dp.message(F.text == "Вернутся в главное меню")
 async def start_command(message: Message):
     await message.answer_photo(
         'AgACAgIAAxkBAAIElGdLMwTg5ryGW34KC5nWUmfQEjlgAAL65TEb4nBYSpjvLhbFuxviAQADAgADcwADNgQ',

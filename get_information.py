@@ -8,13 +8,6 @@ from keyboards import (my_profile_keyboard, samples_keyboard, samples_1688_keybo
 get_info = Router()
 
 
-@get_info.message(F.text == "️Цены")
-async def price(message: Message):
-    await message.answer_photo(
-        "AgACAgIAAxkBAAPbZztu_WMs7OrFwLEW9wPUzWKoyJYAAvnqMRv6E-FJIrIRnk8frsgBAAMCAANzAAM2BA",
-        "2,5$/КГ\n230/Куб")
-
-
 # ВСЯ ОБРАБОТКА ДЛЯ АДРЕСА СКЛАДА И ОБРАЗЦОВ
 @get_info.message(F.text == "️Адрес склада")
 async def address(message: Message):
@@ -24,6 +17,19 @@ async def address(message: Message):
                                   f"地址：<code>佛山市南海区大沥镇黄岐泌冲凤秀岗工业区凤秀大楼18号3档  FS{user_id[0]:04d} "
                                   f"发货一定要写名字，麦头，不然仓库不收</code>")
     await message.answer("Нажмите чтобы увидеть образцы", reply_markup=samples_keyboard)
+
+
+@get_info.message(F.text == "Бланк для заказа")
+async def price(message: Message):
+    ...
+    # await message.
+
+
+@get_info.message(F.text == "️Цены")
+async def price(message: Message):
+    await message.answer_photo(
+        "AgACAgIAAxkBAAPbZztu_WMs7OrFwLEW9wPUzWKoyJYAAvnqMRv6E-FJIrIRnk8frsgBAAMCAANzAAM2BA",
+        "2,5$/КГ\n230/Куб")
 
 
 @get_info.callback_query(F.data.startswith("simple_"))

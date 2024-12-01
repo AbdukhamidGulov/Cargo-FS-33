@@ -36,7 +36,7 @@ add_track_codes_btn = create_keyboard_button("️Добавить трек-ко�
 track_codes_list_btn = create_keyboard_button("️Список трек-кодов")
 recreate_db_btn = create_keyboard_button("️Пересоздать БД пользователей")
 recreate_tc_btn = create_keyboard_button("️Пересоздать БД трек-номеров")
-back_to_main_menu_btn = create_keyboard_button("Вернутся в гавное меню")
+back_to_main_menu_btn = create_keyboard_button("Вернутся в главное меню")
 
 pass_reg_btn = create_inline_button("️Пропустить", "pass_reg")
 do_reg_btn = create_inline_button("️Пройти регистрацию", "do_reg")

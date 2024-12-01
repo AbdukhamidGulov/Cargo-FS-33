@@ -43,13 +43,6 @@ async def recreate_tc(message: Message):
     await message.answer('База данных Трек-номеров успешно песоздана!')
 
 
-@admin.message(F.photo, IsAdmin(admin_ids))
-async def photo(message: Message):
-    await message.answer(print_token_photo := message.photo[0].file_id)
-    print(print_token_photo)
-
-
-
 # Добавление трек-кодов
 class TrackCodeStates(StatesGroup):
     waiting_for_track_codes = State()
@@ -130,3 +123,17 @@ async def track_codes_list(message: Message):
     # Удаляем файлы после отправки
     remove(excel_file_path)
     remove(text_file_path)
+
+
+# ФУНКЦИИ ДЛЯ УЛАВЛОВАНИЯ ТОКЕНОВ ФАЙЛОВ
+@admin.message(F.photo, IsAdmin(admin_ids))
+async def get_photo_id(message: Message):
+    print_token_photo = message.photo[0].file_id
+    await message.answer(f"<b>Токен скинутого фото:</b>\n<code>{print_token_photo}</code>")
+    print(print_token_photo)
+
+@admin.message(F.document)
+async def get_document_id(message: Message):
+    print_token_document = message.document.file_id
+    await message.answer(f"<b>Токен скинутого документа:</b>\n<code>{print_token_document}</code>")
+    print(print_token_document)
