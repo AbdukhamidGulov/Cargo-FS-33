@@ -20,9 +20,9 @@ async def address(message: Message):
 
 
 @get_info.message(F.text == "Бланк для заказа")
-async def price(message: Message):
-    ...
-    # await message.
+async def send_order_form(message: Message):
+    await message.answer_document(document="BQACAgIAAxkBAAIFOGdMdX50fhlJbYDkoijeDvetdoJiAAJLPgACq454SXUIYnLcX1a5NgQ",
+                                  caption="Вот ваш бланк для заказа. Заполните его и отправьте нам!")
 
 
 @get_info.message(F.text == "️Цены")
