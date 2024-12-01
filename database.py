@@ -23,12 +23,12 @@ async def drop_users_table():
 
 
 # Создание таблицы track_code
-async def create_track_numbers_table():
+async def create_track_codes_table():
     async with connect("database.db") as db:
         await db.execute("""
             CREATE TABLE IF NOT EXISTS track_codes (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                track_number VARCHAR UNIQUE,
+                track_code VARCHAR UNIQUE,
                 status VARCHAR,
                 tg_id INTEGER 
             )
@@ -56,10 +56,17 @@ async def add_user_info(tg_id, username, name, phone=None, address=None):
 async def get_user_by_tg_id(tg_id: int):
     async with connect("database.db") as db:
         cursor = await db.execute("SELECT id FROM users WHERE tg_id = ?", (tg_id,))
-        user = await cursor.fetchone()
-        return user
+        return await cursor.fetchone()
 
-async def get_info_profile(tg_id):
+
+async def get_users_tg_info():
+    async with connect("database.db") as db:
+        db.row_factory = Row
+        async with db.execute("SELECT tg_id, username FROM users") as cursor:
+            rows = await cursor.fetchall()
+            return {row["tg_id"]: row["username"] for row in rows}
+
+async def get_info_profile(tg_id) -> dict:
     async with connect("database.db") as db:
         db.row_factory = Row
         async with db.execute("SELECT * FROM users WHERE tg_id = ?", (tg_id,)) as cursor:
@@ -73,13 +80,22 @@ async def update_user_info(tg_id: int, field: str, value: str):
         await db.commit()
 
 
-# # Получение всех трек-номеров
-# async def get_track_codes_list():
-#     async with connect("database.db") as db:
-#         db.row_factory = Row
-#         async with db.execute("SELECT track_number, status FROM track_code") as cursor:
-#             rows = await cursor.fetchall()
-#             return {row["track_number"]: row["status"] for row in rows} if rows else {}
+# Получение всех трек-кодов
+async def get_track_codes_list():
+    async with connect("database.db") as db:
+        db.row_factory = Row
+        async with db.execute("SELECT id, track_code, status, tg_id FROM track_codes") as cursor:
+            return await cursor.fetchall()
+    
+
+# Получение трек-кодов пользователя
+async def get_user_track_codes(tg_id: int):
+    async with connect("database.db") as db:
+        db.row_factory = Row
+        async with db.execute(
+            "SELECT track_code, status FROM track_codes WHERE tg_id = ?", (tg_id,)) as cursor:
+            rows = await cursor.fetchall()
+            return [(row["track_code"], row["status"]) for row in rows] if rows else []
 
 
 # Добавление трек-кодов списком (для администратора)
@@ -87,9 +103,9 @@ async def add_track_codes_list(track_codes: list[str], status: str = "in_stock")
     async with connect("database.db") as db:
         for track in track_codes:
             await db.execute("""
-                INSERT INTO track_codes (track_number, status, tg_id)
+                INSERT INTO track_codes (track_code, status, tg_id)
                 VALUES (?, ?, NULL)
-                ON CONFLICT(track_number) DO UPDATE SET status=excluded.status
+                ON CONFLICT(track_code) DO UPDATE SET status=excluded.status
             """, (track, status))
         await db.commit()
 
@@ -98,14 +114,14 @@ async def add_track_codes_list(track_codes: list[str], status: str = "in_stock")
 async def check_or_add_track_code(track_code: str, tg_id: int):
     async with connect("database.db") as db:
         db.row_factory = Row
-        async with db.execute("SELECT * FROM track_codes WHERE track_number = ?", (track_code,)) as cursor:
+        async with db.execute("SELECT * FROM track_codes WHERE track_code = ?", (track_code,)) as cursor:
             row = await cursor.fetchone()
 
         if row:
             return row["status"]
         else:
             await db.execute("""
-                INSERT INTO track_codes (track_number, status, tg_id)
+                INSERT INTO track_codes (track_code, status, tg_id)
                 VALUES (?, ?, ?)
             """, (track_code, "out_of_stock", tg_id))
             await db.commit()
