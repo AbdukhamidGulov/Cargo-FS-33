@@ -1,5 +1,5 @@
 from asyncio import run
-from aiogram import Bot, Dispatcher
+from aiogram import Bot, Dispatcher, F
 from aiogram.types import Message
 from aiogram.filters import CommandStart
 from aiogram.client.default import DefaultBotProperties
@@ -22,6 +22,7 @@ dp.include_routers(admin,  get_info, change, states, track_code, calc, calc_volu
 
 
 @dp.message(CommandStart())
+@dp.message(F.text == "Вернутся в гавное меню")
 async def start_command(message: Message):
     await message.answer_photo(
         'AgACAgIAAxkBAAIElGdLMwTg5ryGW34KC5nWUmfQEjlgAAL65TEb4nBYSpjvLhbFuxviAQADAgADcwADNgQ',

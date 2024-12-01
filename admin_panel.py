@@ -15,6 +15,7 @@ from keyboards import admin_keyboard
 admin = Router()
 
 
+@admin.message(F.text == "Админ", IsAdmin(admin_ids))
 @admin.message(Command(commands=['admin']), IsAdmin(admin_ids))
 async def admin_command(message: Message):
     await message.answer('Выберите команду', reply_markup=admin_keyboard)

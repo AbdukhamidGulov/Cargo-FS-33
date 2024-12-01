@@ -1,7 +1,7 @@
-from keyboards import create_button, create_inline_keyboard
+from keyboards import create_inline_button, create_inline_keyboard
 
-calculate_volume_btn = create_button(text="Рассчитать обьём", callback_data="calculate_volume")
-calculate_shipping_btn = create_button(text="Рассчитать доставку", callback_data="calc_shipping")
+calculate_volume_btn = create_inline_button(text="Рассчитать обьём", callback_data="calculate_volume")
+calculate_shipping_btn = create_inline_button(text="Рассчитать доставку", callback_data="calc_shipping")
 # calculate_redemption_btn = create_button(text="Рассчитать выкуп", callback_data="calculate_redemption")
 # _btn = create_button(text="", callback_data="")
 # _btn = create_button(text="", callback_data="")
