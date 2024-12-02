@@ -132,6 +132,12 @@ async def get_photo_id(message: Message):
     await message.answer(f"<b>Токен скинутого фото:</b>\n<code>{print_token_photo}</code>")
     print(print_token_photo)
 
+@admin.message(F.video, IsAdmin(admin_ids))
+async def get_video_id(message: Message):
+    print_token_video = message.video.file_id
+    await message.answer(f"<b>Токен скинутого видео:</b>\n<code>{print_token_video}</code>")
+    print(print_token_video)
+
 @admin.message(F.document)
 async def get_document_id(message: Message):
     print_token_document = message.document.file_id

@@ -1,6 +1,7 @@
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery, Message, InputMediaPhoto, InputMediaVideo
 from aiogram import F, Router
 
+from text_info import *
 from database import get_info_profile, get_user_by_tg_id, get_user_track_codes
 from keyboards import (my_profile_keyboard, samples_keyboard, samples_1688_keyboard, samples_Taobao_keyboard,\
                        samples_Pinduoduo_keyboard, samples_Poizon_keyboard, main_keyboard, change_data_keyboard)
@@ -12,28 +13,16 @@ get_info = Router()
 @get_info.message(F.text == "️Адрес склада")
 async def address(message: Message):
     user_id = await get_user_by_tg_id(message.from_user.id)
-    await message.answer(f"<u>Адрес склада</u>\n收件人：<code>FS{user_id[0]:04d}</code>\n"
-                                  f"电话号码：<code>15116957545</code>\n"
-                                  f"地址：<code>佛山市南海区大沥镇黄岐泌冲凤秀岗工业区凤秀大楼18号3档  FS{user_id[0]:04d} "
-                                  f"发货一定要写名字，麦头，不然仓库不收</code>")
+    await message.answer(warehouse_address.format(f"{user_id[0]:04d}"))
     await message.answer("Нажмите чтобы увидеть образцы", reply_markup=samples_keyboard)
 
 @get_info.callback_query(F.data.startswith("simple_"))
 async def handle_simple(callback: CallbackQuery):
     await callback.message.delete()
-    samples = {
-        "1688": {
-            "photo_id": "AgACAgIAAxkBAAIBimc_ZKt4RFZIx-jpBI116ulY13LAAAKq7DEbu-rwSQ6olox6fGduAQADAgADcwADNgQ",
-            "caption": "Образец 1688", "keyboard": samples_1688_keyboard},
-        "Taobao": {
-            "photo_id": "AgACAgIAAxkBAAIBjGc_ZR4880Smla-5Bgd2Sjnn_AbyAAKt7DEbu-rwSXoONn0x9TuXAQADAgADcwADNgQ",
-            "caption": "Образец Taobao", "keyboard": samples_Taobao_keyboard},
-        "Pinduoduo": {
-            "photo_id": "AgACAgIAAxkBAAIBjmc_ZYPMxuT9j_Zb5UgVlsb_l3H0AAKu7DEbu-rwSdaIN5anq7SqAQADAgADcwADNgQ",
-            "caption": "Образец Pinduoduo", "keyboard": samples_Pinduoduo_keyboard},
-        "Poizon": {
-            "photo_id": "AgACAgIAAxkBAAIBkGc_ZdXomhwB_-CBUdPwO5bsAswkAAJD5zEbrMfxSV5EjAkSWiH9AQADAgADcwADNgQ",
-            "caption": "Образец poizon", "keyboard": samples_Poizon_keyboard}}
+    samples = {"1688": {"photo_id": sample_1688, "caption": "Образец 1688", "keyboard": samples_1688_keyboard},
+        "Taobao": {"photo_id": sample_Taobao, "caption": "Образец Taobao", "keyboard": samples_Taobao_keyboard},
+        "Pinduoduo": {"photo_id": sample_Pinduoduo, "caption": "Образец Pinduoduo", "keyboard": samples_Pinduoduo_keyboard},
+        "Poizon": {"photo_id": sample_Poizon, "caption": "Образец poizon", "keyboard": samples_Poizon_keyboard}}
 
     key = callback.data.split("_")[-1]
     sample = samples[key]
@@ -41,72 +30,63 @@ async def handle_simple(callback: CallbackQuery):
     await callback.message.answer("Нажмите чтобы увидеть другие образцы", reply_markup=sample["keyboard"])
 
 
-# Обрабтчик для отправения БЛАНКА
+# Другие обработчики
 @get_info.message(F.text == "Бланк для заказа")
 async def send_order_form(message: Message):
-    await message.answer_document(document="BQACAgIAAxkBAAIFOGdMdX50fhlJbYDkoijeDvetdoJiAAJLPgACq454SXUIYnLcX1a5NgQ",
-                                  caption="Вот ваш бланк для заказа. Заполните его и отправьте нам!")
+    await message.answer_document(document=order_form, caption="Вот ваш бланк для заказа. Заполните его и отправьте нам!")
 
-
-# Обрабтчик для отправения ИНФОРМАЦИИ о том Где брать трек-номер
 @get_info.message(F.text == "Где брать трек-номер")
-async def send_order_form(message: Message):
-    await message.answer("⬇️ <b>Где брать трек номер.</b>")
-    await message.answer_photo("AgACAgIAAxkBAAIFRGdMfYbh30o5AeHeq3M421ylzr5cAAIb4jEbd4JoSz82D2nJhJjpAQADAgADcwADNgQ")
-    await message.answer_photo(
-        "AgACAgIAAxkBAAIFRmdMfbGjsYmbP6dvqpw1pagB8OWqAAIa4jEbd4JoS2OOutkxjRHwAQADAgADcwADNgQ"," 💴 1688" )
-    await message.answer("Taobao.\nPoizon.\nPinduoduo.")
-
+async def send_track_number_info(message: Message):
+    await message.answer('<tg-emoji emoji-id="5193202823411546657">⬇️</tg-emoji> <b>Где брать трек номер.</b>')
+    media = [InputMediaPhoto(media=track_number_info_photo1, caption=" 💴 1688\nTaobao.\nPoizon.\nPinduoduo."),
+             InputMediaPhoto(media=track_number_info_photo2)]
+    await message.answer_media_group(media)
+    await message.reply(goods_check)
 
 @get_info.message(F.text == "Самовыкуп")
-async def send_order_form(message: Message):
-    await message.answer('<a href="https://t.me/cargoFS33/78">Нажмите чтобы узнать о Самовыкупе</a>')
-
+async def send_self_purchase(message: Message):
+    user_id = await get_user_by_tg_id(message.from_user.id)
+    await message.answer(self_purchase.format(f"{user_id[0]:04d}"))
 
 @get_info.message(F.text == "Тарифы")
-async def send_order_form(message: Message):
-    await message.answer('<a href="https://t.me/cargoFS33/84">Нажмите чтобы узнать о Тарифах</a>')
-
+async def send_tariffs(message: Message):
+    await message.answer(tariffs)
 
 @get_info.message(F.text == "Страховка")
-async def send_order_form(message: Message):
-    await message.answer('<a href="https://t.me/cargoFS33/97">Нажмите чтобы узнать о Страховке</a>')
-
+async def send_insurance(message: Message):
+    await message.answer(insurance)
 
 @get_info.message(F.text == "Проверка товаров")
-async def send_order_form(message: Message):
-    await message.answer('<a href="https://t.me/cargoFS33/2241">Нажмите чтобы узнать о Проверке товаров</a>')
-
+async def send_goods_check(message: Message):
+    media = [InputMediaVideo(media=goods_check_video1),
+        InputMediaPhoto(media=goods_check_photo1),
+        InputMediaVideo(media=goods_check_video2),
+        InputMediaPhoto(media=goods_check_photo2),
+        InputMediaPhoto(media=goods_check_photo3)]
+    await message.answer_media_group(media)
+    await message.reply(goods_check)
 
 @get_info.message(F.text == "Консолидация")
-async def send_order_form(message: Message):
-    await message.answer('<a href="https://t.me/cargoFS33/107">Нажмите чтобы узнать о Консолидации</a>')
-
+async def send_consolidation(message: Message):
+    await message.answer_photo(consolidation_photo, consolidation)
 
 @get_info.message(F.text == "Запрещённые товары")
-async def x_tovar(message: Message):
-    pd = ("<b>НАШЕ КАРГО НЕ ПРИНИМАЕТ СЛЕДУЮЩИЕ ВИДЫ ПОСЫЛОК!</b>\n\n"
-          "1. <b>Лекарства</b> (порошки, таблетки, лекарства в виде жидкостей).\n\n"
-          "2. <b>Все виды холодного оружия</b> (ножи, электрошокеры, биты и другое данного характера) "
-          "полностью запрещены.\n\n"
-          "3. <b>Всё что запрещено на РФ</b> (Военные товары, химия, растения, семена, газ, электронные сигареты)")
-    await message.answer(pd)
+async def send_forbidden_goods(message: Message):
+    await message.answer(forbidden_goods)
 
+# # # # # # # # # # #
 
-@get_info.message(F.text == "Курс Alipay")
+@get_info.message(F.text == "Курс Alipay")  # сделать инлайн кнопкой
 async def send_order_form(message: Message):
     await message.answer('<a href="https://t.me/Alipay_Chat_ru">Нажмите чтобы узнать о "Курсе Alipay"</a>')
 
-
-@get_info.message(F.text == "Чат Карго FS-33")
+@get_info.message(F.text == "Чат Карго FS-33")  # сделать инлайн кнопкой
 async def send_order_form(message: Message):
     await message.answer('<a href="https://t.me/cargoFS33">Нажмите чтобы войти в Чат Карго FS-33"</a>')
 
-
-@get_info.message(F.text == "Админ")
+@get_info.message(F.text == "Админ")  # сделать инлайн кнопкой
 async def send_order_form(message: Message):
     await message.answer('<a href="https://t.me/fir2201">Нажмите чтобы связатся с админом</a>')
-
 
 @get_info.message(F.text == "Упаковка")
 async def send_order_form(message: Message):
