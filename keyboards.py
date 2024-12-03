@@ -7,7 +7,8 @@ def create_keyboard_button(text: str) -> KeyboardButton:
 def create_keyboard(buttons: list[list[KeyboardButton]]) -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True)
 
-def create_inline_button(text: str, callback_data: str = None) -> InlineKeyboardButton:
+def create_inline_button(text: str, callback_data: str = None, url: str = None) -> InlineKeyboardButton:
+    if url: return InlineKeyboardButton(text=text, url=url)
     return InlineKeyboardButton(text=text, callback_data=callback_data)
 
 def create_inline_keyboard(buttons: list[list[InlineKeyboardButton]]) -> InlineKeyboardMarkup:
@@ -25,11 +26,13 @@ consolidation_btn = create_keyboard_button("Консолидация")
 check_track_number_btn = create_keyboard_button("Проверка трек-кода")
 delivery_cost_calc_btn = create_keyboard_button("Рассчитать стоимость доставки")
 forbidden_goods_btn = create_keyboard_button("Запрещённые товары")
-alipay_exchange_rate_btn = create_keyboard_button("Курс Alipay")
-cargo_chat_btn = create_keyboard_button("Чат Карго FS-33")
-admin_panel_btn = create_keyboard_button("Админ")
 packing_btn = create_keyboard_button("Упаковка")
 my_profile_btn = create_keyboard_button("Мой профиль")
+anther_btn = create_keyboard_button("Другие кнопки")
+
+alipay_exchange_rate_btn = create_inline_button(text="Курс Alipay", url="https://t.me/Alipay_Chat_ru")
+cargo_chat_btn = create_inline_button(text="Чат Карго FS-33", url="https://t.me/cargoFS33")
+admin_panel_btn = create_inline_button(text="Админ", url="https://t.me/fir2201")
 
 # Админ кнопки
 add_track_codes_btn = create_keyboard_button("️Добавить трек-коды")
@@ -60,10 +63,11 @@ main_keyboard = create_keyboard([
     [tariffs_btn, insurance_btn],
     [goods_check_btn, consolidation_btn],
     [check_track_number_btn, delivery_cost_calc_btn],
-    [forbidden_goods_btn, alipay_exchange_rate_btn],
-    [cargo_chat_btn, admin_panel_btn],
-    [packing_btn, my_profile_btn]
+    [forbidden_goods_btn, packing_btn],
+    [my_profile_btn, anther_btn]
 ])
+main_inline_keyboard = create_inline_keyboard([[alipay_exchange_rate_btn, cargo_chat_btn], [admin_panel_btn]])
+
 
 admin_keyboard = create_keyboard([
     [add_track_codes_btn], [track_codes_list_btn],

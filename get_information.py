@@ -3,8 +3,9 @@ from aiogram import F, Router
 
 from text_info import *
 from database import get_info_profile, get_user_by_tg_id, get_user_track_codes
-from keyboards import (my_profile_keyboard, samples_keyboard, samples_1688_keyboard, samples_Taobao_keyboard,\
-                       samples_Pinduoduo_keyboard, samples_Poizon_keyboard, main_keyboard, change_data_keyboard)
+from keyboards import (my_profile_keyboard, samples_keyboard, samples_1688_keyboard, samples_Taobao_keyboard, \
+                       samples_Pinduoduo_keyboard, samples_Poizon_keyboard, main_keyboard, change_data_keyboard,
+                       main_inline_keyboard)
 
 get_info = Router()
 
@@ -76,21 +77,9 @@ async def send_forbidden_goods(message: Message):
 
 # # # # # # # # # # #
 
-@get_info.message(F.text == "Курс Alipay")  # сделать инлайн кнопкой
-async def send_order_form(message: Message):
-    await message.answer('<a href="https://t.me/Alipay_Chat_ru">Нажмите чтобы узнать о "Курсе Alipay"</a>')
-
-@get_info.message(F.text == "Чат Карго FS-33")  # сделать инлайн кнопкой
-async def send_order_form(message: Message):
-    await message.answer('<a href="https://t.me/cargoFS33">Нажмите чтобы войти в Чат Карго FS-33"</a>')
-
-@get_info.message(F.text == "Админ")  # сделать инлайн кнопкой
-async def send_order_form(message: Message):
-    await message.answer('<a href="https://t.me/fir2201">Нажмите чтобы связатся с админом</a>')
-
 @get_info.message(F.text == "Упаковка")
-async def send_order_form(message: Message):
-    await message.answer('<a href="https://t.me/cargoFS33/70">Нажмите чтобы узнать об Упаковке</a>')
+async def send_packing(message: Message):
+    await message.answer(packing)
 
 
 @get_info.message(F.text == "️Цены")  # Нету кнопки
@@ -133,6 +122,11 @@ async def my_track_codes(callback: CallbackQuery):
     else:
         await callback.message.answer("У вас нет зарегистрированных трек-кодов.\n"
                                       "Для их регистрации поищите их через команду <code>Проверка трек-кода</code>")
+
+
+@get_info.message(F.text == "Другие кнопки")
+async def send_anther(message: Message):
+    await message.answer("вот другие кнопки Фирузчон баратан", reply_markup=main_inline_keyboard)
 
 
 # ОБРАБОТЧИК КОМАНДЫ НАЗАД В ГЛАВНОЕ МЕНЮ
