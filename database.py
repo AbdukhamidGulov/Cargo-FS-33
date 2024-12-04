@@ -9,8 +9,7 @@ async def create_users_table():
                 tg_id INTEGER NOT NULL,
                 name TEXT NOT NULL,
                 username VARCHAR,
-                phone VARCHAR,
-                address VARCHAR
+                phone VARCHAR
             )
         """)
         await db.commit()
@@ -43,12 +42,12 @@ async def drop_track_numbers_table():
 
 
 # Добавление пользователя
-async def add_user_info(tg_id, username, name, phone=None, address=None):
+async def add_user_info(tg_id, username, name, phone=None):
     async with connect("database.db") as db:
         await db.execute("""
-            INSERT INTO users (tg_id, name, username, phone, address)
-            VALUES (?, ?, ?, ?, ?)
-        """, (tg_id, name, username, phone, address))
+            INSERT INTO users (tg_id, name, username, phone)
+            VALUES (?, ?, ?, ?)
+        """, (tg_id, name, username, phone,))
         await db.commit()
         return await get_user_by_tg_id(tg_id)
 

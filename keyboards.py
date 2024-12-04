@@ -49,7 +49,6 @@ change_data_btn = create_inline_button("️Изменит данные", "change
 
 change_name_btn = create_inline_button("Имя и фамилию", "change_name")
 change_phone_btn = create_inline_button("Телефон", "change_phone")
-change_address_btn = create_inline_button("️Адрес", "change_address")
 
 simple_1688_btn = create_inline_button("️Образец 1688", "simple_1688")
 simple_Taobao_btn = create_inline_button("️Образец Taobao", "simple_Taobao")
@@ -82,8 +81,7 @@ my_profile_keyboard = create_inline_keyboard([[change_data_btn, my_track_codes_b
 
 change_data_keyboard = create_inline_keyboard([
     [change_name_btn],
-    [change_phone_btn],
-    [change_address_btn]
+    [change_phone_btn]
 ])
 
 samples_keyboard = create_inline_keyboard([

@@ -1,7 +1,7 @@
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import CallbackQuery, Message, ReplyKeyboardRemove
+from aiogram.types import CallbackQuery, Message
 
 from database import update_user_info
 from keyboards import main_keyboard
@@ -14,8 +14,8 @@ class UpdateInfoStates(StatesGroup):
 @change.callback_query(F.data.startswith("change_"))
 async def change_info(callback: CallbackQuery, state: FSMContext):
     await callback.message.delete()
-    field = callback.data.split("_")[-1]  # (name, phone, address)
-    d = {"name": "Введите новое имя:", "phone": "Введите новый номер телефона:", "address": "Введите новый адрес:"}
+    field = callback.data.split("_")[-1]  # (name, phone)
+    d = {"name": "Введите новое имя:", "phone": "Введите новый номер телефона:"}
     await state.update_data(field=field)
     await state.set_state(UpdateInfoStates.waiting_for_new_value)
     await callback.message.answer(d[field])

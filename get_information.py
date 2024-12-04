@@ -91,7 +91,7 @@ async def price(message: Message):
 
 
 # ОБРАБОТЧИК КОМАНДЫ "Мой профиль"
-@get_info.message(F.text == "️Мой профиль")
+@get_info.message(F.text == "Мой профиль")
 async def profile(message: Message):
     inf = await get_info_profile(message.from_user.id)
     if not inf: await message.answer("Профиль не найден.")
@@ -99,8 +99,7 @@ async def profile(message: Message):
     await message.answer(
         f"Номер для заказов: <code>FS{inf.get('id'):04d}</code>\n"
         f"Имя: {inf.get('name') or no}\n"
-        f"Номер: {inf.get('phone') or no}\n"
-        f"Адрес доставки: {inf.get('address') or no}\n")
+        f"Номер: {inf.get('phone') or no}\n")
     await message.answer("Что нужно сделать ещё?", reply_markup=my_profile_keyboard)
 
 @get_info.callback_query(F.data == "change_profile_data")

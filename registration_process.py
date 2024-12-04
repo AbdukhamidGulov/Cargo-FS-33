@@ -30,17 +30,10 @@ async def add_user_name(message: Message, state: FSMContext):
 @states.message(Registration.number)
 async def add_user_name(message: Message, state: FSMContext):
     await state.update_data(number = message.text)
-    await state.set_state(Registration.city)
-    await message.answer("Напишите ваш адрес пожалуйста:")
-
-@states.message(Registration.city)
-async def add_user_name(message: Message, state: FSMContext):
-    user_city = message.text.title()
-    await state.update_data(city = user_city)
     data = await state.get_data()
     await state.clear()
     new_user_id = await add_user_info(message.from_user.id, message.from_user.username,
-                                      data["name"], data["number"], data["city"])
+                                      data["name"], data["number"])
     await message.answer("Спасибо за регистрацию!")
     await message.answer(f"Ваш персональный номер для совершения заказов: <code>FS{new_user_id[0]:04d}</code>")
     await message.answer("Как я могу вам помочь?", reply_markup=main_keyboard)
