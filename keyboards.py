@@ -37,6 +37,7 @@ admin_panel_btn = create_inline_button(text="Админ", url="https://t.me/fir2
 # Админ кнопки
 add_track_codes_btn = create_keyboard_button("️Добавить трек-коды")
 track_codes_list_btn = create_keyboard_button("️Список трек-кодов")
+search_by_id_btn = create_keyboard_button("Искать информацию по ID")
 recreate_db_btn = create_keyboard_button("️Пересоздать БД пользователей")
 recreate_tc_btn = create_keyboard_button("️Пересоздать БД трек-номеров")
 back_to_main_menu_btn = create_keyboard_button("Вернуться в главное меню")
@@ -70,8 +71,8 @@ main_inline_keyboard = create_inline_keyboard([[alipay_exchange_rate_btn, cargo_
 
 admin_keyboard = create_keyboard([
     [add_track_codes_btn], [track_codes_list_btn],
-    [recreate_db_btn], [recreate_tc_btn],
-    [back_to_main_menu_btn]
+    [search_by_id_btn], [recreate_db_btn],
+    [recreate_tc_btn], [back_to_main_menu_btn]
 ])
 
 

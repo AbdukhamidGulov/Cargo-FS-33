@@ -8,7 +8,7 @@ from openpyxl.styles import Alignment
 from openpyxl.workbook import Workbook
 
 from database import get_track_codes_list, drop_users_table, create_users_table, \
-    drop_track_numbers_table, create_track_codes_table, add_track_codes_list, get_users_tg_info
+    drop_track_numbers_table, create_track_codes_table, add_track_codes_list, get_users_tg_info, get_user_by_id
 from filters_and_config import IsAdmin, admin_ids
 from keyboards import admin_keyboard
 
@@ -28,6 +28,36 @@ async def admin_command(message: Message, bot: Bot):
                                               f"c id {message.from_user.id} нажал на команду <b>admin</b>")
     print(message.from_user.id)
 
+
+# Искать информацию по ID
+class SearchUserStates(StatesGroup):
+    waiting_for_user_id = State()
+
+# Обработчик нажатия кнопки "Искать информацию по ID"
+@admin.message(F.text == "Искать информацию по ID")
+async def search_by_id(message: Message, state: FSMContext):
+    await message.answer("Введите ID пользователя (например, FS0001 или просто 1):")
+    await state.set_state(SearchUserStates.waiting_for_user_id)
+
+# Обработчик ввода ID
+@admin.message(SearchUserStates.waiting_for_user_id)
+async def process_user_id(message: Message, state: FSMContext):
+    user_id = message.text.strip()
+    user_data = await get_user_by_id(user_id)  # Вызов функции для поиска пользователя
+
+    if not user_data:
+        await message.answer("Пользователь с таким ID не найден.")
+        await state.clear()
+        return
+
+    no = "<i>Не заполнено</i>"
+    await message.answer(
+        f"ID: <code>FS{user_data['id']:04d}</code>\n"
+        f"Имя: {user_data['name'] or no}\n"
+        f"Username: @{user_data['username'] or no}\n"
+        f"Номер телефона: {user_data['phone'] or no}\n"
+    )
+    await state.clear()
 
 @admin.message(F.text == "️Пересоздать БД пользователей", IsAdmin(admin_ids))
 async def recreat_db(message: Message):

@@ -79,6 +79,27 @@ async def update_user_info(tg_id: int, field: str, value: str):
         await db.commit()
 
 
+async def get_user_by_id(user_id: str) -> dict | None:
+    if user_id.startswith("FS"):
+        user_id = int(user_id[2:])
+    else:
+        user_id = int(user_id)
+
+    async with connect("database.db") as db:
+        query = "SELECT * FROM users WHERE id = ?"
+        async with db.execute(query, (user_id,)) as cursor:
+            result = await cursor.fetchone()
+            if result:
+                return {
+                    "id": result[0],
+                    "tg_id": result[1],
+                    "name": result[2],
+                    "username": result[3],
+                    "phone": result[4],
+                }
+    return None
+
+
 # Получение всех трек-кодов
 async def get_track_codes_list():
     async with connect("database.db") as db:
