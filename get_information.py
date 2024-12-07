@@ -116,11 +116,12 @@ async def my_track_codes(callback: CallbackQuery):
     if track_codes:
         response = "Ваши трек-коды:\n\n"
         for track_code, status in track_codes:
-            response += f"<b>{track_code}</b> - <i>{'На складе' if status == 'in_stock' else 'Не на скаде'}</i>\n"
+            response += f"<b>{track_code}</b> - <i>{'На складе' if status == 'in_stock' else 'Не на складе'}</i>\n"
         await callback.message.answer(response)
     else:
         await callback.message.answer("У вас нет зарегистрированных трек-кодов.\n"
-                                      "Для их регистрации поищите их через команду <code>Проверка трек-кода</code>")
+                                      "Для того чтобы их добавить, просто поищите их через команду "
+                                      "<code>Проверка трек-кода</code> и они автоматически сохраняться в ваши трек-коды")
 
 
 @get_info.message(F.text == "Другие кнопки")

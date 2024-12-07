@@ -38,7 +38,7 @@ async def add_user_name(message: Message, state: FSMContext):
     await message.answer(f"Ваш персональный номер для совершения заказов: <code>FS{new_user_id[0]:04d}</code>")
     await message.answer("Как я могу вам помочь?", reply_markup=main_keyboard)
 
-# Функция для получении данных с телеграмма, если пользователь нажмёт "Пропустит"
+# Функция для получения данных с телеграмма, если пользователь нажмёт "Пропустит"
 @states.callback_query(F.data == "pass_reg")
 async def pass_reg(callback: CallbackQuery):
     user_id = callback.from_user.id

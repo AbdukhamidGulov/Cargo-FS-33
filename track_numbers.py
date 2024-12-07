@@ -15,7 +15,7 @@ class TrackCode(StatesGroup):
 
 @track_code.message(F.text == "Проверка трек-кода")
 async def check_track_code(message: Message, state: FSMContext):
-    await message.answer("Вставьте ваш скопированный трек-код для проверки:")
+    await message.answer("Вставьте и отправьте ваш трек-код для проверки:")
     await state.set_state(TrackCode.track_code)
 
 @track_code.message(TrackCode.track_code)
@@ -26,13 +26,16 @@ async def process_track_code(message: Message, state: FSMContext):
         return
 
     tg_id = message.from_user.id
-    status = await check_or_add_track_code(message.text.strip(), tg_id)
-    if status == "in_stock":
-        await message.answer("Ваш товар уже на складе.")
-    elif status == "out_of_stock":
-        await message.answer("Ваш товар ещё не прибыл на склад.")
-    else:
-        await message.answer("Произошла ошибка. Попробуйте позже.")
+    track_code_text = message.text.strip()
+    status = await check_or_add_track_code(track_code_text, tg_id)
+    status_messages = {
+        "in_stock": "Ваш товар уже на складе.",
+        "out_of_stock": "Ваш товар ещё не прибыл на склад.",
+        "shipped": "Ваш товар был отправлен."
+    }
+    # Отправляем сообщение
+    response = status_messages.get(status, "Статус трек-кода неизвестен. Обратитесь к администратору.")
+    await message.answer(response)
 
     await message.answer("Вы можете отправить следующий трек-код или написать '<code>Отмена</code>' "
                          "для завершения проверки.", reply_markup=ReplyKeyboardRemove())

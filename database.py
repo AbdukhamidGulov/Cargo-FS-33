@@ -100,6 +100,7 @@ async def get_user_by_id(user_id: str) -> dict | None:
     return None
 
 
+## РАБОТА С ТРЕК-КОДАМИ
 # Получение всех трек-кодов
 async def get_track_codes_list():
     async with connect("database.db") as db:
@@ -119,7 +120,7 @@ async def get_user_track_codes(tg_id: int):
 
 
 # Добавление трек-кодов списком (для администратора)
-async def add_track_codes_list(track_codes: list[str], status: str = "in_stock"):
+async def add_or_update_track_codes_list(track_codes: list[str], status: str):
     async with connect("database.db") as db:
         for track in track_codes:
             await db.execute("""

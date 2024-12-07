@@ -32,7 +32,7 @@ async def start_command(message: Message):
         await message.answer('Я помогу вам найти адреса складов, проверить трек-код и ознакомить с ценами',
                              reply_markup=main_keyboard)
     else:
-        await message.answer('Вы ещё не зарегистрированы чтобы пользоватся нашим ботом\n\n'
+        await message.answer('Вы ещё не зарегистрированы чтобы пользоваться нашим ботом\n\n'
                              'Хотите зарегистрироваться?', reply_markup=reg_keyboard)
 
 
@@ -49,4 +49,3 @@ async def main():
 if __name__ == "__main__":
     run(main())
 
-# для тестового комита

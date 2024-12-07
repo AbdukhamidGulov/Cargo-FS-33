@@ -14,7 +14,7 @@ def create_inline_button(text: str, callback_data: str = None, url: str = None) 
 def create_inline_keyboard(buttons: list[list[InlineKeyboardButton]]) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
-# Кнопки гавного меню
+# Кнопки главного меню
 warehouse_address_btn = create_keyboard_button("️Адрес склада")
 order_form_btn = create_keyboard_button("Бланк для заказа")
 track_number_info_btn = create_keyboard_button("Где брать трек-номер")
@@ -35,7 +35,8 @@ cargo_chat_btn = create_inline_button(text="Чат Карго FS-33", url="https
 admin_panel_btn = create_inline_button(text="Админ", url="https://t.me/fir2201")
 
 # Админ кнопки
-add_track_codes_btn = create_keyboard_button("️Добавить трек-коды")
+add_track_codes_btn = create_keyboard_button("️Добавить пребывшие на склад трек-коды")
+add_sent_track_codes_btn = create_keyboard_button("Добавить отправленные трек-коды")
 track_codes_list_btn = create_keyboard_button("️Список трек-кодов")
 search_by_id_btn = create_keyboard_button("Искать информацию по ID")
 recreate_db_btn = create_keyboard_button("️Пересоздать БД пользователей")
@@ -70,9 +71,8 @@ main_inline_keyboard = create_inline_keyboard([[alipay_exchange_rate_btn, cargo_
 
 
 admin_keyboard = create_keyboard([
-    [add_track_codes_btn], [track_codes_list_btn],
-    [search_by_id_btn], [recreate_db_btn],
-    [recreate_tc_btn], [back_to_main_menu_btn]
+    [add_track_codes_btn], [add_sent_track_codes_btn], [track_codes_list_btn],
+    [search_by_id_btn], [recreate_db_btn], [recreate_tc_btn], [back_to_main_menu_btn]
 ])
 
 

@@ -7,8 +7,8 @@ from aiogram.types import Message, FSInputFile
 from openpyxl.styles import Alignment
 from openpyxl.workbook import Workbook
 
-from database import get_track_codes_list, drop_users_table, create_users_table, \
-    drop_track_numbers_table, create_track_codes_table, add_track_codes_list, get_users_tg_info, get_user_by_id
+from database import (get_track_codes_list, drop_users_table, create_users_table, drop_track_numbers_table,
+                      create_track_codes_table, get_users_tg_info, get_user_by_id, add_or_update_track_codes_list)
 from filters_and_config import IsAdmin, admin_ids
 from keyboards import admin_keyboard
 
@@ -23,8 +23,8 @@ async def admin_command(message: Message):
 
 @admin.message(Command(commands=['admin']))
 async def admin_command(message: Message, bot: Bot):
-    await message.answer('Вы не явяетесь админом')
-    await bot.send_message(admin_ids[0], text=f"Пользоватеь {message.from_user.username} "
+    await message.answer('Вы не являетесь админом')
+    await bot.send_message(admin_ids[0], text=f"Пользователь {message.from_user.username} "
                                               f"c id {message.from_user.id} нажал на команду <b>admin</b>")
     print(message.from_user.id)
 
@@ -33,17 +33,15 @@ async def admin_command(message: Message, bot: Bot):
 class SearchUserStates(StatesGroup):
     waiting_for_user_id = State()
 
-# Обработчик нажатия кнопки "Искать информацию по ID"
 @admin.message(F.text == "Искать информацию по ID")
 async def search_by_id(message: Message, state: FSMContext):
     await message.answer("Введите ID пользователя (например, FS0001 или просто 1):")
     await state.set_state(SearchUserStates.waiting_for_user_id)
 
-# Обработчик ввода ID
 @admin.message(SearchUserStates.waiting_for_user_id)
 async def process_user_id(message: Message, state: FSMContext):
     user_id = message.text.strip()
-    user_data = await get_user_by_id(user_id)  # Вызов функции для поиска пользователя
+    user_data = await get_user_by_id(user_id)
 
     if not user_data:
         await message.answer("Пользователь с таким ID не найден.")
@@ -59,26 +57,12 @@ async def process_user_id(message: Message, state: FSMContext):
     )
     await state.clear()
 
-@admin.message(F.text == "️Пересоздать БД пользователей", IsAdmin(admin_ids))
-async def recreat_db(message: Message):
-    await drop_users_table()
-    await create_users_table()
-    await message.answer('База данных пользователей успешно песоздана!')
 
-
-@admin.message(F.text  == "️Пересоздать БД трек-номеров", IsAdmin(admin_ids))
-async def recreate_tc(message: Message):
-    await drop_track_numbers_table()
-    await create_track_codes_table()
-    await message.answer('База данных Трек-номеров успешно песоздана!')
-
-
-# Добавление трек-кодов
+# Добавление пребывших на склад трек-кодов
 class TrackCodeStates(StatesGroup):
     waiting_for_track_codes = State()
 
-
-@admin.message(F.text == "️Добавить трек-коды", IsAdmin(admin_ids))
+@admin.message(F.text == "️Добавить пребывшие на склад трек-коды", IsAdmin(admin_ids))
 async def add_track_codes(message: Message, state: FSMContext):
     await message.answer("Пожалуйста, отправьте список трек-кодов \n"
                          "<i>(каждый трек-код с новой строки или через пробел)</i>.")
@@ -91,17 +75,42 @@ async def process_track_codes(message: Message, state: FSMContext):
         await message.answer("Список трек-кодов пуст. Пожалуйста, отправьте данные снова.")
         return
 
-    # Добавляем трек-коды в базу данных
     try:
-        await add_track_codes_list(track_codes)
-        await message.answer(f"Успешно добавлено {len(track_codes)} трек-кодов в базу данных со статусом 'На скаде'.")
+        await add_or_update_track_codes_list(track_codes, "in_stock")
+        await message.answer(f"Успешно добавлено {len(track_codes)} трек-кодов в базу данных со статусом 'На складе'.")
     except Exception as e:
         await message.answer(f"Произошла ошибка при добавлении трек-кодов: {e}")
 
     await state.clear()
 
 
+# Добавление отправленные трек-коды
+class TrackCodeStates(StatesGroup):
+    waiting_for_shipped_codes = State()
 
+@admin.message(F.text == "Добавить отправленные трек-коды", IsAdmin(admin_ids))
+async def add_shipped_track_codes(message: Message, state: FSMContext):
+    await message.answer("Отправьте список отправленных трек-кодов:\n"
+                         "<i>(каждый трек-код с новой строки или через пробел)</i>.")
+    await state.set_state(TrackCodeStates.waiting_for_shipped_codes)
+
+@admin.message(TrackCodeStates.waiting_for_shipped_codes)
+async def process_shipped_track_codes(message: Message, state: FSMContext):
+    track_codes = list(filter(None, map(str.strip, message.text.split())))
+    if not track_codes:
+        await message.answer("Список трек-кодов пуст. Пожалуйста, отправьте данные снова.")
+        return
+
+    try:
+        await add_or_update_track_codes_list(track_codes, "shipped")
+        await message.answer(f"Успешно обновлено {len(track_codes)} трек-кодов на статус 'Отправлен'.")
+    except Exception as e:
+        await message.answer(f"Произошла ошибка при обновлении трек-кодов: {e}")
+
+    await state.clear()
+
+
+# Получение списка трек-кодов
 @admin.message(F.text == "️Список трек-кодов",  IsAdmin(admin_ids))
 async def track_codes_list(message: Message):
     await message.delete()
@@ -153,6 +162,20 @@ async def track_codes_list(message: Message):
     # Удаляем файлы после отправки
     remove(excel_file_path)
     remove(text_file_path)
+
+
+@admin.message(F.text == "️Пересоздать БД пользователей", IsAdmin(admin_ids))
+async def recreat_db(message: Message):
+    await drop_users_table()
+    await create_users_table()
+    await message.answer('База данных пользователей успешно пересоздана!')
+
+
+@admin.message(F.text  == "️Пересоздать БД трек-номеров", IsAdmin(admin_ids))
+async def recreate_tc(message: Message):
+    await drop_track_numbers_table()
+    await create_track_codes_table()
+    await message.answer('База данных Трек-номеров успешно пересоздана!')
 
 
 # ФУНКЦИИ ДЛЯ УЛАВЛОВАНИЯ ТОКЕНОВ ФАЙЛОВ
