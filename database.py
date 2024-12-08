@@ -1,4 +1,6 @@
 from aiogram import Bot
+from aiogram.exceptions import TelegramBadRequest
+from aiogram.types import Message
 from aiosqlite import connect, Row
 
 # Создание таблицы пользователей
@@ -121,7 +123,7 @@ async def get_user_track_codes(tg_id: int):
 
 
 # Добавление трек-кодов списком (для администратора)
-async def add_or_update_track_codes_list(track_codes: list[str], status: str, bot):
+async def add_or_update_track_codes_list(track_codes: list[str], status: str, bot, message: Message):
     async with connect("database.db") as db:
         for track in track_codes:
             result = await db.execute("""
@@ -132,10 +134,23 @@ async def add_or_update_track_codes_list(track_codes: list[str], status: str, bo
             """, (track, status))
             row = await result.fetchone()
             if row and row[1]:
-                print(row[1], __name__, 135)
                 track_code, tg_id, status = row
                 status_text = "на складе" if status == "in_stock" else "отправлен"
-                await bot.send_message(tg_id, f"Ваш товар с трек-кодом <code>{track_code}</code> {status_text}.")
+                try:
+                    await bot.send_message(tg_id, f"Ваш товар с трек-кодом <code>{track_code}</code> {status_text}.")
+                except TelegramBadRequest as e:
+                    if "chat not found" in str(e):
+                        bot.send_message(message.from_user.id, f"Не удалось отправить сообщение пользователю {tg_id}: {e}")
+                        # Обновление или удаление невалидного tg_id
+                        await db.execute("""
+                                            UPDATE track_codes 
+                                            SET tg_id = NULL 
+                                            WHERE track_code = ? AND tg_id = ?
+                                        """, (track_code, tg_id))
+                    else:
+                        bot.send_message(message.from_user.id, f"Ошибка при отправке сообщения: {e}")
+                except Exception as e:
+                    bot.send_message(message.from_user.id, f"Неизвестная ошибка при отправке сообщения: {e}")
 
         await db.commit()
 
