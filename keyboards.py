@@ -57,6 +57,11 @@ simple_Taobao_btn = create_inline_button("️Образец Taobao", "simple_Tao
 simple_Pinduoduo_btn = create_inline_button("️Образец Pinduoduo", "simple_Pinduoduo")
 simple_Poizon_btn = create_inline_button("️Образец Poizon", "simple_Poizon")
 
+where_get_1688_btn = create_inline_button("С 1688", "where_get_with_1688")
+where_get_Taobao_btn = create_inline_button("С Taobao", "where_get_with_Taobao")
+where_get_Pinduoduo_btn = create_inline_button("С Pinduoduo", "where_get_with_Pinduoduo")
+where_get_Poizon_btn = create_inline_button("️С Poizon", "where_get_with_Poizon")
+
 
 main_keyboard = create_keyboard([
     [warehouse_address_btn, order_form_btn],
@@ -93,3 +98,8 @@ samples_1688_keyboard = create_inline_keyboard([[simple_Taobao_btn], [simple_Pin
 samples_Taobao_keyboard = create_inline_keyboard([[simple_1688_btn], [simple_Pinduoduo_btn], [simple_Poizon_btn]])
 samples_Pinduoduo_keyboard = create_inline_keyboard([[simple_1688_btn], [simple_Taobao_btn], [simple_Poizon_btn]])
 samples_Poizon_keyboard = create_inline_keyboard([[simple_1688_btn], [simple_Taobao_btn], [simple_Pinduoduo_btn]])
+
+where_get_keyboard = create_inline_keyboard([
+    [where_get_1688_btn, where_get_Taobao_btn],
+    [where_get_Pinduoduo_btn, where_get_Poizon_btn]
+])

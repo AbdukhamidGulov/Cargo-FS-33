@@ -5,7 +5,7 @@ from text_info import *
 from database import get_info_profile, get_user_by_tg_id, get_user_track_codes
 from keyboards import (my_profile_keyboard, samples_keyboard, samples_1688_keyboard, samples_Taobao_keyboard, \
                        samples_Pinduoduo_keyboard, samples_Poizon_keyboard, main_keyboard, change_data_keyboard,
-                       main_inline_keyboard)
+                       main_inline_keyboard, where_get_keyboard)
 
 get_info = Router()
 
@@ -14,7 +14,8 @@ get_info = Router()
 @get_info.message(F.text == "️Адрес склада")
 async def address(message: Message):
     user_id = await get_user_by_tg_id(message.from_user.id)
-    await message.answer(warehouse_address.format(f"{user_id[0]:04d}"))
+    fs = f"{user_id[0]:04d}"
+    await message.answer(warehouse_address.format(fs))
     await message.answer("Нажмите чтобы увидеть образцы", reply_markup=samples_keyboard)
 
 @get_info.callback_query(F.data.startswith("simple_"))
@@ -34,15 +35,30 @@ async def handle_simple(callback: CallbackQuery):
 # Другие обработчики
 @get_info.message(F.text == "Бланк для заказа")
 async def send_order_form(message: Message):
+    await message.answer(blank_info)
     await message.answer_document(document=order_form, caption="Вот ваш бланк для заказа. Заполните его и отправьте нам!")
+
 
 @get_info.message(F.text == "Где брать трек-номер")
 async def send_track_number_info(message: Message):
-    await message.answer('<tg-emoji emoji-id="5193202823411546657">⬇️</tg-emoji> <b>Где брать трек номер.</b>')
-    media = [InputMediaPhoto(media=track_number_info_photo1, caption=" 💴 1688\nTaobao.\nPoizon.\nPinduoduo."),
-             InputMediaPhoto(media=track_number_info_photo2)]
-    await message.answer_media_group(media)
-    await message.reply(goods_check)
+    await message.answer('⬇️ <b>С какого сайта вы хотите получить информацию о получении трек-номеров?</b>',
+                         reply_markup=where_get_keyboard)
+
+@get_info.callback_query(F.data.startswith("where_get_with_"))
+async def handle_simple(callback: CallbackQuery):
+    photos = {
+        "1688": [track_number_info_photo1_1688, track_number_info_photo2_1688],
+        "Taobao": [track_number_info_photo1_Taobao, track_number_info_photo2_Taobao],
+        "Pinduoduo": [track_number_info_photo1_Pinduoduo, track_number_info_photo2_Pinduoduo],
+        "Poizon": [track_number_info_photo1_Poizon, track_number_info_photo2_Poizon]
+    }
+
+    key = callback.data.split("_")[-1]
+    photo_key = photos.get(key)
+    media = [InputMediaPhoto(media=photo_key[0], caption=key),
+             InputMediaPhoto(media=photo_key[1])]
+    await callback.message.answer_media_group(media)
+
 
 @get_info.message(F.text == "Самовыкуп")
 async def send_self_purchase(message: Message):
@@ -55,7 +71,7 @@ async def send_tariffs(message: Message):
 
 @get_info.message(F.text == "Страховка")
 async def send_insurance(message: Message):
-    await message.answer(insurance)
+    await message.answer("<i>функция не разработана</i>")   # # # # # # # # # # #
 
 @get_info.message(F.text == "Проверка товаров")
 async def send_goods_check(message: Message):
