@@ -1,3 +1,4 @@
+from aiogram import Bot
 from aiosqlite import connect, Row
 
 # Создание таблицы пользователей
@@ -120,25 +121,34 @@ async def get_user_track_codes(tg_id: int):
 
 
 # Добавление трек-кодов списком (для администратора)
-async def add_or_update_track_codes_list(track_codes: list[str], status: str):
+async def add_or_update_track_codes_list(track_codes: list[str], status: str, bot):
     async with connect("database.db") as db:
         for track in track_codes:
-            await db.execute("""
+            result = await db.execute("""
                 INSERT INTO track_codes (track_code, status, tg_id)
                 VALUES (?, ?, NULL)
                 ON CONFLICT(track_code) DO UPDATE SET status=excluded.status
+                RETURNING track_code, tg_id, status
             """, (track, status))
+            row = await result.fetchone()
+            if row and row[1]:
+                print(row[1], __name__, 135)
+                track_code, tg_id, status = row
+                status_text = "на складе" if status == "in_stock" else "отправлен"
+                await bot.send_message(tg_id, f"Ваш товар с трек-кодом <code>{track_code}</code> {status_text}.")
+
         await db.commit()
 
 
 # Проверка или добавление трек-кода для пользователя
-async def check_or_add_track_code(track_code: str, tg_id: int):
+async def check_or_add_track_code(track_code: str, tg_id: int, bot: Bot):
     async with connect("database.db") as db:
         db.row_factory = Row
         async with db.execute("SELECT * FROM track_codes WHERE track_code = ?", (track_code,)) as cursor:
             row = await cursor.fetchone()
 
         if row:
+            old_status = row["status"]
             if row["tg_id"] is None:
                 await db.execute("""
                     UPDATE track_codes
@@ -146,6 +156,20 @@ async def check_or_add_track_code(track_code: str, tg_id: int):
                     WHERE track_code = ?
                 """, (tg_id, track_code))
                 await db.commit()
+
+            if old_status != "in_stock" and old_status != "shipped":
+                status = "in_stock" if row["status"] == "in_stock" else "shipped"
+                await db.execute("""
+                    UPDATE track_codes
+                    SET status = ?
+                    WHERE track_code = ?
+                """, (status, track_code))
+                await db.commit()
+
+                # Отправка уведомления
+                if row["tg_id"]:
+                    status_message = "Ваш товар уже на складе." if status == "in_stock" else "Ваш товар уже был отправлен."
+                    await bot.send_message(row["tg_id"], status_message)
             return row["status"]
         else:
             await db.execute("""
