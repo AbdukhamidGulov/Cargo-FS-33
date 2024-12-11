@@ -1,6 +1,4 @@
-from aiogram import Bot
 from aiogram.exceptions import TelegramBadRequest
-from aiogram.types import Message
 from aiosqlite import connect, Row
 
 # Создание таблицы пользователей
@@ -123,7 +121,7 @@ async def get_user_track_codes(tg_id: int):
 
 
 # Добавление трек-кодов списком (для администратора)
-async def add_or_update_track_codes_list(track_codes: list[str], status: str, bot, message: Message):
+async def add_or_update_track_codes_list(track_codes: list[str], status: str, bot, message):
     async with connect("database.db") as db:
         for track in track_codes:
             result = await db.execute("""
@@ -156,7 +154,7 @@ async def add_or_update_track_codes_list(track_codes: list[str], status: str, bo
 
 
 # Проверка или добавление трек-кода для пользователя
-async def check_or_add_track_code(track_code: str, tg_id: int, bot: Bot):
+async def check_or_add_track_code(track_code: str, tg_id: int, bot):
     async with connect("database.db") as db:
         db.row_factory = Row
         async with db.execute("SELECT * FROM track_codes WHERE track_code = ?", (track_code,)) as cursor:

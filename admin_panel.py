@@ -62,16 +62,17 @@ class TrackCodeStates(StatesGroup):
     waiting_for_codes = State()
 
 async def handle_track_codes(message: Message, state: FSMContext, status: str, bot: Bot):
-    track_codes = list(filter(None, map(str.strip, message.text.split())))
-    if not track_codes:
-        await message.answer("Список трек-кодов пуст. Пожалуйста, отправьте данные снова.")
+    if not message.text:
+        await message.answer("Пожалуйста, отправьте текстовое сообщение с трек-кодами.")
         return
+
+    track_codes = list(filter(None, map(str.strip, message.text.split())))
 
     action = "добавлено" if status == "in_stock" else "обновлено"
     status_text = "На складе" if status == "in_stock" else "Отправлен"
 
     try:
-        await add_or_update_track_codes_list(track_codes, status, bot)
+        await add_or_update_track_codes_list(track_codes, status, bot, message)
         await message.answer(
             f"Успешно {action} {len(track_codes)} трек-кодов в базу данных со статусом '{status_text}'.")
     except Exception as e:

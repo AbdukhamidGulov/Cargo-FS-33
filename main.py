@@ -12,7 +12,7 @@ from registration_process import states
 from calculator.calc_handlers import calc
 from calculator.calc_volume import calc_volume
 from calculator.calculate_shipping import calc_shipping
-from keyboards import main_keyboard, reg_keyboard, main_inline_keyboard
+from keyboards import main_keyboard, reg_keyboard
 from filters_and_config import TELEGRAM_BOT_TOKEN
 from database import create_users_table, get_user_by_tg_id, create_track_codes_table
 
