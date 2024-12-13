@@ -7,23 +7,22 @@ order_form = 'BQACAgIAAxkBAAIFOGdMdX50fhlJbYDkoijeDvetdoJiAAJLPgACq454SXUIYnLcX1
 track_number_info_photo1_1688 = 'AgACAgIAAxkBAAIFRGdMfYbh30o5AeHeq3M421ylzr5cAAIb4jEbd4JoSz82D2nJhJjpAQADAgADcwADNgQ'
 track_number_info_photo2_1688 = 'AgACAgIAAxkBAAIFRmdMfbGjsYmbP6dvqpw1pagB8OWqAAIa4jEbd4JoS2OOutkxjRHwAQADAgADcwADNgQ'
 track_number_info_photo1_Taobao = 'AgACAgIAAxkBAAIGl2dUMexB9K3JhSB0PRVjVLRI6BQlAAIj5TEbHFahSubRT6aM5zzoAQADAgADcwADNgQ'
-track_number_info_photo2_Taobao = 'AgACAgIAAxkBAAIGmWdUMfoZYuG45Xhx3jt06o7RkJZSAAIk5TEbHFahSpBfCFy2uvExAQADAgADcwADNgQ'
+track_number_info_photo2_Taobao = 'AgACAgIAAxkBAAIHmmdcbyuzErmrd88ayMk2gVc_OuMAA93nMRsHSuFKhmLtrCvchh0BAAMCAANzAAM2BA'
 track_number_info_photo1_Pinduoduo = 'AgACAgIAAxkBAAIGrGdURsZUzSCiVf5KV-KLyzvJQfNFAALb5TEbHFahSuG5Kza5eTbWAQADAgADcwADNgQ'
 track_number_info_photo2_Pinduoduo = 'AgACAgIAAxkBAAIGrmdUR9Fwue4BkHCX5iH0Wmn8wrJMAALd5TEbHFahSh7CbKztET0iAQADAgADcwADNgQ'
 track_number_info_photo1_Poizon = 'AgACAgIAAxkBAAIGqGdUQfe4D6Le5xmwjjFZ2EA6Y6nBAAI75TEbHFahSj-l3G_1hGzvAQADAgADcwADNgQ'
 track_number_info_photo2_Poizon = 'AgACAgIAAxkBAAIGqmdUQiMe1BnXYVyUricOddw2MF2UAAI85TEbHFahSpKuZ1xVrIbSAQADAgADcwADNgQ'
 self_purchase = ''' ✅<b><u>САМОВЫКУП</u></b>
-<i>
-</i><blockquote><i>Самовыкуп товаров из Китая – это отличный способ сэкономить на покупках и самостоятельно контролировать процесс. Вы можете самостоятельно выбрать и купить любые товары на китайских платформах, а мы поможем с:
 
-➡️<i>Быстрой и надежной доставкой
-➡️<i>Консолидацией посылок для снижения затрат
-➡️<i>Консультациями по оформлению заказа и доставке
+<i>Самовыкуп товаров из Китая – это отличный способ сэкономить на покупках и самостоятельно контролировать процесс. Вы можете самостоятельно выбрать и купить любые товары на китайских платформах, а мы поможем с:</i>
+
+➡️<i>Быстрой и надежной доставкой</i>
+➡️<i>Консолидацией посылок для снижения затрат</i>
+➡️<i>Консультациями по оформлению заказа и доставке</i>
 
 Экономьте на посредниках и получайте заказы напрямую из Китая! Если хотите узнать больше о том, как грамотно организовать самовыкуп и избежать распространенных ошибок, напишите нам – мы поможем разобраться во всех деталях.
 
-Также рекомендуем изучить больше информации о логистике и карго-доставке, чтоб
-ы повысить эффективность своих заказов.</i></blockquote>
+️<i>Также рекомендуем изучить больше информации о логистике и карго-доставке, чтобы повысить эффективность своих заказов.</i>
 
 
  

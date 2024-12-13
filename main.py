@@ -25,7 +25,7 @@ dp.include_routers(admin,  get_info, change, states, track_code, calc, calc_volu
 @dp.message(F.text == "Вернуться в главное меню")
 async def start_command(message: Message):
     await message.answer_photo(
-        'AgACAgIAAxkBAAIElGdLMwTg5ryGW34KC5nWUmfQEjlgAAL65TEb4nBYSpjvLhbFuxviAQADAgADcwADNgQ',
+        'AgACAgIAAxkBAAMFZ1x08p0YNMLAtVs8dKOunkv7RlsAAvrlMRvicFhKsRcQclEx8ucBAAMCAANzAAM2BA',
         'Вас приветствует Telegram-бот карго компании <b>FS-33</b> 🚚')
     user = await get_user_by_tg_id(message.from_user.id)
     if user:
