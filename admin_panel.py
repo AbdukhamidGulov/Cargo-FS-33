@@ -58,15 +58,27 @@ async def process_user_id(message: Message, state: FSMContext):
     await state.clear()
 
 
+# Добавить трек-номера
 class TrackCodeStates(StatesGroup):
     waiting_for_codes = State()
 
 async def handle_track_codes(message: Message, state: FSMContext, status: str, bot: Bot):
-    if not message.text:
-        await message.answer("Пожалуйста, отправьте текстовое сообщение с трек-кодами.")
-        return
+    track_codes = []
 
-    track_codes = list(filter(None, map(str.strip, message.text.split())))
+    if message.text:
+        track_codes = list(filter(None, map(str.strip, message.text.split())))
+    elif message.document:
+        file_id = message.document.file_id
+        file = await bot.get_file(file_id)
+        file_path = file.file_path
+
+        file_content = await bot.download_file(file_path)
+        content = file_content.read().decode('utf-8')
+        track_codes = list(filter(None, map(str.strip, content.splitlines())))
+
+    if not track_codes:
+        await message.answer("Не удалось получить трек-коды. Убедитесь, что отправили текст или текстовый файл с кодами.")
+        return
 
     action = "добавлено" if status == "in_stock" else "обновлено"
     status_text = "На складе" if status == "in_stock" else "Отправлен"
@@ -80,16 +92,16 @@ async def handle_track_codes(message: Message, state: FSMContext, status: str, b
     finally:
         await state.clear()
 
-@admin.message(F.text == "️Добавить пребывшие на склад трек-коды", IsAdmin(admin_ids))
+@admin.message(F.text == "❕Добавить пребывшие на склад трек-коды", IsAdmin(admin_ids))
 async def add_track_codes(message: Message, state: FSMContext):
-    await message.answer("Пожалуйста, отправьте список трек-кодов \n"
+    await message.answer("Пожалуйста, отправьте список трек-кодов или загрузите файл (формат .txt):\n"
                          "<i>(каждый трек-код с новой строки или через пробел)</i>.")
     await state.set_state(TrackCodeStates.waiting_for_codes)
     await state.update_data(status="in_stock")
 
 @admin.message(F.text == "Добавить отправленные трек-коды", IsAdmin(admin_ids))
 async def add_shipped_track_codes(message: Message, state: FSMContext):
-    await message.answer("Отправьте список отправленных трек-кодов:\n"
+    await message.answer("Отправьте список отправленных трек-кодов или загрузите файл (формат .txt):\n"
                          "<i>(каждый трек-код с новой строки или через пробел)</i>.")
     await state.set_state(TrackCodeStates.waiting_for_codes)
     await state.update_data(status="shipped")
