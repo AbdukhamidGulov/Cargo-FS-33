@@ -1,17 +1,17 @@
 warehouse_address = '<u>Адрес склада</u>\n收件人：<code>FS{0}</code>\n电话号码：<code>15116957545</code>\n地址：<code>佛山市南海区大沥镇黄岐泌冲凤秀岗工业区凤秀大楼18号3档  FS{0} 发货一定要写名字，麦头，不然仓库不收</code>'
-sample_1688 = 'AgACAgIAAxkBAAIBimc_ZKt4RFZIx-jpBI116ulY13LAAAKq7DEbu-rwSQ6olox6fGduAQADAgADcwADNgQ'
-sample_Taobao = 'AgACAgIAAxkBAAIBjGc_ZR4880Smla-5Bgd2Sjnn_AbyAAKt7DEbu-rwSXoONn0x9TuXAQADAgADcwADNgQ'
-sample_Pinduoduo = 'AgACAgIAAxkBAAIBjmc_ZYPMxuT9j_Zb5UgVlsb_l3H0AAKu7DEbu-rwSdaIN5anq7SqAQADAgADcwADNgQ'
-sample_Poizon = 'AgACAgIAAxkBAAIBkGc_ZdXomhwB_-CBUdPwO5bsAswkAAJD5zEbrMfxSV5EjAkSWiH9AQADAgADcwADNgQ'
-order_form = 'BQACAgIAAxkBAAIFOGdMdX50fhlJbYDkoijeDvetdoJiAAJLPgACq454SXUIYnLcX1a5NgQ'
-track_number_info_photo1_1688 = 'AgACAgIAAxkBAAIFRGdMfYbh30o5AeHeq3M421ylzr5cAAIb4jEbd4JoSz82D2nJhJjpAQADAgADcwADNgQ'
-track_number_info_photo2_1688 = 'AgACAgIAAxkBAAIFRmdMfbGjsYmbP6dvqpw1pagB8OWqAAIa4jEbd4JoS2OOutkxjRHwAQADAgADcwADNgQ'
-track_number_info_photo1_Taobao = 'AgACAgIAAxkBAAIGl2dUMexB9K3JhSB0PRVjVLRI6BQlAAIj5TEbHFahSubRT6aM5zzoAQADAgADcwADNgQ'
-track_number_info_photo2_Taobao = 'AgACAgIAAxkBAAIHmmdcbyuzErmrd88ayMk2gVc_OuMAA93nMRsHSuFKhmLtrCvchh0BAAMCAANzAAM2BA'
-track_number_info_photo1_Pinduoduo = 'AgACAgIAAxkBAAIGrGdURsZUzSCiVf5KV-KLyzvJQfNFAALb5TEbHFahSuG5Kza5eTbWAQADAgADcwADNgQ'
-track_number_info_photo2_Pinduoduo = 'AgACAgIAAxkBAAIGrmdUR9Fwue4BkHCX5iH0Wmn8wrJMAALd5TEbHFahSh7CbKztET0iAQADAgADcwADNgQ'
-track_number_info_photo1_Poizon = 'AgACAgIAAxkBAAIGqGdUQfe4D6Le5xmwjjFZ2EA6Y6nBAAI75TEbHFahSj-l3G_1hGzvAQADAgADcwADNgQ'
-track_number_info_photo2_Poizon = 'AgACAgIAAxkBAAIGqmdUQiMe1BnXYVyUricOddw2MF2UAAI85TEbHFahSpKuZ1xVrIbSAQADAgADcwADNgQ'
+sample_1688 = 'AgACAgIAAxkBAAMNZ11Lrxv9Zm1QYZvK-Cv9eOykYegAAqrsMRu76vBJvPXtHukQpB0BAAMCAANzAAM2BA'
+sample_Taobao = 'AgACAgIAAxkBAAMOZ11LwVslUVnoz5j_tw_KkRDlwQYAAq3sMRu76vBJH7NYTYCFj-sBAAMCAANzAAM2BA'
+sample_Pinduoduo = 'AgACAgIAAxkBAAMPZ11LzfmGu7xfDGzONSv4AoUrisIAAq7sMRu76vBJa9ChCvJz6XUBAAMCAANzAAM2BA'
+sample_Poizon = 'AgACAgIAAxkBAAMQZ11L2Qlkdm1qHBO0-EITsPY4EqwAAkPnMRusx_FJZcvNUJKMwlkBAAMCAANzAAM2BA'
+order_form = 'BQACAgIAAxkBAAMRZ11L_qP8GqH863RXQA_IpbHxJaoAAks-AAKrjnhJ8To8UNoHItk2BA'
+track_number_info_photo1_1688 = 'AgACAgIAAxkBAAMSZ11MLEQ1fbAPNdBMWdcB-wGF5ZkAAhviMRt3gmhL8JwnniB_WzkBAAMCAANzAAM2BA'
+track_number_info_photo2_1688 = 'AgACAgIAAxkBAAMTZ11MNrv8gH9bWov2fOyr5ElKMhIAAhriMRt3gmhLKx0Zs32DWvcBAAMCAANzAAM2BA'
+track_number_info_photo1_Taobao = 'AgACAgIAAxkBAAMUZ11MQw-_y0Akk19ANFfsaIuhIPUAAiPlMRscVqFKH64EDTAX3tQBAAMCAANzAAM2BA'
+track_number_info_photo2_Taobao = 'AgACAgIAAxkBAAMVZ11MUYOxQrhW-PbfA4l9Ii47U2IAAt3nMRsHSuFKrZy3EMiXD0sBAAMCAANzAAM2BA'
+track_number_info_photo1_Pinduoduo = 'AgACAgIAAxkBAAMWZ11MZoL6cbQmWG4wHfgsX_SXu6YAAtvlMRscVqFKlN1BSDaM2f4BAAMCAANzAAM2BA'
+track_number_info_photo2_Pinduoduo = 'AgACAgIAAxkBAAMXZ11MbXvKqlBV4HRO4WiISlAJj5AAAt3lMRscVqFKuiF4GLEcZ6IBAAMCAANzAAM2BA'
+track_number_info_photo1_Poizon = 'AgACAgIAAxkBAAMYZ11MfIv7EO_P81DAPmx8WU6ISccAAjvlMRscVqFKraK3dSDdXjABAAMCAANzAAM2BA'
+track_number_info_photo2_Poizon = 'AgACAgIAAxkBAAMZZ11Mkd33CFN4QLDFdsly3SOec-0AAjzlMRscVqFKqwABlIts_w-eAQADAgADcwADNgQ'
 self_purchase = ''' ✅<b><u>САМОВЫКУП</u></b>
 
 <i>Самовыкуп товаров из Китая – это отличный способ сэкономить на покупках и самостоятельно контролировать процесс. Вы можете самостоятельно выбрать и купить любые товары на китайских платформах, а мы поможем с:</i>
@@ -74,11 +74,11 @@ tariffs = '''✅ <b><u>ТАРИФЫ:</u></b>
 ➡️ Прием груза в Москве и пересылка до ТК -  от 260 рублей выше,коробка, цены могут меняться в зависимости от веса и изменений на рынке.'''
 
 
-goods_check_video1 = 'BAACAgIAAxkBAAIFqWdN29uKjXbi11lxFLZ0_CYWgzq9AAKWTgACkDaJS_mHVp_uh3OlNgQ'
-goods_check_photo1 = 'AgACAgIAAxkBAAIFq2dN2_IldgMesLb6tvKYscvnPwfSAAJY5TEbkDaJSx0eVY8PjbzhAQADAgADcwADNgQ'
-goods_check_video2 = 'BAACAgIAAxkBAAIFrWdN3AK0qIVqr8oursstNIWfiGiUAAKbTgACkDaJS44SZ4kOQDjcNgQ'
-goods_check_photo2 = 'AgACAgIAAxkBAAIFr2dN3BQETradI5_KkZ-tiuaQ8hF3AAJZ5TEbkDaJS7N-uEl3XSWaAQADAgADcwADNgQ'
-goods_check_photo3 = 'AgACAgIAAxkBAAIFsWdN3CvF3U6wk8gxjERaaoi4xFOSAAJa5TEbkDaJS2ItVZS2DIZPAQADAgADcwADNgQ'
+goods_check_video1 = 'BAACAgIAAxkBAAMaZ11Mwf1xlWpN7AmY4rrPaAvqdrwAApZOAAKQNolLl0aG-hN7S9U2BA'
+goods_check_photo1 = 'AgACAgIAAxkBAAMbZ11Mye-nMgw6I4j0neWcFdWEFoMAAljlMRuQNolLmiA19Z2XEXIBAAMCAANzAAM2BA'
+goods_check_video2 = 'BAACAgIAAxkBAAMcZ11M00CgSZzoWLHRzUjt2qXs0JkAAptOAAKQNolL2sP7TFiIesQ2BA'
+goods_check_photo2 = 'AgACAgIAAxkBAAMdZ11M2t8GtbZ5EWt2GISorlxIpDsAAlnlMRuQNolLNT4d1IUh7WEBAAMCAANzAAM2BA'
+goods_check_photo3 = 'AgACAgIAAxkBAAMeZ11M6YViTM0EedMnYBC3nmSCue4AAlrlMRuQNolLAlJUMk7HVjMBAAMCAANzAAM2BA'
 
 goods_check = '''✅ <b>ПРОВЕРКА</b>
 - Бесплатно до 5 треков, за каждый последующий трек — 5 юаней.
