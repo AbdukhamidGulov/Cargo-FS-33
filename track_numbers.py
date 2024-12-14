@@ -20,7 +20,7 @@ async def check_track_code(message: Message, state: FSMContext):
 
 @track_code.message(TrackCode.track_code)
 async def process_track_code(message: Message, state: FSMContext, bot: Bot):
-    if message.text.lower() == "отмена":
+    if message.text == "Отмена":
         await message.answer("Режим проверки трек-кодов завершён.", reply_markup=main_keyboard)
         await state.clear()
         return

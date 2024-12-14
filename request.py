@@ -1,4 +1,4 @@
-from aiogram import F, Router
+from aiogram import F, Router, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, Message
@@ -26,7 +26,7 @@ async def start_verification_request(callback: CallbackQuery, state: FSMContext)
 
 # Функция для получения трек-кодов
 @request.message(RequestVerification.waiting_for_track_codes)
-async def receive_track_codes(message: Message, state: FSMContext):
+async def receive_track_codes(message: Message, state: FSMContext, bot: Bot):
     track_codes = message.text.strip().split()  # Получаем список трек-кодов
     user_id = message.from_user.id  # ID пользователя
     username = message.from_user.username  # Имя пользователя (если указано)
@@ -37,7 +37,7 @@ async def receive_track_codes(message: Message, state: FSMContext):
         f"Трек-коды:\n{chr(10).join(track_codes)}"
     )
 
-    await message.bot.send_message(chat_id=admin_ids[0]  , text=admin_message)
+    await bot.send_message(chat_id=admin_ids[1]  , text=admin_message)
     await message.answer("Ваша заявка на проверку товаров успешно отправлена администратору.",
                          reply_markup=main_inline_keyboard)
     await state.clear()
