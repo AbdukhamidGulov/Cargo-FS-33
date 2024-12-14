@@ -15,7 +15,7 @@ from keyboards import admin_keyboard
 admin = Router()
 
 
-@admin.message(F.text == "Админ", IsAdmin(admin_ids))
+@admin.message(F.text.lower() == "админ", IsAdmin(admin_ids))
 @admin.message(Command(commands=['admin']), IsAdmin(admin_ids))
 async def admin_command(message: Message):
     await message.answer('Выберите команду', reply_markup=admin_keyboard)
@@ -166,14 +166,14 @@ async def track_codes_list(message: Message):
     remove(text_file_path)
 
 
-@admin.message(F.text == "️Пересоздать БД пользователей", IsAdmin(admin_ids))
+@admin.message(Command(commands="dp_users"), IsAdmin(admin_ids))
 async def recreat_db(message: Message):
     await drop_users_table()
     await create_users_table()
     await message.answer('База данных пользователей успешно пересоздана!')
 
 
-@admin.message(F.text  == "️Пересоздать БД трек-номеров", IsAdmin(admin_ids))
+@admin.message(Command(commands="dp_tracks"), IsAdmin(admin_ids))
 async def recreate_tc(message: Message):
     await drop_track_numbers_table()
     await create_track_codes_table()

@@ -57,13 +57,11 @@ add_track_codes_btn = create_keyboard_button("️Добавить пребывш
 add_sent_track_codes_btn = create_keyboard_button("Добавить отправленные трек-коды")
 track_codes_list_btn = create_keyboard_button("️Список трек-кодов")
 search_by_id_btn = create_keyboard_button("Искать информацию по ID")
-recreate_db_btn = create_keyboard_button("️Пересоздать БД пользователей")
-recreate_tc_btn = create_keyboard_button("️Пересоздать БД трек-номеров")
 back_to_main_menu_btn = create_keyboard_button("Вернуться в главное меню")
 
 admin_keyboard = create_keyboard([
     [add_track_codes_btn], [add_sent_track_codes_btn], [track_codes_list_btn],
-    [search_by_id_btn], [recreate_db_btn], [recreate_tc_btn], [back_to_main_menu_btn]
+    [search_by_id_btn], [back_to_main_menu_btn]
 ])
 
 # Кнопки регистрации
