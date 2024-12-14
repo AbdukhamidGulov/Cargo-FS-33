@@ -2,9 +2,9 @@ from aiohttp import ClientSession
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
-from aiogram.types import Message
+from aiogram.types import Message, CallbackQuery
 
-from calculator.calc_keyboards import item_type_keyboard
+from keyboards import main_keyboard, item_type_keyboard, main_inline_keyboard
 
 calc_ins = Router()
 item_types = [
@@ -24,9 +24,10 @@ class InsuranceState(StatesGroup):
     item_type = State()  # Выбор типа товара
 
 # Старт расчёта страховки
-@calc_ins.message(F.text == "Страховка")
-async def start_insurance(message: Message, state: FSMContext):
-    await message.answer("Введите стоимость груза в юанях:")
+@calc_ins.callback_query(F.data == "calc_insurance")
+async def start_insurance(callback: CallbackQuery, state: FSMContext):
+    await callback.message.delete()
+    await callback.message.answer("Введите стоимость груза в юанях:")
     await state.set_state(InsuranceState.cost)
 
 # Ввод стоимости
@@ -101,6 +102,8 @@ async def enter_item_type(message: Message, state: FSMContext):
         f"составит: {insurance_rate}%\n\n"
         f"ИТОГО:\n"
         f"💲 Сумма страховки в долларах: {insurance_cost_usd:.2f}$\n"
-        f"🇷🇺 Сумма страховки в руб.: {insurance_cost_rub:.0f} руб."
+        f"🇷🇺 Сумма страховки в руб.: {insurance_cost_rub:.0f} руб." ,
+        reply_markup=main_keyboard
     )
     await state.clear()
+    await message.answer('Чем я ещё могу вам помочь?', reply_markup=main_inline_keyboard)

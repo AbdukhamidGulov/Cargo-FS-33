@@ -26,7 +26,6 @@ async def admin_command(message: Message, bot: Bot):
     await message.answer('Вы не являетесь админом')
     await bot.send_message(admin_ids[0], text=f"Пользователь {message.from_user.username} "
                                               f"c id {message.from_user.id} нажал на команду <b>admin</b>")
-    print(message.from_user.id)
 
 
 # Искать информацию по ID

@@ -3,7 +3,9 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 
-from keyboards import main_keyboard
+from keyboards import main_keyboard, main_inline_keyboard
+from text_info import calculate_volume_photo1, calculate_volume_photo2, \
+    calculate_volume_photo3, calculate_volume_photo4, calculate_volume_photo5
 
 calc_volume = Router()
 
@@ -18,8 +20,7 @@ class CargoCalculator(StatesGroup):
 async def calculate_volume(callback: CallbackQuery, state: FSMContext):
     await callback.message.delete()
     await callback.message.answer_photo(
-        "AgACAgIAAxkBAAIC12dDODeR9pB6wB0FwZo7yPjFQ4p_AALe5zEbF8_QSXw4G3IYnu6FAQADAgADcwADNgQ",
-        "❗️<i>Что такое плотность и для чего она нужна? "
+        calculate_volume_photo1, "❗️<i>Что такое плотность и для чего она нужна? "
         "<a href='https://t.me/quicktao_cargo1/16303'>Читайте здесь</a></i>\n\n"
         "Для расчёта плотности груза введите длину груза (в сантиметрах):")
     await state.set_state(CargoCalculator.length)
@@ -31,9 +32,7 @@ async def input_length(message: Message, state: FSMContext):
         await message.answer("Введите целое числовое значение длины.")
     else:
         await state.update_data(length=int(message.text))
-        await message.answer_photo(
-            "AgACAgIAAxkBAAIC22dDPTTeZGmoebUNiAnw1DeBaRS5AALg5zEbF8_QSVQaSQKyc8t1AQADAgADcwADNgQ",
-                                   "Введите ширину упаковки (в сантиметрах):")
+        await message.answer_photo(calculate_volume_photo2, "Введите ширину упаковки (в сантиметрах):")
         await state.set_state(CargoCalculator.width)
 
 # Обработка ширины
@@ -43,9 +42,7 @@ async def input_width(message: Message, state: FSMContext):
         await message.answer("Введите целое числовое значение ширины.")
     else:
         await state.update_data(width=int(message.text))
-        await message.answer_photo(
-            "AgACAgIAAxkBAAIC3WdDPbKq8yf1XCDVJtaBU0r_3Jx5AALf5zEbF8_QSZaf5vQCjiBIAQADAgADcwADNgQ",
-            "Введите высоту упаковки (в сантиметрах):")
+        await message.answer_photo(calculate_volume_photo3, "Введите высоту упаковки (в сантиметрах):")
         await state.set_state(CargoCalculator.height)
 
 # Обработка высоты
@@ -55,9 +52,7 @@ async def input_height(message: Message, state: FSMContext):
         await message.answer("Введите целое числовое значение высоты.")
     else:
         await state.update_data(height=int(message.text))
-        await message.answer_photo(
-            "AgACAgIAAxkBAAIC32dDPfbEGlPi_7kc3Q5agF6LuaKGAALh5zEbF8_QSV_BwbvNnOLsAQADAgADcwADNgQ",
-            "Теперь введите вес груза (в килограммах):")
+        await message.answer_photo(calculate_volume_photo4, "Теперь введите вес груза (в килограммах):")
         await state.set_state(CargoCalculator.weight)
 
 # Обработка веса и вывод результата
@@ -69,11 +64,11 @@ async def input_weight(message: Message, state: FSMContext):
         volume = data["length"] * data["width"] * data["height"] / 1000000
         density = weight / volume
 
-        await message.answer_photo(
-            "AgACAgIAAxkBAAIDEmdDRPPKCM_q0ZJ49T9-5h1z9f7LAALR5zEbI2PQSQZ_9fnuXY76AQADAgADcwADNgQ",
+        await message.answer_photo(calculate_volume_photo5,
             f"Объём груза: {volume:.2f} м³\n"
             f"Плотность груза: {density:.2f} кг/м³", reply_markup=main_keyboard)
         await state.clear()
+        await message.answer('Чем я ещё могу вам помочь?', reply_markup=main_inline_keyboard)
     except ValueError:
         await message.answer("Введите числовое значение веса.")
 

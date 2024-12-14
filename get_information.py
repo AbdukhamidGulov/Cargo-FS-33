@@ -69,41 +69,36 @@ async def send_self_purchase(message: Message):
 async def send_tariffs(message: Message):
     await message.answer(tariffs)
 
-@get_info.message(F.text == "Страховка")
-async def send_insurance(message: Message):
-    await message.answer("<i>функция не разработана</i>")   # # # # # # # # # # #
-
-@get_info.message(F.text == "Проверка товаров")
-async def send_goods_check(message: Message):
+@get_info.callback_query(F.data == "goods_check")
+async def send_goods_check(callback: CallbackQuery):
     media = [InputMediaVideo(media=goods_check_video1),
         InputMediaPhoto(media=goods_check_photo1),
         InputMediaVideo(media=goods_check_video2),
         InputMediaPhoto(media=goods_check_photo2),
         InputMediaPhoto(media=goods_check_photo3)]
-    await message.answer_media_group(media)
-    await message.reply(goods_check)
+    await callback.message.answer_media_group(media)
+    await callback.message.reply(goods_check, reply_markup=main_keyboard)
 
 @get_info.message(F.text == "Консолидация")
 async def send_consolidation(message: Message):
-    await message.answer_photo(consolidation_photo, consolidation)
+    inf = await get_info_profile(message.from_user.id)
+    await message.answer_photo(consolidation_photo, consolidation.format(f'<code>FS{inf.get('id'):04d}</code>'),
+                               show_caption_above_media=True)
+
 
 @get_info.message(F.text == "Запрещённые товары")
 async def send_forbidden_goods(message: Message):
     await message.answer(forbidden_goods)
 
-# # # # # # # # # # #
-
 @get_info.message(F.text == "Упаковка")
 async def send_packing(message: Message):
     await message.answer(packing)
 
-
 @get_info.message(F.text == "️Цены")  # Нету кнопки
 async def price(message: Message):
     await message.answer_photo(
-        "AgACAgIAAxkBAAPbZztu_WMs7OrFwLEW9wPUzWKoyJYAAvnqMRv6E-FJIrIRnk8frsgBAAMCAANzAAM2BA",
+        "AgACAgIAAxkBAANYZ11s0AJ1HhedVqNTXJD5fX0pZWkAAvnqMRv6E-FJUdKB1YR7H-gBAAMCAANzAAM2BA",
         "2,5$/КГ\n230/Куб")
-
 
 
 # ОБРАБОТЧИК КОМАНДЫ "Мой профиль"

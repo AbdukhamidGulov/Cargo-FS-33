@@ -1,3 +1,4 @@
+main_menu_photo = 'AgACAgIAAxkBAAMFZ1x08p0YNMLAtVs8dKOunkv7RlsAAvrlMRvicFhKsRcQclEx8ucBAAMCAANzAAM2BA'
 warehouse_address = '<u>Адрес склада</u>\n收件人：<code>FS{0}</code>\n电话号码：<code>15116957545</code>\n地址：<code>佛山市南海区大沥镇黄岐泌冲凤秀岗工业区凤秀大楼18号3档  FS{0} 发货一定要写名字，麦头，不然仓库不收</code>'
 sample_1688 = 'AgACAgIAAxkBAAMNZ11Lrxv9Zm1QYZvK-Cv9eOykYegAAqrsMRu76vBJvPXtHukQpB0BAAMCAANzAAM2BA'
 sample_Taobao = 'AgACAgIAAxkBAAMOZ11LwVslUVnoz5j_tw_KkRDlwQYAAq3sMRu76vBJH7NYTYCFj-sBAAMCAANzAAM2BA'
@@ -12,6 +13,11 @@ track_number_info_photo1_Pinduoduo = 'AgACAgIAAxkBAAMWZ11MZoL6cbQmWG4wHfgsX_SXu6
 track_number_info_photo2_Pinduoduo = 'AgACAgIAAxkBAAMXZ11MbXvKqlBV4HRO4WiISlAJj5AAAt3lMRscVqFKuiF4GLEcZ6IBAAMCAANzAAM2BA'
 track_number_info_photo1_Poizon = 'AgACAgIAAxkBAAMYZ11MfIv7EO_P81DAPmx8WU6ISccAAjvlMRscVqFKraK3dSDdXjABAAMCAANzAAM2BA'
 track_number_info_photo2_Poizon = 'AgACAgIAAxkBAAMZZ11Mkd33CFN4QLDFdsly3SOec-0AAjzlMRscVqFKqwABlIts_w-eAQADAgADcwADNgQ'
+calculate_volume_photo1 = 'AgACAgIAAxkBAAOXZ12lYbhglLU6W36YIxp6K6Q7iZ4AAnjqMRstzolKWs9-u_3lmMoBAAMCAANzAAM2BA'
+calculate_volume_photo2 = 'AgACAgIAAxkBAAOZZ12mWJGwEqPAMFwF6uvqI8lRobAAAnjnMRvOn7BK1YsZ4atYpXMBAAMCAANzAAM2BA'
+calculate_volume_photo3 = 'AgACAgIAAxkBAAObZ12mqklJATjHu4MWFhnGDRjPTN0AAnnnMRvOn7BKvQNXdq-6XKkBAAMCAANzAAM2BA'
+calculate_volume_photo4 = 'AgACAgIAAxkBAAOdZ12nASlzTTq8jw6wp1A2bhBCmGUAAnrnMRvOn7BKhaLX1MdStjYBAAMCAANzAAM2BA'
+calculate_volume_photo5 = 'AgACAgIAAxkBAAOfZ12nQMz8S2vj-5iy8akXPWQ21qYAAnvnMRvOn7BKJi6g-sXXNpoBAAMCAANzAAM2BA'
 self_purchase = ''' ✅<b><u>САМОВЫКУП</u></b>
 
 <i>Самовыкуп товаров из Китая – это отличный способ сэкономить на покупках и самостоятельно контролировать процесс. Вы можете самостоятельно выбрать и купить любые товары на китайских платформах, а мы поможем с:</i>
@@ -45,13 +51,7 @@ FS0000-2 второй клиент:</i></blockquote>
 
 ➡️  <a href="https://t.me/c/1817208921/82">Ознакомьтесь  с тарифами.</a> 
 
-➡️  <i>После того как все товары поступят на склад, для подтверждения высылается список трек-номеров. Укажите тип упаковки (коробка, коробка+уголок, деревянная обрешётка ) и способ доставки (авто быстрая/медленная).</i>
-
-⬇️ <b>Где брать трек номер.</b>
-Taobao.
-Poizon.
-💴 <a href="https://t.me/cargoFS33/2228">1688</a>
-Pinduoduo.'''
+➡️  <i>После того как все товары поступят на склад, для подтверждения высылается список трек-номеров. Укажите тип упаковки (коробка, коробка+уголок, деревянная обрешётка ) и способ доставки (авто быстрая/медленная).</i>'''
 
 
 tariffs = '''✅ <b><u>ТАРИФЫ:</u></b>
@@ -111,14 +111,14 @@ goods_check = '''✅ <b>ПРОВЕРКА</b>
 <b><u>Для уточнения вопросов: @fir2201🌐</u></b>'''
 
 
-consolidation_photo = 'AgACAgIAAxkBAAIFwGdN3qiELrDc5Mz6kXPAMZbfqELOAAJv0zEbQbRhSuHO2lwgj6BvAQADAgADcwADNgQ'
+consolidation_photo = 'AgACAgIAAxkBAANqZ12Aa0si3pHNFH-jFtp9iJZczJYAAm_TMRtBtGFKRp2xUk8yylIBAAMCAANzAAM2BA'
 consolidation = '''📌  Отправка грузов📌
 
 ➡️Для сбора треков на отправку вам придется их самостоятельно отслеживать. 
 ➡️Только после того, как вы увидите, что весь необходимый товар дошел до склада, отправьте консолидацию.
 
  ✅Присылаем следующие данные:
-1. Ваш код-
+1. Ваш код-{}
 2. Страна-
 3. Способ доставки- 
 4. Упаковка-
@@ -129,7 +129,7 @@ consolidation = '''📌  Отправка грузов📌
 
 ➡️Если посылки разделены, не забудьте отправить список отслеживания по категориям.
 
-➡️Пример консолидации для самовыкупа на фото'''
+➡️Пример консолидации для самовыкупа на фото⬇️'''
 
 
 forbidden_goods = '''<b>НАШЕ КАРГО НЕ ПРИНИМАЕТ СЛЕДУЮЩИЕ ВИДЫ ПОСЫЛОК!</b>\n\n1. <b>Лекарства</b> (порошки, таблетки, лекарства в виде жидкостей).\n\n2. <b>Все виды холодного оружия</b> (ножи, электрошокеры, биты и другое данного характера) полностью запрещены.\n\n3. <b>Всё что запрещено на РФ</b> (Военные товары, химия, растения, семена, газ, электронные сигареты)'''

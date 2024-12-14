@@ -1,10 +1,10 @@
 from aiogram import Router, F, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
-from aiogram.types import Message, ReplyKeyboardRemove
+from aiogram.types import Message
 
 from database import check_or_add_track_code
-from keyboards import main_keyboard
+from keyboards import main_keyboard, cancel_keyboard
 
 track_code = Router()
 
@@ -33,9 +33,9 @@ async def process_track_code(message: Message, state: FSMContext, bot: Bot):
         "out_of_stock": "Ваш товар ещё не прибыл на склад.",
         "shipped": "Ваш товар был отправлен."
     }
-    # Отправляем сообщение
+
     response = status_messages.get(status, "Статус трек-кода неизвестен. Обратитесь к администратору.")
     await message.answer(response)
 
-    await message.answer("Вы можете отправить следующий трек-код или написать '<code>Отмена</code>' "
-                         "для завершения проверки.", reply_markup=ReplyKeyboardRemove())
+    await message.answer("Вы можете отправить следующий <b>трек-код</b> или нажать '<code>Отмена</code>',"
+                         "чтобы завершит проверку.", reply_markup=cancel_keyboard)
