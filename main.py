@@ -6,6 +6,7 @@ from aiogram.client.default import DefaultBotProperties
 
 from admin_panel import admin
 from change_processor import change
+from request import request
 from track_numbers import track_code
 from get_information import get_info
 from text_info import main_menu_photo
@@ -19,7 +20,7 @@ from filters_and_config import TELEGRAM_BOT_TOKEN
 
 bot = Bot(token=TELEGRAM_BOT_TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
 dp = Dispatcher()
-dp.include_routers(admin,  get_info, change, states, track_code, calc_volume, calc_ins, calc_shipping)
+dp.include_routers(admin,  get_info, change, states, track_code, request, calc_volume, calc_ins, calc_shipping)
 
 
 @dp.message(CommandStart())

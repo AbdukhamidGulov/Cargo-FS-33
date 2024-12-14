@@ -35,11 +35,11 @@ main_keyboard = create_keyboard([
 ])
 
 # Инлайн кнопки главного меню
-calculate_volume_btn = create_inline_button(text="Рассчитать обьём", callback_data="calculate_volume")
+calculate_volume_btn = create_inline_button(text="Рассчитать объём", callback_data="calculate_volume")
 # calculate_shipping_btn = create_inline_button(text="Рассчитать доставку", callback_data="calc_shipping")
 calculate_insurance_btn = create_inline_button(text="Рассчитать страховку", callback_data="calc_insurance")
 goods_check_btn = create_inline_button(text="Проверка товаров", callback_data="goods_check")
-request_for_verification_btn = create_inline_button(text="Заявка на проерку", callback_data="request_for_verification")
+request_for_verification_btn = create_inline_button(text="Заявка на проверку", callback_data="request_for_verification")
 alipay_exchange_rate_btn = create_inline_button(text="Курс Alipay", url="https://t.me/Alipay_Chat_ru")
 cargo_chat_btn = create_inline_button(text="Чат Карго FS-33", url="https://t.me/cargoFS33")
 admin_panel_btn = create_inline_button(text="Админ", url="https://t.me/fir2201")

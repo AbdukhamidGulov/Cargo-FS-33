@@ -184,17 +184,14 @@ async def recreate_tc(message: Message):
 @admin.message(F.photo, IsAdmin(admin_ids))
 async def get_photo_id(message: Message):
     print_token_photo = message.photo[0].file_id
-    await message.answer(f"<b>Токен скинутого фото:</b>\n<code>{print_token_photo}</code>")
-    print(print_token_photo)
+    await message.reply(f"<b>Токен скинутого фото:</b>\n<code>{print_token_photo}</code>")
 
 @admin.message(F.video, IsAdmin(admin_ids))
 async def get_video_id(message: Message):
     print_token_video = message.video.file_id
-    await message.answer(f"<b>Токен скинутого видео:</b>\n<code>{print_token_video}</code>")
-    print(print_token_video)
+    await message.reply(f"<b>Токен скинутого видео:</b>\n<code>{print_token_video}</code>")
 
 @admin.message(F.document)
 async def get_document_id(message: Message):
     print_token_document = message.document.file_id
-    await message.answer(f"<b>Токен скинутого документа:</b>\n<code>{print_token_document}</code>")
-    print(print_token_document)
+    await message.reply(f"<b>Токен скинутого документа:</b>\n<code>{print_token_document}</code>")
