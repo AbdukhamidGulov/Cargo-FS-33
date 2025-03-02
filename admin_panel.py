@@ -8,7 +8,8 @@ from openpyxl.styles import Alignment
 from openpyxl.workbook import Workbook
 
 from database import (get_track_codes_list, drop_users_table, create_users_table, drop_track_numbers_table,
-                      create_track_codes_table, get_users_tg_info, get_user_by_id, add_or_update_track_codes_list)
+                      create_track_codes_table, get_users_tg_info, get_user_by_id, add_or_update_track_codes_list,
+                      delete_shipped_track_codes)
 from filters_and_config import IsAdmin, admin_ids
 from keyboards import admin_keyboard
 
@@ -91,7 +92,7 @@ async def handle_track_codes(message: Message, state: FSMContext, status: str, b
     finally:
         await state.clear()
 
-@admin.message(F.text == "❕Добавить пребывшие на склад трек-коды", IsAdmin(admin_ids))
+@admin.message(F.text == "️Добавить пребывшие на склад трек-коды", IsAdmin(admin_ids))
 async def add_track_codes(message: Message, state: FSMContext):
     await message.answer("Пожалуйста, отправьте список трек-кодов или загрузите файл (формат .txt):\n"
                          "<i>(каждый трек-код с новой строки или через пробел)</i>.")
@@ -165,6 +166,13 @@ async def track_codes_list(message: Message):
     remove(excel_file_path)
     remove(text_file_path)
 
+
+# Удаение отправенных трек-кодов
+@admin.message(F.text == "Удалить отправленные трек-коды",  IsAdmin(admin_ids))
+async def delete_shipped_track_codes_handler(message: Message):
+    await message.delete()
+    await delete_shipped_track_codes()
+    await message.answer("Все отправленные трек-коды успешно удалены.")
 
 @admin.message(Command(commands="dp_users"), IsAdmin(admin_ids))
 async def recreat_db(message: Message):

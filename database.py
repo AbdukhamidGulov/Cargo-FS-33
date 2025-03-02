@@ -191,3 +191,15 @@ async def check_or_add_track_code(track_code: str, tg_id: int, bot):
             """, (track_code, "out_of_stock", tg_id))
             await db.commit()
             return "out_of_stock"
+
+
+async def delete_shipped_track_codes():
+    """
+    Удаляет все трек-коды со статусом "shipped" (отправлено).
+    """
+    async with connect("database.db") as db:
+        await db.execute("""
+            DELETE FROM track_codes
+            WHERE status = 'shipped'
+        """)
+        await db.commit()
