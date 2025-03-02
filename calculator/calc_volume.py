@@ -4,8 +4,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 
 from keyboards import main_keyboard, main_inline_keyboard
-from text_info import calculate_volume_photo1, calculate_volume_photo2, \
-    calculate_volume_photo3, calculate_volume_photo4, calculate_volume_photo5
+from text_info import calculate_volume_photo1, calculate_volume_photo5
 
 calc_volume = Router()
 
@@ -32,7 +31,7 @@ async def input_length(message: Message, state: FSMContext):
         await message.answer("Введите целое числовое значение длины.")
     else:
         await state.update_data(length=int(message.text))
-        await message.answer_photo(calculate_volume_photo2, "Введите ширину упаковки (в сантиметрах):")
+        await message.answer_photo(calculate_volume_photo1, "Введите ширину упаковки (в сантиметрах):")
         await state.set_state(CargoCalculator.width)
 
 # Обработка ширины
@@ -42,7 +41,7 @@ async def input_width(message: Message, state: FSMContext):
         await message.answer("Введите целое числовое значение ширины.")
     else:
         await state.update_data(width=int(message.text))
-        await message.answer_photo(calculate_volume_photo3, "Введите высоту упаковки (в сантиметрах):")
+        await message.answer_photo(calculate_volume_photo1, "Введите высоту упаковки (в сантиметрах):")
         await state.set_state(CargoCalculator.height)
 
 # Обработка высоты
@@ -52,7 +51,7 @@ async def input_height(message: Message, state: FSMContext):
         await message.answer("Введите целое числовое значение высоты.")
     else:
         await state.update_data(height=int(message.text))
-        await message.answer_photo(calculate_volume_photo4, "Теперь введите вес груза (в килограммах):")
+        await message.answer_photo(calculate_volume_photo1, "Теперь введите вес груза (в килограммах):")
         await state.set_state(CargoCalculator.weight)
 
 # Обработка веса и вывод результата

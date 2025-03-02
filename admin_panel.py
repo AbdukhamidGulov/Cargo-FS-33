@@ -3,7 +3,7 @@ from aiogram import F, Router, Bot
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
-from aiogram.types import Message, FSInputFile
+from aiogram.types import Message, FSInputFile, CallbackQuery
 from openpyxl.styles import Alignment
 from openpyxl.workbook import Workbook
 
@@ -11,7 +11,7 @@ from database import (get_track_codes_list, drop_users_table, create_users_table
                       create_track_codes_table, get_users_tg_info, get_user_by_id, add_or_update_track_codes_list,
                       delete_shipped_track_codes)
 from filters_and_config import IsAdmin, admin_ids
-from keyboards import admin_keyboard
+from keyboards import admin_keyboard, confirm_keyboard
 
 admin = Router()
 
@@ -167,25 +167,88 @@ async def track_codes_list(message: Message):
     remove(text_file_path)
 
 
-# Удаение отправенных трек-кодов
-@admin.message(F.text == "Удалить отправленные трек-коды",  IsAdmin(admin_ids))
-async def delete_shipped_track_codes_handler(message: Message):
+# Обработка функций для удаения с потверждением
+class DangerActions(StatesGroup):
+    confirm_action = State()
+
+
+# Удаление отправленных трек-кодов
+@admin.message(F.text == "Удалить отправленные трек-коды", IsAdmin(admin_ids))
+async def delete_shipped_handler(message: Message, state: FSMContext):
     await message.delete()
-    await delete_shipped_track_codes()
-    await message.answer("Все отправленные трек-коды успешно удалены.")
+    await ask_confirmation(
+        message=message,
+        state=state,
+        action_type='delete_tracks',
+        warning_text="Это удалит ВСЕ отправленные трек-коды!"
+    )
 
+# Пересоздание таблицы пользователей
 @admin.message(Command(commands="dp_users"), IsAdmin(admin_ids))
-async def recreat_db(message: Message):
-    await drop_users_table()
-    await create_users_table()
-    await message.answer('База данных пользователей успешно пересоздана!')
+async def recreat_db_handler(message: Message, state: FSMContext):
+    await ask_confirmation(
+        message=message,
+        state=state,
+        action_type='recreate_users',
+        warning_text="Это ПОЛНОСТЬЮ удалит таблицу пользователей и создаст её заново!"
+    )
 
-
+# Пересоздание таблицы трек-кодов
 @admin.message(Command(commands="dp_tracks"), IsAdmin(admin_ids))
-async def recreate_tc(message: Message):
-    await drop_track_numbers_table()
-    await create_track_codes_table()
-    await message.answer('База данных Трек-номеров успешно пересоздана!')
+async def recreate_tc_handler(message: Message, state: FSMContext):
+    await ask_confirmation(
+        message=message,
+        state=state,
+        action_type='recreate_tracks',
+        warning_text="Это ПОЛНОСТЬЮ удалит таблицу трек-кодов и создаст её заново!"
+    )
+
+
+async def ask_confirmation(
+        message: Message,
+        state: FSMContext,
+        action_type: str,  # Тип операции: 'delete_tracks', 'recreate_users', 'recreate_tracks'
+        warning_text: str  # Текст предупреждения для пользователя
+):
+    await state.update_data(action_type=action_type)
+    await message.answer(
+        f"⚠️ {warning_text}\n\nВы уверены?",
+        reply_markup=confirm_keyboard
+    )
+    await state.set_state(DangerActions.confirm_action)
+
+
+@admin.callback_query(F.data.startswith("danger_"), DangerActions.confirm_action)
+async def handle_danger_actions(callback: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    action_type = data.get('action_type')
+
+    await callback.message.delete()
+    await state.clear()
+
+    if callback.data == "danger_confirm":
+        try:
+            if action_type == 'delete_tracks':
+                await delete_shipped_track_codes()
+                msg = "Все отправленные трек-коды удалены!"
+
+            elif action_type == 'recreate_users':
+                await drop_users_table()
+                await create_users_table()
+                msg = "Таблица пользователей пересоздана!"
+
+            elif action_type == 'recreate_tracks':
+                await drop_track_numbers_table()
+                await create_track_codes_table()
+                msg = "Таблица трек-кодов пересоздана!"
+
+            await callback.message.answer(f"✅ Успех!\n{msg}")
+
+        except Exception as e:
+            await callback.message.answer(f"❌ Ошибка: {str(e)}")
+
+    else:  # danger_cancel
+        await callback.message.answer("🚫 Действие отменено")
 
 
 # ФУНКЦИИ ДЛЯ УЛАВЛОВАНИЯ ТОКЕНОВ ФАЙЛОВ

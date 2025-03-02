@@ -13,11 +13,8 @@ track_number_info_photo1_Pinduoduo = 'AgACAgIAAxkBAAMWZ11MZoL6cbQmWG4wHfgsX_SXu6
 track_number_info_photo2_Pinduoduo = 'AgACAgIAAxkBAAMXZ11MbXvKqlBV4HRO4WiISlAJj5AAAt3lMRscVqFKuiF4GLEcZ6IBAAMCAANzAAM2BA'
 track_number_info_photo1_Poizon = 'AgACAgIAAxkBAAMYZ11MfIv7EO_P81DAPmx8WU6ISccAAjvlMRscVqFKraK3dSDdXjABAAMCAANzAAM2BA'
 track_number_info_photo2_Poizon = 'AgACAgIAAxkBAAMZZ11Mkd33CFN4QLDFdsly3SOec-0AAjzlMRscVqFKqwABlIts_w-eAQADAgADcwADNgQ'
-calculate_volume_photo1 = 'AgACAgIAAxkBAAOXZ12lYbhglLU6W36YIxp6K6Q7iZ4AAnjqMRstzolKWs9-u_3lmMoBAAMCAANzAAM2BA'
-calculate_volume_photo2 = 'AgACAgIAAxkBAAOZZ12mWJGwEqPAMFwF6uvqI8lRobAAAnjnMRvOn7BK1YsZ4atYpXMBAAMCAANzAAM2BA'
-calculate_volume_photo3 = 'AgACAgIAAxkBAAObZ12mqklJATjHu4MWFhnGDRjPTN0AAnnnMRvOn7BKvQNXdq-6XKkBAAMCAANzAAM2BA'
-calculate_volume_photo4 = 'AgACAgIAAxkBAAOdZ12nASlzTTq8jw6wp1A2bhBCmGUAAnrnMRvOn7BKhaLX1MdStjYBAAMCAANzAAM2BA'
-calculate_volume_photo5 = 'AgACAgIAAxkBAAOfZ12nQMz8S2vj-5iy8akXPWQ21qYAAnvnMRvOn7BKJi6g-sXXNpoBAAMCAANzAAM2BA'
+calculate_volume_photo1 = 'AgACAgIAAxkBAAIC9mfEO_n5I8rMts7cjIvd5BDf1FenAAJX9TEbaMAhSlTx35KzaCUbAQADAgADcwADNgQ'
+calculate_volume_photo5 = 'AgACAgIAAxkBAAIC-2fEPQtaS9_LWizm3J-twysnCmOdAAJi9TEbaMAhSqVs6D5VQK16AQADAgADcwADNgQ'
 self_purchase = ''' ✅<b><u>САМОВЫКУП</u></b>
 
 <i>Самовыкуп товаров из Китая – это отличный способ сэкономить на покупках и самостоятельно контролировать процесс. Вы можете самостоятельно выбрать и купить любые товары на китайских платформах, а мы поможем с:</i>

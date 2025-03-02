@@ -65,6 +65,14 @@ admin_keyboard = create_keyboard([
     [search_by_id_btn], [delete_sent_track_codes_btn], [back_to_main_menu_btn]
 ])
 
+
+# Кнопки потверждения действий
+yes_btn = create_inline_button(text="✅ Да", callback_data="danger_confirm")
+no_btn = create_inline_button(text="❌ Нет", callback_data="danger_cancel")
+
+confirm_keyboard = create_inline_keyboard([[yes_btn, no_btn]])
+
+
 # Кнопки регистрации
 pass_reg_btn = create_inline_button("️Пропустить", "pass_reg")
 do_reg_btn = create_inline_button("️Пройти регистрацию", "do_reg")
