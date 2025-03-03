@@ -1,9 +1,9 @@
 main_menu_photo = 'AgACAgIAAxkBAAMFZ1x08p0YNMLAtVs8dKOunkv7RlsAAvrlMRvicFhKsRcQclEx8ucBAAMCAANzAAM2BA'
-warehouse_address = '<u>Адрес склада</u>\n收件人：<code>FS{0}</code>\n电话号码：<code>15116957545</code>\n地址：<code>佛山市南海区大沥镇黄岐泌冲凤秀岗工业区凤秀大楼18号3档  FS{0} 发货一定要写名字，麦头，不然仓库不收</code>'
-sample_1688 = 'AgACAgIAAxkBAAMNZ11Lrxv9Zm1QYZvK-Cv9eOykYegAAqrsMRu76vBJvPXtHukQpB0BAAMCAANzAAM2BA'
-sample_Taobao = 'AgACAgIAAxkBAAMOZ11LwVslUVnoz5j_tw_KkRDlwQYAAq3sMRu76vBJH7NYTYCFj-sBAAMCAANzAAM2BA'
-sample_Pinduoduo = 'AgACAgIAAxkBAAMPZ11LzfmGu7xfDGzONSv4AoUrisIAAq7sMRu76vBJa9ChCvJz6XUBAAMCAANzAAM2BA'
-sample_Poizon = 'AgACAgIAAxkBAAMQZ11L2Qlkdm1qHBO0-EITsPY4EqwAAkPnMRusx_FJZcvNUJKMwlkBAAMCAANzAAM2BA'
+warehouse_address = '<u>Адрес склада</u>\n收件人：<code>FS{0}</code>\n电话号码：<code>15116957545</code>\n地址：<code>地址：佛山市南海区大沥镇黄岐泌冲凤秀岗工业区凤秀大楼18号1-2档  FS{0} 发货一定要写名字，麦头，不然仓库不收</code>'
+sample_1688 = 'AgACAgIAAxkBAAIDdmfFpr3WuZVmsNljzFvh8_GA_IyeAAIs7zEbaMApSi89KxsP-UAgAQADAgADcwADNgQ'
+sample_Taobao = 'AgACAgIAAxkBAAIDeGfFpyKurCfaV4G-2AxLjanLHtKIAAIt7zEbaMApSt-eQmrDkM_EAQADAgADcwADNgQ'
+sample_Pinduoduo = 'AgACAgIAAxkBAAIDfGfFp2qGzIFa7OGgGqzggPLYVzOGAAIz7zEbaMApSn-3BT5b6cZHAQADAgADcwADNgQ'
+sample_Poizon = 'AgACAgIAAxkBAAIDemfFpzVmsGJvXy-Dfd47CTlQrchWAAIw7zEbaMApSnvVHScZLkswAQADAgADcwADNgQ'
 order_form = 'BQACAgIAAxkBAAMRZ11L_qP8GqH863RXQA_IpbHxJaoAAks-AAKrjnhJ8To8UNoHItk2BA'
 track_number_info_photo1_1688 = 'AgACAgIAAxkBAAMSZ11MLEQ1fbAPNdBMWdcB-wGF5ZkAAhviMRt3gmhL8JwnniB_WzkBAAMCAANzAAM2BA'
 track_number_info_photo2_1688 = 'AgACAgIAAxkBAAMTZ11MNrv8gH9bWov2fOyr5ElKMhIAAhriMRt3gmhLKx0Zs32DWvcBAAMCAANzAAM2BA'
@@ -131,44 +131,12 @@ consolidation = '''📌  Отправка грузов📌
 
 forbidden_goods = '''<b>НАШЕ КАРГО НЕ ПРИНИМАЕТ СЛЕДУЮЩИЕ ВИДЫ ПОСЫЛОК!</b>\n\n1. <b>Лекарства</b> (порошки, таблетки, лекарства в виде жидкостей).\n\n2. <b>Все виды холодного оружия</b> (ножи, электрошокеры, биты и другое данного характера) полностью запрещены.\n\n3. <b>Всё что запрещено на РФ</b> (Военные товары, химия, растения, семена, газ, электронные сигареты)'''
 
-packing = ''' <b>Добро пожаловать в Карго FS-33</b> 
 
-<b>Организация выкупа и консолидация ваших заказов из любых китайских 🇨🇳приложений.
-Хотите сэкономить на доставке из Китая? Наше карго – это ваш лучший выбор!  </b>
-<blockquote><i>Быстрая и надежная доставка
-Прозрачные тарифы без скрытых платежей
-Полный контроль на всех этапах перевозки
-Консолидация посылок для максимальной экономии</i></blockquote>
-<b>Ваше надёжное Карго</b> FS-33 ❤️ 
-
-НАШИ УСЛУГИ: ⬇️
-
- ✅Покупка и доставка товаров с китайских сайтов, таких как 1688, Pinduoduo, WeChat и Poizon.
- ✅Поиск товаров на сайте.
- ✅Консолидация и хранение товаров на складах в Гуанчжоу
- ✅Оплата поставщикам и пополнение кошелька Alipay. 
- ✅Страхование грузов.
-
-
-⬇️<b><u>Обязательно ознакомьтесь с нашими условиями работы.</u></b>
-
-  1 🔘<a href="https://t.me/cargoFS33/78">Адрес  для самовыкупа </a>
-  2 🔘<a href="https://t.me/c/1817208921/76">Бланка для заказа</a>
-  3 🔘<a href="https://t.me/c/1817208921/72">Выкуп через нас
-</a>  4 🔘Как заполнят адрес склада. 
-  5 🔘<a href="https://t.me/cargoFS33/78">Где брать трек номер:</a><a href="https://t.me/c/1817208921/72">
-</a>  6 🔘<a href="https://t.me/c/1817208921/78">Самовыкуп </a>
-  7 🔘<a href="https://t.me/cargoFS33/1777">Прайс</a>
-  8 🔘<a href="https://t.me/cargoFS33/2258">Прайс на авто товары </a>
-  9 🔘<a href="https://t.me/cargoFS33/107">Консолидация  </a> 
-10 🔘<a href="https://t.me/cargoFS33/97">Страховка</a>
-11 🔘<a href="https://t.me/c/1817208921/84">Тарифы</a> 
-11 🔘<a href="https://t.me/cargoFS33/1426">Как Просчитать  доставку?</a>
-12 🔘<a href="https://t.me/cargoFS33/2239">Южное Ворота</a>   
-13 🔘<a href="https://t.me/cargoFS33/2241">Проверка товара </a>
+packing = ''' <i>Информация ещё не заполнено</i> 
 
 НАШИ КОНТАКТЫ:
 ✅Telegram:@fir2201'''
+
 
 blank_info = '''  <b>Мы занимаемся выкупом товаров из Китая по самым выгодным условиям!</b>
 
