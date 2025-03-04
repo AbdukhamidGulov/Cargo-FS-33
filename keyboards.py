@@ -37,13 +37,13 @@ main_keyboard = create_keyboard([
 
 # Инлайн кнопки главного меню
 warehouse_address_btn = create_inline_button(text="️Адрес склада", callback_data="warehouse_address") ##-----
-admin_panel_btn = create_inline_button(text="Админ", url="https://t.me/fir2201")
+admin_btn = create_inline_button(text="Админ", url="https://t.me/fir2201")
 alipay_exchange_rate_btn = create_inline_button(text="Курс Alipay", url="https://t.me/Alipay_Chat_ru")
 my_profile_btn = create_inline_button(text="Мой профиль", callback_data="my_profile")
 cargo_chat_btn = create_inline_button(text="Чат Карго FS-33", url="https://t.me/cargoFS33")
 
 main_inline_keyboard = create_inline_keyboard([
-    [warehouse_address_btn, admin_panel_btn, alipay_exchange_rate_btn],
+    [warehouse_address_btn, admin_btn, alipay_exchange_rate_btn],
     [my_profile_btn, cargo_chat_btn]
 ])
 
@@ -53,7 +53,7 @@ add_track_codes_btn = create_keyboard_button("️Добавить пребывш
 add_sent_track_codes_btn = create_keyboard_button("Добавить отправленные трек-коды")
 track_codes_list_btn = create_keyboard_button("️Список трек-кодов")
 search_by_id_btn = create_keyboard_button("Искать информацию по ID")
-delete_sent_track_codes_btn = create_keyboard_button("Удалить отправленные трек-коды")  # Новая кнопка
+delete_sent_track_codes_btn = create_keyboard_button("Удалить отправленные трек-коды")
 back_to_main_menu_btn = create_keyboard_button("Вернуться в главное меню")
 
 admin_keyboard = create_keyboard([

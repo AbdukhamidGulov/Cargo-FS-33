@@ -11,12 +11,12 @@ get_info = Router()
 
 
 # ВСЯ ОБРАБОТКА ДЛЯ АДРЕСА СКЛАДА И ОБРАЗЦОВ
-@get_info.message(F.text == "️Адрес склада")
-async def address(message: Message):
-    user_id = await get_user_by_tg_id(message.from_user.id)
+@get_info.callback_query(F.data == "️warehouse_address")
+async def address(callback: CallbackQuery):
+    user_id = await get_user_by_tg_id(callback.message.from_user.id)
     fs = f"{user_id[0]:04d}"
-    await message.answer(warehouse_address.format(fs))
-    await message.answer("Нажмите чтобы увидеть образцы", reply_markup=samples_keyboard)
+    await callback.message.answer(warehouse_address.format(fs))
+    await callback.message.answer("Нажмите чтобы увидеть образцы", reply_markup=samples_keyboard)
 
 @get_info.callback_query(F.data.startswith("simple_"))
 async def handle_simple(callback: CallbackQuery):
@@ -64,10 +64,10 @@ async def handle_simple(callback: CallbackQuery):
 # async def send_self_purchase(message: Message):
 #     user_id = await get_user_by_tg_id(message.from_user.id)
 #     await message.answer(self_purchase.format(f"{user_id[0]:04d}"))
-#
-# @get_info.message(F.text == "Тарифы")
-# async def send_tariffs(message: Message):
-#     await message.answer(tariffs)
+
+@get_info.message(F.text == "Тарифы")
+async def send_tariffs(message: Message):
+    await message.answer(tariffs)
 
 @get_info.message(F.text == "Проверка товаров")
 async def send_goods_check(message: Message):
