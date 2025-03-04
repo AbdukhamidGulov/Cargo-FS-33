@@ -59,25 +59,25 @@ async def handle_simple(callback: CallbackQuery):
              InputMediaPhoto(media=photo_key[1])]
     await callback.message.answer_media_group(media)
 
+#
+# @get_info.message(F.text == "Самовыкуп")
+# async def send_self_purchase(message: Message):
+#     user_id = await get_user_by_tg_id(message.from_user.id)
+#     await message.answer(self_purchase.format(f"{user_id[0]:04d}"))
+#
+# @get_info.message(F.text == "Тарифы")
+# async def send_tariffs(message: Message):
+#     await message.answer(tariffs)
 
-@get_info.message(F.text == "Самовыкуп")
-async def send_self_purchase(message: Message):
-    user_id = await get_user_by_tg_id(message.from_user.id)
-    await message.answer(self_purchase.format(f"{user_id[0]:04d}"))
-
-@get_info.message(F.text == "Тарифы")
-async def send_tariffs(message: Message):
-    await message.answer(tariffs)
-
-@get_info.callback_query(F.data == "goods_check")
-async def send_goods_check(callback: CallbackQuery):
+@get_info.message(F.text == "Проверка товаров")
+async def send_goods_check(message: Message):
     media = [InputMediaVideo(media=goods_check_video1),
         InputMediaPhoto(media=goods_check_photo1),
         InputMediaVideo(media=goods_check_video2),
         InputMediaPhoto(media=goods_check_photo2),
         InputMediaPhoto(media=goods_check_photo3)]
-    await callback.message.answer_media_group(media)
-    await callback.message.reply(goods_check, reply_markup=main_keyboard)
+    await message.answer_media_group(media)
+    await message.reply(goods_check, reply_markup=main_keyboard)
 
 @get_info.message(F.text == "Консолидация")
 async def send_consolidation(message: Message):
@@ -92,7 +92,7 @@ async def send_forbidden_goods(message: Message):
 
 @get_info.message(F.text == "Упаковка")
 async def send_packing(message: Message):
-    await message.answer(packing)
+    await message.answer_photo(packing_photo, packing)
 
 @get_info.message(F.text == "️Цены")  # Нету кнопки
 async def price(message: Message):
@@ -102,16 +102,16 @@ async def price(message: Message):
 
 
 # ОБРАБОТЧИК КОМАНДЫ "Мой профиль"
-@get_info.message(F.text == "Мой профиль")
-async def profile(message: Message):
-    inf = await get_info_profile(message.from_user.id)
-    if not inf: await message.answer("Профиль не найден.")
+@get_info.message(F.text == "my_profile")
+async def profile(callback: CallbackQuery):
+    inf = await get_info_profile(callback.message.from_user.id)
+    if not inf: await callback.message.answer("Профиль не найден.")
     no = "<i>Не заполнено</i>"
-    await message.answer(
+    await callback.message.answer(
         f"Номер для заказов: <code>FS{inf.get('id'):04d}</code>\n"
         f"Имя: {inf.get('name') or no}\n"
         f"Номер: {inf.get('phone') or no}\n")
-    await message.answer("Что нужно сделать ещё?", reply_markup=my_profile_keyboard)
+    await callback.message.answer("Что нужно сделать ещё?", reply_markup=my_profile_keyboard)
 
 @get_info.callback_query(F.data == "change_profile_data")
 async def change_profile_data(callback: CallbackQuery):
@@ -133,11 +133,6 @@ async def my_track_codes(callback: CallbackQuery):
         await callback.message.answer("У вас нет зарегистрированных трек-кодов.\n"
                                       "Для того чтобы их добавить, просто поищите их через команду "
                                       "<code>Проверка трек-кода</code> и они автоматически сохраняться в ваши трек-коды")
-
-
-@get_info.message(F.text == "Другие кнопки")
-async def send_anther(message: Message):
-    await message.answer("вот другие кнопки Фирузчон баратан", reply_markup=main_inline_keyboard)
 
 
 # ОБРАБОТЧИК КОМАНДЫ НАЗАД В ГЛАВНОЕ МЕНЮ

@@ -15,40 +15,36 @@ def create_inline_keyboard(buttons: list[list[InlineKeyboardButton]]) -> InlineK
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 # Кнопки главного меню
-warehouse_address_btn = create_keyboard_button("️Адрес склада")
-check_track_number_btn = create_keyboard_button("Проверка трек-кода")
 order_form_btn = create_keyboard_button("Бланк для заказа")
 track_number_info_btn = create_keyboard_button("Где брать трек-номер")
-self_purchase_btn = create_keyboard_button("Самовыкуп")
-tariffs_btn = create_keyboard_button("Тарифы")
-consolidation_btn = create_keyboard_button("Консолидация")
 forbidden_goods_btn = create_keyboard_button("Запрещённые товары")
+consolidation_btn = create_keyboard_button("Консолидация")
+check_track_number_btn = create_keyboard_button("Проверка трек-кода")
+goods_check_btn = create_keyboard_button("Проверка товаров")
+# self_purchase_btn = create_keyboard_button("Самовыкуп")
+calculate_volume_btn = create_keyboard_button("Рассчитать объём")
+calculate_insurance_btn = create_keyboard_button("Рассчитать страховку")
+tariffs_btn = create_keyboard_button("Тарифы")
 packing_btn = create_keyboard_button("Упаковка")
-my_profile_btn = create_keyboard_button("Мой профиль")
 
 main_keyboard = create_keyboard([
-    [warehouse_address_btn, check_track_number_btn],
-    [order_form_btn, track_number_info_btn],
-    [self_purchase_btn, tariffs_btn],
-    [consolidation_btn, forbidden_goods_btn],
-    [packing_btn, my_profile_btn]
+    [order_form_btn , track_number_info_btn ],
+    [forbidden_goods_btn, consolidation_btn],
+    [check_track_number_btn, goods_check_btn],
+    [calculate_volume_btn, calculate_insurance_btn],
+    [tariffs_btn, packing_btn]
 ])
 
 # Инлайн кнопки главного меню
-calculate_volume_btn = create_inline_button(text="Рассчитать объём", callback_data="calculate_volume")
-# calculate_shipping_btn = create_inline_button(text="Рассчитать доставку", callback_data="calc_shipping")
-calculate_insurance_btn = create_inline_button(text="Рассчитать страховку", callback_data="calc_insurance")
-goods_check_btn = create_inline_button(text="Проверка товаров", callback_data="goods_check")
-request_for_verification_btn = create_inline_button(text="Заявка на проверку", callback_data="request_for_verification")
-alipay_exchange_rate_btn = create_inline_button(text="Курс Alipay", url="https://t.me/Alipay_Chat_ru")
-cargo_chat_btn = create_inline_button(text="Чат Карго FS-33", url="https://t.me/cargoFS33")
+warehouse_address_btn = create_inline_button(text="️Адрес склада", callback_data="warehouse_address") ##-----
 admin_panel_btn = create_inline_button(text="Админ", url="https://t.me/fir2201")
+alipay_exchange_rate_btn = create_inline_button(text="Курс Alipay", url="https://t.me/Alipay_Chat_ru")
+my_profile_btn = create_inline_button(text="Мой профиль", callback_data="my_profile")
+cargo_chat_btn = create_inline_button(text="Чат Карго FS-33", url="https://t.me/cargoFS33")
 
 main_inline_keyboard = create_inline_keyboard([
-    [calculate_volume_btn, calculate_insurance_btn],
-    [goods_check_btn, request_for_verification_btn],
-    [alipay_exchange_rate_btn, cargo_chat_btn],
-    [admin_panel_btn]
+    [warehouse_address_btn, admin_panel_btn, alipay_exchange_rate_btn],
+    [my_profile_btn, cargo_chat_btn]
 ])
 
 

@@ -15,12 +15,12 @@ class CargoCalculator(StatesGroup):
     weight = State()  # вес
 
 
-@calc_volume.callback_query(F.data == "calculate_volume")
-async def calculate_volume(callback: CallbackQuery, state: FSMContext):
-    await callback.message.delete()
-    await callback.message.answer_photo(
+@calc_volume.message(F.text == "Рассчитать объём")
+async def calculate_volume(message: Message, state: FSMContext):
+    await message.delete()
+    await message.answer_photo(
         calculate_volume_photo1, "❗️<i>Что такое плотность и для чего она нужна? "
-        "<a href='https://t.me/quicktao_cargo1/16303'>Читайте здесь</a></i>\n\n"
+        "<a href='https://t.me/cargoFS33/1426'>Читайте здесь</a></i>\n\n"
         "Для расчёта плотности груза введите длину груза (в сантиметрах):")
     await state.set_state(CargoCalculator.length)
 

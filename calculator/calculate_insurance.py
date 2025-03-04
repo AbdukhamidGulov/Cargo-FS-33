@@ -24,10 +24,10 @@ class InsuranceState(StatesGroup):
     item_type = State()  # Выбор типа товара
 
 # Старт расчёта страховки
-@calc_ins.callback_query(F.data == "calc_insurance")
-async def start_insurance(callback: CallbackQuery, state: FSMContext):
-    await callback.message.delete()
-    await callback.message.answer("Введите стоимость груза в юанях:")
+@calc_ins.message(F.text == "Рассчитать страховку")
+async def start_insurance(message: Message, state: FSMContext):
+    await message.delete()
+    await message.answer("Введите стоимость груза в юанях:")
     await state.set_state(InsuranceState.cost)
 
 # Ввод стоимости
