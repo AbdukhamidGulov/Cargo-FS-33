@@ -2,9 +2,9 @@ from aiohttp import ClientSession
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message
 
-from keyboards import main_keyboard, item_type_keyboard, main_inline_keyboard
+from keyboards import main_keyboard, item_type_keyboard,  get_main_inline_keyboard
 
 calc_ins = Router()
 item_types = [
@@ -106,4 +106,4 @@ async def enter_item_type(message: Message, state: FSMContext):
         reply_markup=main_keyboard
     )
     await state.clear()
-    await message.answer('Чем я ещё могу вам помочь?', reply_markup=main_inline_keyboard)
+    await message.answer('Чем я ещё могу вам помочь?', reply_markup=get_main_inline_keyboard(message.from_user.id))

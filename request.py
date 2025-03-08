@@ -4,8 +4,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, Message
 
 from filters_and_config import admin_ids
-from keyboards import main_inline_keyboard
-
+from keyboards import get_main_inline_keyboard
 
 request = Router()
 
@@ -36,8 +35,7 @@ async def receive_track_codes(message: Message, state: FSMContext, bot: Bot):
         "оставил заявку на проверку своих товаров.\n\n"
         f"Трек-коды:\n{chr(10).join(track_codes)}"
     )
-
     await bot.send_message(chat_id=admin_ids[1]  , text=admin_message)
     await message.answer("Ваша заявка на проверку товаров успешно отправлена администратору.",
-                         reply_markup=main_inline_keyboard)
+                         reply_markup=get_main_inline_keyboard(message.from_user.id))
     await state.clear()

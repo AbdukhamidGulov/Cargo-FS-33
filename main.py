@@ -4,9 +4,9 @@ from aiogram.types import Message
 from aiogram.filters import CommandStart
 from aiogram.client.default import DefaultBotProperties
 
+from request import request
 from admin_panel import admin
 from change_processor import change
-from request import request
 from track_numbers import track_code
 from get_information import get_info
 from text_info import main_menu_photo
@@ -14,9 +14,9 @@ from registration_process import states
 from calculator.calc_volume import calc_volume
 from calculator.calculate_insurance import calc_ins
 from calculator.calculate_shipping import calc_shipping
-from keyboards import main_keyboard, reg_keyboard, main_inline_keyboard
+from keyboards import main_keyboard, reg_keyboard, get_main_inline_keyboard
 from database import create_users_table, get_user_by_tg_id, create_track_codes_table
-from filters_and_config import TELEGRAM_BOT_TOKEN
+from filters_and_config import TELEGRAM_BOT_TOKEN, admin_ids
 
 bot = Bot(token=TELEGRAM_BOT_TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
 dp = Dispatcher()
@@ -33,7 +33,7 @@ async def start_command(message: Message):
     if user:
         await message.answer('Я помогу вам найти адреса складов, проверить трек-код и ознакомить с ценами',
                              reply_markup=main_keyboard)
-        await message.answer('Как я могу вам помочь?', reply_markup=main_inline_keyboard)
+        await message.answer('Как я могу вам помочь?', reply_markup=get_main_inline_keyboard(message.from_user.id))
     else:
         await message.answer('Вы ещё не зарегистрированы чтобы пользоваться нашим ботом\n\n'
                              'Хотите зарегистрироваться?', reply_markup=reg_keyboard)

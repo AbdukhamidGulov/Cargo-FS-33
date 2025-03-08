@@ -15,6 +15,10 @@ from keyboards import admin_keyboard, confirm_keyboard
 
 admin = Router()
 
+@admin.callback_query(F.data == "admin_panel")
+async def handle_admin_panel(callback: CallbackQuery):
+    await callback.message.answer("Выберите команду", reply_markup=admin_keyboard)
+    await callback.answer()
 
 @admin.message(F.text.lower() == "админ", IsAdmin(admin_ids))
 @admin.message(Command(commands=['admin']), IsAdmin(admin_ids))
@@ -26,7 +30,7 @@ async def admin_command(message: Message):
 async def admin_command(message: Message, bot: Bot):
     await message.answer('Вы не являетесь админом')
     await bot.send_message(admin_ids[0], text=f"Пользователь {message.from_user.username} "
-                                              f"c id {message.from_user.id} нажал на команду <b>admin</b>")
+                                              f"c id <code>{message.from_user.id} нажал на команду <b>admin</b>")
 
 
 # Искать информацию по ID

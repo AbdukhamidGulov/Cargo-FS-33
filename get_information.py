@@ -5,7 +5,7 @@ from text_info import *
 from database import get_info_profile, get_user_by_tg_id, get_user_track_codes
 from keyboards import (my_profile_keyboard, samples_keyboard, samples_1688_keyboard, samples_Taobao_keyboard, \
                        samples_Pinduoduo_keyboard, samples_Poizon_keyboard, main_keyboard, change_data_keyboard,
-                       main_inline_keyboard, where_get_keyboard)
+                       where_get_keyboard)
 
 get_info = Router()
 

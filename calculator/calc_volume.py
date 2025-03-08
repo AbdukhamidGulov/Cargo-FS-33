@@ -3,7 +3,8 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 
-from keyboards import main_keyboard, main_inline_keyboard
+from filters_and_config import admin_ids
+from keyboards import main_keyboard, get_main_inline_keyboard
 from text_info import calculate_volume_photo1, calculate_volume_photo5
 
 calc_volume = Router()
@@ -67,7 +68,7 @@ async def input_weight(message: Message, state: FSMContext):
             f"Объём груза: {volume:.2f} м³\n"
             f"Плотность груза: {density:.2f} кг/м³", reply_markup=main_keyboard)
         await state.clear()
-        await message.answer('Чем я ещё могу вам помочь?', reply_markup=main_inline_keyboard)
+        await message.answer('Чем я ещё могу вам помочь?', reply_markup=get_main_inline_keyboard(message.from_user.id))
     except ValueError:
         await message.answer("Введите числовое значение веса.")
 

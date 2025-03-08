@@ -1,5 +1,7 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, KeyboardButton, ReplyKeyboardMarkup
 
+from filters_and_config import admin_ids
+
 
 def create_keyboard_button(text: str) -> KeyboardButton:
     return KeyboardButton(text=text)
@@ -36,16 +38,22 @@ main_keyboard = create_keyboard([
 ])
 
 # Инлайн кнопки главного меню
-warehouse_address_btn = create_inline_button(text="️Адрес склада", callback_data="warehouse_address") ##-----
-admin_btn = create_inline_button(text="Админ", url="https://t.me/fir2201")
-alipay_exchange_rate_btn = create_inline_button(text="Курс Alipay", url="https://t.me/Alipay_Chat_ru")
-my_profile_btn = create_inline_button(text="Мой профиль", callback_data="my_profile")
-cargo_chat_btn = create_inline_button(text="Чат Карго FS-33", url="https://t.me/cargoFS33")
+def get_main_inline_keyboard(user_id: int) -> InlineKeyboardMarkup:
+    """Автоматически определяет права пользователя и создаёт клавиатуру"""
+    is_admin = user_id in admin_ids
+    warehouse_address_btn = create_inline_button(text="️Адрес склада", callback_data="warehouse_address")
+    alipay_exchange_rate_btn = create_inline_button(text="Курс Alipay", url="https://t.me/Alipay_Chat_ru")
+    my_profile_btn = create_inline_button(text="Мой профиль", callback_data="my_profile")
+    cargo_chat_btn = create_inline_button(text="Чат Карго FS-33", url="https://t.me/cargoFS33")
 
-main_inline_keyboard = create_inline_keyboard([
-    [warehouse_address_btn, admin_btn, alipay_exchange_rate_btn],
-    [my_profile_btn, cargo_chat_btn]
-])
+    admin_panel_btn = (
+        create_inline_button(text="Админ", callback_data="admin_panel") if is_admin
+        else create_inline_button(text="Админ", url="https://t.me/fir2201")
+    )
+    return create_inline_keyboard([
+        [warehouse_address_btn, admin_panel_btn, alipay_exchange_rate_btn],
+        [my_profile_btn, cargo_chat_btn]
+    ])
 
 
 # Админ кнопки
@@ -62,7 +70,7 @@ admin_keyboard = create_keyboard([
 ])
 
 
-# Кнопки потверждения действий
+# Кнопки подтверждения действий
 yes_btn = create_inline_button(text="✅ Да", callback_data="danger_confirm")
 no_btn = create_inline_button(text="❌ Нет", callback_data="danger_cancel")
 
