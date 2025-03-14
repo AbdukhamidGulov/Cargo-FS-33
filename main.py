@@ -15,8 +15,8 @@ from calculator.calc_volume import calc_volume
 from calculator.calculate_insurance import calc_ins
 from calculator.calculate_shipping import calc_shipping
 from keyboards import main_keyboard, reg_keyboard, get_main_inline_keyboard
-from database import create_users_table, get_user_by_tg_id, create_track_codes_table
-from filters_and_config import TELEGRAM_BOT_TOKEN, admin_ids
+from database import get_user_by_tg_id, create_tables
+from filters_and_config import TELEGRAM_BOT_TOKEN
 
 bot = Bot(token=TELEGRAM_BOT_TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
 dp = Dispatcher()
@@ -41,8 +41,7 @@ async def start_command(message: Message):
 
 async def main():
     try:
-        await create_users_table()
-        await create_track_codes_table()
+        await create_tables()
         print('Бот запущен')
         await dp.start_polling(bot)
     finally:

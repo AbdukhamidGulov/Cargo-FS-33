@@ -7,9 +7,8 @@ from aiogram.types import Message, FSInputFile, CallbackQuery
 from openpyxl.styles import Alignment
 from openpyxl.workbook import Workbook
 
-from database import (get_track_codes_list, drop_users_table, create_users_table, drop_track_numbers_table,
-                      create_track_codes_table, get_users_tg_info, get_user_by_id, add_or_update_track_codes_list,
-                      delete_shipped_track_codes)
+from database import (get_track_codes_list, drop_users_table, get_users_tg_info, get_user_by_id, create_tables,
+                      add_or_update_track_codes_list, delete_shipped_track_codes, drop_track_codes_table)
 from filters_and_config import IsAdmin, admin_ids
 from keyboards import admin_keyboard, confirm_keyboard
 
@@ -238,12 +237,12 @@ async def handle_danger_actions(callback: CallbackQuery, state: FSMContext):
 
             elif action_type == 'recreate_users':
                 await drop_users_table()
-                await create_users_table()
+                await create_tables()
                 msg = "Таблица пользователей пересоздана!"
 
             elif action_type == 'recreate_tracks':
-                await drop_track_numbers_table()
-                await create_track_codes_table()
+                await drop_track_codes_table()
+                await create_tables()
                 msg = "Таблица трек-кодов пересоздана!"
 
             await callback.message.answer(f"✅ Успех!\n{msg}")

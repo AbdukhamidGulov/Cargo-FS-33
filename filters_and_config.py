@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 TELEGRAM_BOT_TOKEN = getenv('BOT_TOKEN')
+DATABASE_URL = getenv('DATABASE_URL')
 admin_ids = list(map(int, getenv('admin_ids').split(",")))
 
 

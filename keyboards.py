@@ -39,7 +39,7 @@ main_keyboard = create_keyboard([
 
 # Инлайн кнопки главного меню
 def get_main_inline_keyboard(user_id: int) -> InlineKeyboardMarkup:
-    """Автоматически определяет права пользователя и создаёт клавиатуру"""
+    """Автоматически определяет права пользователя и создаёт инлайн клавиатуру с админом"""
     is_admin = user_id in admin_ids
     warehouse_address_btn = create_inline_button(text="️Адрес склада", callback_data="warehouse_address")
     alipay_exchange_rate_btn = create_inline_button(text="Курс Alipay", url="https://t.me/Alipay_Chat_ru")
