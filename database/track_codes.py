@@ -156,21 +156,15 @@ async def add_or_update_track_codes_list(track_codes: list[str], status: str, bo
                 logger.error(f"Ошибка при обработке трек-кода {track}: {e}")
                 raise
 
-async def check_or_add_track_code(track_code: str, tg_id: int, bot) -> str:
+async def check_or_add_track_code(track_code: str, tg_id: int) -> str:
     """
-    Функция выполняет две задачи:
-    1. Если трек-код уже есть в базе данных: возвращать его текущий статус и показывать пользователю соответствующее сообщение
-    (например, "Ваш товар уже на складе", "Ваш товар ещё не прибыл на склад" или "Ваш товар был отправлен").
-
-    2. Если трек-кода нет в базе: добавлять его со статусом "out_of_stock" и сообщать пользователю
-    "Ваш товар ещё не прибыл на склад".
-
-
+    Проверяет наличие трек-кода в базе данных.
+    Если трек-код есть, обновляет tg_id (если он был None) и возвращает текущий статус.
+    Если трек-кода нет, добавляет его со статусом "out_of_stock" и возвращает "out_of_stock".
 
     Args:
         track_code (str): Трек-код.
         tg_id (int): Telegram ID пользователя.
-        bot: Объект бота для отправки уведомлений.
 
     Returns:
         str: Текущий статус трек-кода.
@@ -179,9 +173,6 @@ async def check_or_add_track_code(track_code: str, tg_id: int, bot) -> str:
         ValueError: Если track_code пустой или некорректный.
         Exception: Если произошла ошибка при проверке или добавлении трек-кода.
     """
-    if not track_code or not isinstance(track_code, str):
-        raise ValueError("Трек-код должен быть непустой строкой.")
-
     async with async_session() as session:
         try:
             async with session.begin():
@@ -190,14 +181,11 @@ async def check_or_add_track_code(track_code: str, tg_id: int, bot) -> str:
                 track_code_obj = result.scalar_one_or_none()
 
                 if track_code_obj:
-                    # Обновляем tg_id, если он был None
-                    if track_code_obj.tg_id is None:
+                    if track_code_obj.tg_id is None:  # Обновляем tg_id, если он был None
                         track_code_obj.tg_id = tg_id
                         await session.commit()
-                    # Просто возвращаем текущий статус без его изменения
                     return track_code_obj.status
-                else:
-                    # Добавляем новый трек-код со статусом "out_of_stock"
+                else:  # Добавляем новый трек-код со статусом "out_of_stock"
                     new_track_code = TrackCode(track_code=track_code, status="out_of_stock", tg_id=tg_id)
                     session.add(new_track_code)
                     await session.commit()
