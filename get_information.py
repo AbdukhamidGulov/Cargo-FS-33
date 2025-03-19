@@ -2,19 +2,24 @@ from aiogram.types import CallbackQuery, Message, InputMediaPhoto, InputMediaVid
 from aiogram import F, Router
 
 from text_info import *
-from database import get_info_profile, get_user_by_tg_id, get_user_track_codes
+from database.users import get_info_profile, get_user_by_tg_id
+from database.track_codes import get_user_track_codes
 from keyboards import (my_profile_keyboard, samples_keyboard, samples_1688_keyboard, samples_Taobao_keyboard, \
                        samples_Pinduoduo_keyboard, samples_Poizon_keyboard, main_keyboard, change_data_keyboard,
-                       where_get_keyboard)
+                       where_get_keyboard, reg_keyboard)
 
 get_info = Router()
 
 
 # ВСЯ ОБРАБОТКА ДЛЯ АДРЕСА СКЛАДА И ОБРАЗЦОВ
-@get_info.callback_query(F.data == "️warehouse_address")
+@get_info.callback_query(F.data == "warehouse_address")
 async def address(callback: CallbackQuery):
-    user_id = await get_user_by_tg_id(callback.message.from_user.id)
-    fs = f"{user_id[0]:04d}"
+    id_from_user = await get_user_by_tg_id(callback.from_user.id)
+    if not id_from_user:
+        await callback.answer(
+            "❌ Вы не зарегистрированы!\n\nХотите зарегистрироваться?", reply_markup=reg_keyboard)
+        return
+    fs = f"{id_from_user:04d}"
     await callback.message.answer(warehouse_address.format(fs))
     await callback.message.answer("Нажмите чтобы увидеть образцы", reply_markup=samples_keyboard)
 
@@ -59,12 +64,6 @@ async def handle_simple(callback: CallbackQuery):
              InputMediaPhoto(media=photo_key[1])]
     await callback.message.answer_media_group(media)
 
-#
-# @get_info.message(F.text == "Самовыкуп")
-# async def send_self_purchase(message: Message):
-#     user_id = await get_user_by_tg_id(message.from_user.id)
-#     await message.answer(self_purchase.format(f"{user_id[0]:04d}"))
-
 @get_info.message(F.text == "Тарифы")
 async def send_tariffs(message: Message):
     await message.answer(tariffs)
@@ -95,10 +94,8 @@ async def send_packing(message: Message):
     await message.answer_photo(packing_photo, packing)
 
 @get_info.message(F.text == "️Цены")  # Нету кнопки
-async def price(message: Message):
-    await message.answer_photo(
-        "AgACAgIAAxkBAANYZ11s0AJ1HhedVqNTXJD5fX0pZWkAAvnqMRv6E-FJUdKB1YR7H-gBAAMCAANzAAM2BA",
-        "2,5$/КГ\n230/Куб")
+async def send_prices(message: Message):
+    await message.answer_photo(prices_photo, prices)
 
 
 # ОБРАБОТЧИК КОМАНДЫ "Мой профиль"

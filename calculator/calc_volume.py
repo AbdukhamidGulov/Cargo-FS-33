@@ -1,9 +1,8 @@
 from aiogram import F, Router
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 
-from filters_and_config import admin_ids
 from keyboards import main_keyboard, get_main_inline_keyboard
 from text_info import calculate_volume_photo1, calculate_volume_photo5
 

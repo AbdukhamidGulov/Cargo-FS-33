@@ -143,6 +143,10 @@ packing = ''' <b>Коробка+мешок+ скотч: 5$
 ✅Telegram:@fir2201'''
 
 
+prices_photo = 'AgACAgIAAxkBAANYZ11s0AJ1HhedVqNTXJD5fX0pZWkAAvnqMRv6E-FJUdKB1YR7H-gBAAMCAANzAAM2BA'
+prices = '2,5$/КГ\n230/Куб'
+
+
 blank_info = '''  <b>Мы занимаемся выкупом товаров из Китая по самым выгодным условиям!</b>
 
 <blockquote><i>Работаем с любыми китайскими интернет-магазинами и приложениями

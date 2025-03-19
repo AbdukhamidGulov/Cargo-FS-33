@@ -17,6 +17,7 @@ async def end_text_handler(message: Message):
     await message.answer(message.text)
     print(message.text)
 
+
 @calc_shipping.message(F.data)
 async def end_data_handler(callback: CallbackQuery):
     await callback.message.answer(callback.message.text)

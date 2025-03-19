@@ -3,7 +3,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message
 
-from database import check_or_add_track_code
+from database.track_codes import check_or_add_track_code
 from keyboards import main_keyboard, cancel_keyboard
 
 track_code = Router()
@@ -15,7 +15,7 @@ class TrackCode(StatesGroup):
 
 @track_code.message(F.text == "Проверка трек-кода")
 async def check_track_code(message: Message, state: FSMContext):
-    await message.answer("Вставьте и отправьте ваш трек-код для проверки:")
+    await message.answer("Отправьте ваш трек-код для проверки:")
     await state.set_state(TrackCode.track_code)
 
 @track_code.message(TrackCode.track_code)
