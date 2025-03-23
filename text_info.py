@@ -143,7 +143,7 @@ packing = ''' <b>Коробка+мешок+ скотч: 5$
 ✅Telegram:@fir2201'''
 
 
-prices_photo = 'AgACAgIAAxkBAANYZ11s0AJ1HhedVqNTXJD5fX0pZWkAAvnqMRv6E-FJUdKB1YR7H-gBAAMCAANzAAM2BA'
+prices_document = 'BQACAgIAAxkBAAMRZ11L_qP8GqH863RXQA_IpbHxJaoAAks-AAKrjnhJ8To8UNoHItk2BA'
 prices = '2,5$/КГ\n230/Куб'
 
 
@@ -176,3 +176,54 @@ blank_info = '''  <b>Мы занимаемся выкупом товаров и�
 ➡Товары, поступающие на склад, проверяются на соответствие по количеству, типу и размеру.
 
 ➡ Как только все товары поступят на склад, мы свяжемся с вами, чтобы договориться об отправке.'''
+
+
+
+
+# Функция чтобы заново заполнит info_content
+
+from database.info_content import update_info_content
+
+async def migrate_text_info_to_db():
+    """Переносит данные из text_info.py в базу данных info_content."""
+    # Создаём словарь с данными из text_info.py
+    data = {
+        "main_menu_photo": main_menu_photo,
+        "warehouse_address": warehouse_address,
+        "sample_1688": sample_1688,
+        "sample_Taobao": sample_Taobao,
+        "sample_Pinduoduo": sample_Pinduoduo,
+        "sample_Poizon": sample_Poizon,
+        "order_form": order_form,
+        "track_number_info_photo1_1688": track_number_info_photo1_1688,
+        "track_number_info_photo2_1688": track_number_info_photo2_1688,
+        "track_number_info_photo1_Taobao": track_number_info_photo1_Taobao,
+        "track_number_info_photo2_Taobao": track_number_info_photo2_Taobao,
+        "track_number_info_photo1_Pinduoduo": track_number_info_photo1_Pinduoduo,
+        "track_number_info_photo2_Pinduoduo": track_number_info_photo2_Pinduoduo,
+        "track_number_info_photo1_Poizon": track_number_info_photo1_Poizon,
+        "track_number_info_photo2_Poizon": track_number_info_photo2_Poizon,
+        "calculate_volume_photo1": calculate_volume_photo1,
+        "calculate_volume_photo5": calculate_volume_photo5,
+        "self_purchase": self_purchase,
+        "tariffs": tariffs,
+        "goods_check_video1": goods_check_video1,
+        "goods_check_photo1": goods_check_photo1,
+        "goods_check_video2": goods_check_video2,
+        "goods_check_photo2": goods_check_photo2,
+        "goods_check_photo3": goods_check_photo3,
+        "goods_check": goods_check,
+        "consolidation_photo": consolidation_photo,
+        "consolidation": consolidation,
+        "forbidden_goods": forbidden_goods,
+        "packing_photo": packing_photo,
+        "packing": packing,
+        "prices_document": prices_document,
+        "prices": prices,
+        "blank_info": blank_info
+    }
+
+    # Переносим данные в базу
+    for key, value in data.items():
+        await update_info_content(key, value)
+    print(f"--- Сохранено в базе данных ---")

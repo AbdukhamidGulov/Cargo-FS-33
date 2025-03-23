@@ -7,13 +7,12 @@ from aiogram.types import Message
 from aiogram.filters import CommandStart
 from aiogram.client.default import DefaultBotProperties
 
-
 from request import request_router
 from profile import profile_router
 from admin_panel import admin_router
 from track_numbers import track_code
 from get_information import get_info
-from text_info import main_menu_photo
+from text_info import main_menu_photo, migrate_text_info_to_db
 from database.base import setup_database
 from database.users import get_user_by_tg_id
 from registration_process import states_router
@@ -68,6 +67,7 @@ async def main():
     try:
         await setup_database()
         logger.info('База данных инициализирована')
+        await migrate_text_info_to_db()
         await dp.start_polling(bot)
         logger.info('Бот начал polling')
     except Exception as e:

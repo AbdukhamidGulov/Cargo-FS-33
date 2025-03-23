@@ -120,12 +120,13 @@ async def send_packing(message: Message):
 @get_info.message(F.text == "️Цены")  # Нету кнопки
 async def send_prices(message: Message):
     """Отправляет информацию о ценах."""
-    await message.answer_photo(prices_photo, prices)
+    await message.answer_document(document=prices_document, caption=prices)
+
 
 
 # ОБРАБОТЧИК КОМАНДЫ НАЗАД В ГЛАВНОЕ МЕНЮ
 @get_info.callback_query(F.data == "main_menu")
 async def back_to_menu(callback: CallbackQuery):
-    """"""
+    """Возвращает в главное меню"""
     await callback.message.delete()
     await callback.message.answer("Как я могу вам помочь?", reply_markup=main_keyboard)

@@ -11,4 +11,5 @@ class Base(DeclarativeBase):
 async def setup_database():
     """Инициализирует базу данных, создавая все таблицы, определённые в моделях SQLAlchemy."""
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+        # await conn.run_sync(Base.metadata.drop_all)  # Раскомментировать для удержания всех таблицы
+        await conn.run_sync(Base.metadata.create_all)  # Создание всех таблиц
