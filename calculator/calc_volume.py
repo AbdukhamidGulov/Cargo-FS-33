@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from keyboards import main_keyboard, get_main_inline_keyboard
 from text_info import calculate_volume_photo1, calculate_volume_photo5
 
-calc_volume = Router()
+calc_volume_router = Router()
 
 class CargoCalculator(StatesGroup):
     length = State()  # длина
@@ -15,7 +15,7 @@ class CargoCalculator(StatesGroup):
     weight = State()  # вес
 
 
-@calc_volume.message(F.text == "Рассчитать объём")
+@calc_volume_router.message(F.text == "Рассчитать объём")
 async def calculate_volume(message: Message, state: FSMContext):
     await message.delete()
     await message.answer_photo(
@@ -25,7 +25,7 @@ async def calculate_volume(message: Message, state: FSMContext):
     await state.set_state(CargoCalculator.length)
 
 # Обработка длины
-@calc_volume.message(CargoCalculator.length)
+@calc_volume_router.message(CargoCalculator.length)
 async def input_length(message: Message, state: FSMContext):
     if not message.text.isdigit():
         await message.answer("Введите целое числовое значение длины.")
@@ -35,7 +35,7 @@ async def input_length(message: Message, state: FSMContext):
         await state.set_state(CargoCalculator.width)
 
 # Обработка ширины
-@calc_volume.message(CargoCalculator.width)
+@calc_volume_router.message(CargoCalculator.width)
 async def input_width(message: Message, state: FSMContext):
     if not message.text.isdigit():
         await message.answer("Введите целое числовое значение ширины.")
@@ -45,7 +45,7 @@ async def input_width(message: Message, state: FSMContext):
         await state.set_state(CargoCalculator.height)
 
 # Обработка высоты
-@calc_volume.message(CargoCalculator.height)
+@calc_volume_router.message(CargoCalculator.height)
 async def input_height(message: Message, state: FSMContext):
     if not message.text.isdigit():
         await message.answer("Введите целое числовое значение высоты.")
@@ -55,7 +55,7 @@ async def input_height(message: Message, state: FSMContext):
         await state.set_state(CargoCalculator.weight)
 
 # Обработка веса и вывод результата
-@calc_volume.message(CargoCalculator.weight)
+@calc_volume_router.message(CargoCalculator.weight)
 async def input_weight(message: Message, state: FSMContext):
     try:
         weight = float(message.text)
@@ -70,24 +70,3 @@ async def input_weight(message: Message, state: FSMContext):
         await message.answer('Чем я ещё могу вам помочь?', reply_markup=get_main_inline_keyboard(message.from_user.id))
     except ValueError:
         await message.answer("Введите числовое значение веса.")
-
-# # Обработка кнопок
-# @calc_volume.callback_query(F.data == "main_menu")
-# async def main_menu(callback: CallbackQuery, state: FSMContext):
-#     await callback.message.answer("Вы вернулись в главное меню.")
-#     await state.clear()
-#
-# @calc_volume.callback_query(F.data == "back")
-# async def go_back(callback: CallbackQuery, state: FSMContext):
-#     current_state = await state.get_state()
-#     if current_state == CargoCalculator.weight:
-#         await callback.message.answer("Введите высоту груза (в сантиметрах):")
-#         await state.set_state(CargoCalculator.height)
-#     elif current_state == CargoCalculator.height:
-#         await callback.message.answer("Введите ширину груза (в сантиметрах):")
-#         await state.set_state(CargoCalculator.width)
-#     elif current_state == CargoCalculator.width:
-#         await callback.message.answer("Введите длину груза (в сантиметрах):")
-#         await state.set_state(CargoCalculator.length)
-#     else:
-#         await callback.message.answer("Вы уже в начальном состоянии.")

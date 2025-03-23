@@ -6,7 +6,7 @@ from aiogram.types import Message
 
 from keyboards import main_keyboard, item_type_keyboard,  get_main_inline_keyboard
 
-calc_ins = Router()
+calc_ins_router = Router()
 item_types = [
     "Объёмный груз",
     "Одежда",
@@ -24,14 +24,14 @@ class InsuranceState(StatesGroup):
     item_type = State()  # Выбор типа товара
 
 # Старт расчёта страховки
-@calc_ins.message(F.text == "Рассчитать страховку")
+@calc_ins_router.message(F.text == "Рассчитать страховку")
 async def start_insurance(message: Message, state: FSMContext):
     await message.delete()
     await message.answer("Введите стоимость груза в юанях:")
     await state.set_state(InsuranceState.cost)
 
 # Ввод стоимости
-@calc_ins.message(InsuranceState.cost)
+@calc_ins_router.message(InsuranceState.cost)
 async def enter_cost(message: Message, state: FSMContext):
     try:
         cost = float(message.text.replace("¥", "").strip())
@@ -42,7 +42,7 @@ async def enter_cost(message: Message, state: FSMContext):
         await message.answer("Пожалуйста, введите корректное значение стоимости.")
 
 # Ввод веса
-@calc_ins.message(InsuranceState.weight)
+@calc_ins_router.message(InsuranceState.weight)
 async def enter_weight(message: Message, state: FSMContext):
     try:
         weight = float(message.text.strip())
@@ -53,7 +53,7 @@ async def enter_weight(message: Message, state: FSMContext):
         await message.answer("Пожалуйста, введите корректное значение веса.")
 
 # Выбор типа товара
-@calc_ins.message(InsuranceState.item_type)
+@calc_ins_router.message(InsuranceState.item_type)
 async def enter_item_type(message: Message, state: FSMContext):
     if message.text not in item_types:
         await message.answer("Пожалуйста, выберите один из предложенных типов товара.")

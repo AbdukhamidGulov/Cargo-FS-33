@@ -15,40 +15,39 @@ from database.base import setup_database
 from database.users import get_user_by_id, get_users_tg_info, drop_users_table
 from database.track_codes import add_or_update_track_codes_list, get_track_codes_list, delete_shipped_track_codes, \
     drop_track_codes_table
-
-admin = Router()
+admin_router = Router()
 logger = getLogger(__name__)
 
-@admin.callback_query(F.data == "admin_panel")
+@admin_router.callback_query(F.data == "admin_panel")
 async def show_admin_panel(callback: CallbackQuery):
     """Открывает панель администратора с выбором команд при нажатии на соответствующую кнопку."""
     await callback.message.answer("Выберите команду", reply_markup=admin_keyboard)
     await callback.answer()
 
-@admin.message(F.text.lower() == "админ", IsAdmin(admin_ids))
-@admin.message(Command(commands=['admin']), IsAdmin(admin_ids))
+@admin_router.message(F.text.lower() == "админ", IsAdmin(admin_ids))
+@admin_router.message(Command(commands=['admin_router']), IsAdmin(admin_ids))
 async def admin_menu(message: Message):
-    """Обрабатывает команду /admin для администраторов, показывая меню команд."""
+    """Обрабатывает команду /admin_router для администраторов, показывая меню команд."""
     await message.answer('Выберите команду', reply_markup=admin_keyboard)
 
-@admin.message(Command(commands=['admin']))
+@admin_router.message(Command(commands=['admin_router']))
 async def handle_non_admin_attempt(message: Message, bot: Bot):
-    """Обрабатывает команду /admin для неадминов, уведомляя их об отсутствии прав и сообщая первому админу о попытке."""
+    """Обрабатывает команду /admin_router для неадминов, уведомляя их об отсутствии прав и сообщая первому админу о попытке."""
     await message.answer('Вы не являетесь админом')
     await bot.send_message(admin_ids[0], text=f"Пользователь {message.from_user.username} "
-                                              f"с id <code>{message.from_user.id}</code> нажал на команду <b>admin</b>")
+                                              f"с id <code>{message.from_user.id}</code> нажал на команду <b>admin_router</b>")
 
 # Искать информацию по ID
 class SearchUserStates(StatesGroup):
     waiting_for_user_id = State()
 
-@admin.message(F.text == "Искать информацию по ID")
+@admin_router.message(F.text == "Искать информацию по ID")
 async def start_user_search(message: Message, state: FSMContext):
     """Начинает процесс поиска информации о пользователе по ID, запрашивая ввод ID."""
     await message.answer("Введите ID пользователя (например, FS0001 или просто 1):")
     await state.set_state(SearchUserStates.waiting_for_user_id)
 
-@admin.message(SearchUserStates.waiting_for_user_id)
+@admin_router.message(SearchUserStates.waiting_for_user_id)
 async def process_user_search_input(message: Message, state: FSMContext):
     """Обрабатывает введенный ID пользователя, возвращая его данные или сообщение об ошибке."""
     user_id = message.text.strip()
@@ -100,16 +99,12 @@ async def process_track_codes(message: Message, state: FSMContext, status: str, 
     action = "добавлено" if status == "in_stock" else "обновлено"
     status_text = "На складе" if status == "in_stock" else "Отправлен"
 
-    try:
-        await add_or_update_track_codes_list(track_codes, status, bot, message)
-        await message.answer(f"Успешно {action} {len(track_codes)} трек-кодов в базу данных со статусом '{status_text}'.")
-    except Exception as e:
-        logger.error(f"Ошибка при {action} трек-кодов: {e}")
-        await message.answer(f"Произошла ошибка при {action} трек-кодов: {e}")
-    finally:
-        await state.clear()
 
-@admin.message(F.text == "️Добавить пребывшие на склад трек-коды", IsAdmin(admin_ids))
+    await add_or_update_track_codes_list(track_codes, status, bot, message)
+    await message.answer(f"Успешно {action} {len(track_codes)} трек-кодов в базу данных со статусом '{status_text}'.")
+    await state.clear()
+
+@admin_router.message(F.text == "️Добавить пребывшие на склад трек-коды", IsAdmin(admin_ids))
 async def add_in_stock_track_codes(message: Message, state: FSMContext):
     """Начинает процесс добавления трек-кодов, находящихся на складе, запрашивая ввод или файл."""
     await message.answer("Пожалуйста, отправьте список трек-кодов или загрузите файл (формат .txt):\n"
@@ -117,7 +112,7 @@ async def add_in_stock_track_codes(message: Message, state: FSMContext):
     await state.set_state(TrackCodeStates.waiting_for_codes)
     await state.update_data(status="in_stock")
 
-@admin.message(F.text == "Добавить отправленные трек-коды", IsAdmin(admin_ids))
+@admin_router.message(F.text == "Добавить отправленные трек-коды", IsAdmin(admin_ids))
 async def add_shipped_track_codes(message: Message, state: FSMContext):
     """Начинает процесс добавления отправленных трек-кодов, запрашивая ввод или файл."""
     await message.answer("Отправьте список отправленных трек-кодов или загрузите файл (формат .txt):\n"
@@ -125,7 +120,7 @@ async def add_shipped_track_codes(message: Message, state: FSMContext):
     await state.set_state(TrackCodeStates.waiting_for_codes)
     await state.update_data(status="shipped")
 
-@admin.message(TrackCodeStates.waiting_for_codes)
+@admin_router.message(TrackCodeStates.waiting_for_codes)
 async def process_track_codes_input(message: Message, state: FSMContext, bot: Bot):
     """Обрабатывает введенные трек-коды, вызывая функцию обработки с сохраненным статусом."""
     data = await state.get_data()
@@ -158,7 +153,7 @@ async def generate_track_codes_report(track_codes: list, users: dict) -> tuple[s
     excel_workbook.save(excel_file_path)
     return excel_file_path, text_file_path
 
-@admin.message(F.text == "️Список трек-кодов", IsAdmin(admin_ids))
+@admin_router.message(F.text == "️Список трек-кодов", IsAdmin(admin_ids))
 async def generate_track_codes_list(message: Message):
     """Генерирует и отправляет список всех трек-кодов в виде Excel и текстового файла."""
     await message.delete()
@@ -179,7 +174,7 @@ async def generate_track_codes_list(message: Message):
 class DangerActions(StatesGroup):
     confirm_action = State()
 
-@admin.message(F.text == "Удалить отправленные трек-коды", IsAdmin(admin_ids))
+@admin_router.message(F.text == "Удалить отправленные трек-коды", IsAdmin(admin_ids))
 async def initiate_delete_shipped(message: Message, state: FSMContext):
     """Начинает процесс удаления отправленных трек-кодов с запросом подтверждения."""
     await message.delete()
@@ -190,7 +185,7 @@ async def initiate_delete_shipped(message: Message, state: FSMContext):
         warning_text="Это удалит ВСЕ отправленные трек-коды!"
     )
 
-@admin.message(Command(commands="dp_users"), IsAdmin(admin_ids))
+@admin_router.message(Command(commands="dp_users"), IsAdmin(admin_ids))
 async def initiate_recreate_users(message: Message, state: FSMContext):
     """Начинает процесс пересоздания таблицы пользователей с запросом подтверждения."""
     await ask_confirmation(
@@ -200,7 +195,7 @@ async def initiate_recreate_users(message: Message, state: FSMContext):
         warning_text="Это ПОЛНОСТЬЮ удалит таблицу пользователей и создаст её заново!"
     )
 
-@admin.message(Command(commands="dp_tracks"), IsAdmin(admin_ids))
+@admin_router.message(Command(commands="dp_tracks"), IsAdmin(admin_ids))
 async def initiate_recreate_tracks(message: Message, state: FSMContext):
     """Начинает процесс пересоздания таблицы трек-кодов с запросом подтверждения."""
     await ask_confirmation(
@@ -216,7 +211,7 @@ async def ask_confirmation(message: Message, state: FSMContext, action_type: str
     await message.answer(f"⚠️ {warning_text}\n\nВы уверены?", reply_markup=confirm_keyboard)
     await state.set_state(DangerActions.confirm_action)
 
-@admin.callback_query(F.data.startswith("danger_"), DangerActions.confirm_action)
+@admin_router.callback_query(F.data.startswith("danger_"), DangerActions.confirm_action)
 async def execute_danger_action(callback: CallbackQuery, state: FSMContext):
     """Обрабатывает подтверждение или отмену опасных действий, выполняя их при подтверждении."""
     data = await state.get_data()
@@ -226,39 +221,33 @@ async def execute_danger_action(callback: CallbackQuery, state: FSMContext):
     await state.clear()
 
     if callback.data == "danger_confirm":
-        try:
-            if action_type == 'delete_tracks':
-                await delete_shipped_track_codes()
-                msg = "Все отправленные трек-коды удалены!"
-            elif action_type == 'recreate_users':
-                await drop_users_table()
-                await setup_database()
-                msg = "Таблица пользователей пересоздана!"
-            elif action_type == 'recreate_tracks':
-                await drop_track_codes_table()
-                await setup_database()
-                msg = "Таблица трек-кодов пересоздана!"
-            await callback.message.answer(f"✅ Успех!\n{msg}")
-        except Exception as e:
-            logger.error(f"Ошибка при выполнении действия {action_type}: {e}")
-            await callback.message.answer(f"❌ Ошибка: {str(e)}")
-    else:
-        await callback.message.answer("🚫 Действие отменено")
+        if action_type == 'delete_tracks':
+            await delete_shipped_track_codes()
+            msg = "Все отправленные трек-коды удалены!"
+        elif action_type == 'recreate_users':
+            await drop_users_table()
+            await setup_database()
+            msg = "Таблица пользователей пересоздана!"
+        elif action_type == 'recreate_tracks':
+            await drop_track_codes_table()
+            await setup_database()
+            msg = "Таблица трек-кодов пересоздана!"
+        await callback.message.answer(f"✅ Успех!\n{msg}")
 
 # Функции для улавливания токенов файлов
-@admin.message(F.photo, IsAdmin(admin_ids))
+@admin_router.message(F.photo, IsAdmin(admin_ids))
 async def capture_photo_token(message: Message):
     """Отправляет токен ID загруженного фото администратору."""
     photo_token = message.photo[0].file_id
     await message.reply(f"<b>Токен скинутого фото:</b>\n<code>{photo_token}</code>")
 
-@admin.message(F.video, IsAdmin(admin_ids))
+@admin_router.message(F.video, IsAdmin(admin_ids))
 async def capture_video_token(message: Message):
     """Отправляет токен ID загруженного видео администратору."""
     video_token = message.video.file_id
     await message.reply(f"<b>Токен скинутого видео:</b>\n<code>{video_token}</code>")
 
-@admin.message(F.document)
+@admin_router.message(F.document)
 async def capture_document_token(message: Message):
     """Отправляет токен ID загруженного документа администратору."""
     document_token = message.document.file_id

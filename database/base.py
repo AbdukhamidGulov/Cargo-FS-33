@@ -9,11 +9,6 @@ class Base(DeclarativeBase):
     pass
 
 async def setup_database():
-    """
-    Инициализирует базу данных, создавая все таблицы, определённые в моделях SQLAlchemy.
-
-    Raises:
-        Exception: Если произошла ошибка при создании таблиц.
-    """
+    """Инициализирует базу данных, создавая все таблицы, определённые в моделях SQLAlchemy."""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

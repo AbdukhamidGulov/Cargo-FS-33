@@ -8,20 +8,15 @@ from aiogram.types import CallbackQuery, Message
 from filters_and_config import admin_ids
 from keyboards import get_main_inline_keyboard
 
-request = Router()
+request_router = Router()
 logger = getLogger(__name__)
 
 class RequestVerification(StatesGroup):
     waiting_for_track_codes = State()
 
-@request.callback_query(F.data == "request_for_verification")
+@request_router.callback_query(F.data == "request_for_verification")
 async def start_verification_request(callback: CallbackQuery, state: FSMContext):
-    """Запускает процесс подачи заявки на проверку товаров.
-
-    Args:
-        callback: Объект callback-запроса от пользователя.
-        state: Контекст FSM для управления состояниями.
-    """
+    """Запускает процесс подачи заявки на проверку товаров."""
     await callback.message.delete()
     await callback.message.answer(
         "Эта команда предназначена для подачи заявок на проверку товаров. "
@@ -29,15 +24,9 @@ async def start_verification_request(callback: CallbackQuery, state: FSMContext)
     )
     await state.set_state(RequestVerification.waiting_for_track_codes)
 
-@request.message(RequestVerification.waiting_for_track_codes)
+@request_router.message(RequestVerification.waiting_for_track_codes)
 async def receive_track_codes(message: Message, state: FSMContext, bot: Bot):
-    """Обрабатывает введённые пользователем трек-коды и отправляет их администратору.
-
-    Args:
-        message: Объект сообщения от пользователя.
-        state: Контекст FSM для управления состояниями.
-        bot: Объект бота для отправки сообщений.
-    """
+    """Обрабатывает введённые пользователем трек-коды и отправляет их администратору."""
     track_code_list = message.text.strip().split()  # Получаем список трек-кодов
 
     if not track_code_list:
