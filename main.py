@@ -7,16 +7,15 @@ from aiogram.types import Message
 from aiogram.filters import CommandStart
 from aiogram.client.default import DefaultBotProperties
 
-
 from request import request_router
 from profile import profile_router
 from admin_panel import admin_router
 from track_numbers import track_code
 from get_information import get_info
-from text_info import main_menu_photo
 from database.base import setup_database
 from database.users import get_user_by_tg_id
 from registration_process import states_router
+from database.info_content import get_info_content
 from calculator.calc_volume import calc_volume_router
 from calculator.calculate_insurance import calc_ins_router
 from calculator.calculate_shipping import calc_shipping_router
@@ -39,6 +38,7 @@ async def start_command(message: Message):
 
     Отправляет приветственное фото и текст, проверяет, зарегистрирован ли пользователь в базе данных.
     Если пользователь зарегистрирован, отправляет основное меню; если нет — предлагает регистрацию."""
+    main_menu_photo = await get_info_content("main_menu_photo")
     await message.answer_photo(
         main_menu_photo,
         'Вас приветствует Telegram-бот карго компании <b>FS-33</b> 🚚'
