@@ -147,8 +147,8 @@ async def generate_track_codes_report(track_codes: list, users: dict) -> tuple[s
         text_file.write("=" * 40 + "\n")
         for row in track_codes:
             user_link = f"t.me/{users.get(row['tg_id'], '')}" if row["tg_id"] else "—"
-            sheet.append([row["id"], row["track_code"], row["status"], user_link])
-            text_file.write(f"{row['id']:03d}. Track Code: {row['track_code']}, Status: {row['status']}, User: {user_link}\n")
+            sheet.append([row["id"], row["track_code_router"], row["status"], user_link])
+            text_file.write(f"{row['id']:03d}. Track Code: {row['track_code_router']}, Status: {row['status']}, User: {user_link}\n")
 
     excel_workbook.save(excel_file_path)
     return excel_file_path, text_file_path

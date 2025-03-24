@@ -17,7 +17,7 @@ class TrackCode(Base):
         """Преобразует объект трек-кода в словарь."""
         return {
             "id": self.id,
-            "track_code": self.track_code,
+            "track_code_router": self.track_code,
             "status": self.status,
             "tg_id": self.tg_id,
         }
@@ -42,7 +42,7 @@ async def get_user_track_codes(tg_id: int) -> list[tuple]:
         result = await session.execute(
             select(TrackCode.track_code, TrackCode.status).where(TrackCode.tg_id == tg_id)
         )
-        return [(row.track_code, row.status) for row in result]
+        return [(row.track_code_router, row.status) for row in result]
 
 
 async def update_or_add_track_code(session, track_code: str, status: str) -> TrackCode:

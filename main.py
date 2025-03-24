@@ -9,13 +9,14 @@ from aiogram.client.default import DefaultBotProperties
 
 from request import request_router
 from profile import profile_router
-from admin_panel import admin_router
-from track_numbers import track_code
-from get_information import get_info
 from database.base import setup_database
+from admin.admin_panel import admin_router
+from track_numbers import track_code_router
+from get_information import get_info_router
 from database.users import get_user_by_tg_id
 from registration_process import states_router
 from database.info_content import get_info_content
+from admin.admin_content import admin_content_router
 from calculator.calc_volume import calc_volume_router
 from calculator.calculate_insurance import calc_ins_router
 from calculator.calculate_shipping import calc_shipping_router
@@ -25,8 +26,8 @@ from filters_and_config import TELEGRAM_BOT_TOKEN
 
 bot = Bot(token=TELEGRAM_BOT_TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
 dp = Dispatcher()
-dp.include_routers(admin_router, get_info, states_router, profile_router,
-                   track_code, request_router, calc_volume_router, calc_ins_router, calc_shipping_router)
+dp.include_routers(admin_router, get_info_router, admin_content_router, states_router, profile_router,
+                   track_code_router, request_router, calc_volume_router, calc_ins_router, calc_shipping_router)
 dp.update.outer_middleware(ExceptionHandlingMiddleware())
 basicConfig(level=INFO, stream=stdout)
 logger = getLogger(__name__)

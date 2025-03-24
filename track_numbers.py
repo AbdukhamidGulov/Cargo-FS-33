@@ -7,7 +7,7 @@ import logging
 from database.track_codes import check_or_add_track_code, get_user_track_codes
 from keyboards import main_keyboard, cancel_keyboard
 
-track_code = Router()
+track_code_router = Router()
 logger = logging.getLogger(__name__)
 
 
@@ -21,14 +21,14 @@ status_messages = {
 class TrackCodeStates(StatesGroup):
     track_code = State()
 
-@track_code.message(F.text == "Проверка трек-кода")
+@track_code_router.message(F.text == "Проверка трек-кода")
 async def check_track_code(message: Message, state: FSMContext) -> None:
     """Запускает процесс проверки трек-кода, запрашивая у пользователя трек-код."""
     await message.answer("Отправьте ваш трек-код для проверки:")
     await state.set_state(TrackCodeStates.track_code)
     logger.info(f"Пользователь {message.from_user.id} начал проверку трек-кода.")
 
-@track_code.message(TrackCodeStates.track_code)
+@track_code_router.message(TrackCodeStates.track_code)
 async def process_track_code(message: Message, state: FSMContext) -> None:
     """Обрабатывает введённый пользователем трек-код, проверяет его статус и отправляет ответ."""
     if message.text == "Отмена":
@@ -60,7 +60,7 @@ async def process_track_code(message: Message, state: FSMContext) -> None:
     )
 
 
-@track_code.callback_query(F.data == "my_track_codes")
+@track_code_router.callback_query(F.data == "my_track_codes")
 async def my_track_codes(callback: CallbackQuery):
     """Отправляет пользователю список его трек-кодов."""
     await callback.message.delete()

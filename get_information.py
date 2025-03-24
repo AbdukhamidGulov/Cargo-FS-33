@@ -5,11 +5,11 @@ from database.info_content import get_info_content
 from database.users import get_info_profile, get_user_by_tg_id
 from keyboards import main_keyboard, where_get_keyboard, reg_keyboard, create_samples_keyboard
 
-get_info = Router()
+get_info_router = Router()
 
 
 # ВСЯ ОБРАБОТКА ДЛЯ АДРЕСА СКЛАДА И ОБРАЗЦОВ
-@get_info.callback_query(F.data == "warehouse_address")
+@get_info_router.callback_query(F.data == "warehouse_address")
 async def address(callback: CallbackQuery):
     """Отправляет адрес склада пользователю."""
     id_from_user = await get_user_by_tg_id(callback.from_user.id)
@@ -26,7 +26,7 @@ async def address(callback: CallbackQuery):
         await callback.message.answer("Адрес склада не найден. Обратитесь к администратору.")
 
 
-@get_info.callback_query(F.data.startswith("simple_"))
+@get_info_router.callback_query(F.data.startswith("simple_"))
 async def handle_simple(callback: CallbackQuery):
     """Обрабатывает запрос на отображение образца."""
     await callback.message.delete()
@@ -42,7 +42,7 @@ async def handle_simple(callback: CallbackQuery):
 
 
 # Другие обработчики
-@get_info.message(F.text == "Бланк для заказа")
+@get_info_router.message(F.text == "Бланк для заказа")
 async def send_order_form(message: Message):
     """Отправляет бланк для заказа."""
     blank_info_text = await get_info_content("blank_info")
@@ -54,14 +54,14 @@ async def send_order_form(message: Message):
         await message.answer("Информация о бланке не найдена.")
 
 
-@get_info.message(F.text == "Где брать трек-номер")
+@get_info_router.message(F.text == "Где брать трек-номер")
 async def send_track_number_info(message: Message):
     """Запрашивает у пользователя выбор сайта для получения информации о трек-номерах."""
     await message.answer('⬇️ <b>С какого сайта вы хотите получить информацию о получении трек-номеров?</b>',
                          reply_markup=where_get_keyboard)
 
 
-@get_info.callback_query(F.data.startswith("where_get_with_"))
+@get_info_router.callback_query(F.data.startswith("where_get_with_"))
 async def handle_track_info(callback: CallbackQuery):
     """Отправляет фото с информацией о трек-номерах для выбранного сайта."""
     key = callback.data.split("_")[-1]
@@ -75,7 +75,7 @@ async def handle_track_info(callback: CallbackQuery):
         await callback.message.answer("Информация о трек-номерах не найдена.")
 
 
-@get_info.message(F.text == "Тарифы")
+@get_info_router.message(F.text == "Тарифы")
 async def send_tariffs(message: Message):
     """Отправляет информацию о тарифах."""
     tariffs_text = await get_info_content("tariffs")
@@ -85,7 +85,7 @@ async def send_tariffs(message: Message):
         await message.answer("Информация о тарифах не найдена.")
 
 
-@get_info.message(F.text == "Проверка товаров")
+@get_info_router.message(F.text == "Проверка товаров")
 async def send_goods_check(message: Message):
     """Отправляет медиа и текст о проверке товаров."""
     video1 = await get_info_content("goods_check_video1")
@@ -106,7 +106,7 @@ async def send_goods_check(message: Message):
         await message.answer("Информация о проверке товаров не найдена.")
 
 
-@get_info.message(F.text == "Консолидация")
+@get_info_router.message(F.text == "Консолидация")
 async def send_consolidation(message: Message):
     """Отправляет фото и текст о консолидации."""
     inf = await get_info_profile(message.from_user.id)
@@ -122,7 +122,7 @@ async def send_consolidation(message: Message):
         await message.answer("Информация о консолидации не найдена.")
 
 
-@get_info.message(F.text == "Запрещённые товары")
+@get_info_router.message(F.text == "Запрещённые товары")
 async def send_forbidden_goods(message: Message):
     """Отправляет информацию о запрещённых товарах."""
     forbidden_goods_text = await get_info_content("forbidden_goods")
@@ -132,7 +132,7 @@ async def send_forbidden_goods(message: Message):
         await message.answer("Информация о запрещённых товарах не найдена.")
 
 
-@get_info.message(F.text == "Упаковка")
+@get_info_router.message(F.text == "Упаковка")
 async def send_packing(message: Message):
     """Отправляет фото и текст об упаковке."""
     packing_photo_id = await get_info_content("packing_photo")
@@ -143,7 +143,7 @@ async def send_packing(message: Message):
         await message.answer("Информация об упаковке не найдена.")
 
 
-@get_info.message(F.text == "️Цены")
+@get_info_router.message(F.text == "️Цены")
 async def send_prices(message: Message):
     """Отправляет информацию о ценах."""
     prices_document = await get_info_content("prices_document")
@@ -156,7 +156,7 @@ async def send_prices(message: Message):
 
 
 # ОБРАБОТЧИК КОМАНДЫ НАЗАД В ГЛАВНОЕ МЕНЮ
-@get_info.callback_query(F.data == "main_menu")
+@get_info_router.callback_query(F.data == "main_menu")
 async def back_to_menu(callback: CallbackQuery):
     """Возвращает пользователя в главное меню."""
     await callback.message.delete()
