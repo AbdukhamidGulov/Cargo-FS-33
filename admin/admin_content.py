@@ -2,9 +2,8 @@ from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
-from sqlalchemy.future import select
 
-from database.info_content import InfoContent, get_info_content, update_info_content, async_session
+from database.info_content import get_info_content, update_info_content
 from filters_and_config import IsAdmin, admin_ids
 from keyboards import create_inline_button, create_inline_keyboard, main_keyboard
 
@@ -33,27 +32,24 @@ CONTENT_TYPES = {
         "packing_photo", "goods_check_photo1", "goods_check_photo2", "goods_check_photo3"
     ],
     "video": ["goods_check_video1", "goods_check_video2"],
-    "document": ["order_form", "prices_document"]
+    "document": ["order_form", "prices_document", "tariffs_document"]
     }
 
 
 # Старт процесса изменения контента
 @admin_content_router.message(F.text == "Изменить данные", IsAdmin(admin_ids))
 async def start_edit_content(message: Message, state: FSMContext):
-    """Показывает список ключей для изменения."""
-    async with async_session() as session:
-        result = await session.execute(select(InfoContent))
-        contents = result.scalars().all()
-        if not contents:
-            await message.answer("В таблице info_content нет данных.")
-            return
+    """Показывает список ключей для изменения, отсортированный по алфавиту."""
+    all_keys = []
+    for type_keys in CONTENT_TYPES.values():
+        all_keys.extend(type_keys)
 
-        buttons = [[create_inline_button(content.key, callback_data=f"edit_{content.key}")] for content in contents]
-        buttons.append([create_inline_button("Отмена", callback_data="cancel_edit")])
-        keyboard = create_inline_keyboard(buttons)
+    buttons = [[create_inline_button(key, callback_data=f"edit_{key}")] for key in sorted(all_keys)]
+    buttons.append([create_inline_button("Отмена", callback_data="cancel_edit")])
+    keyboard = create_inline_keyboard(buttons)
 
-        await message.answer("Выберите, что хотите изменить:", reply_markup=keyboard)
-        await state.set_state(ContentEdit.select_key)
+    await message.answer("Выберите, что хотите изменить:", reply_markup=keyboard)
+    await state.set_state(ContentEdit.select_key)
 
 
 # Обработка выбора ключа

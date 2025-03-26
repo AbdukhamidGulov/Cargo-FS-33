@@ -1,6 +1,6 @@
 from sys import stdout
 from asyncio import run
-from logging import basicConfig, getLogger, INFO
+from logging import basicConfig, getLogger, DEBUG
 
 from aiogram import Bot, Dispatcher, F
 from aiogram.types import Message
@@ -16,7 +16,6 @@ from get_information import get_info_router
 from database.users import get_user_by_tg_id
 from registration_process import states_router
 from database.info_content import get_info_content
-from admin.admin_content import admin_content_router
 from calculator.calc_volume import calc_volume_router
 from calculator.calculate_insurance import calc_ins_router
 from calculator.calculate_shipping import calc_shipping_router
@@ -26,11 +25,18 @@ from filters_and_config import TELEGRAM_BOT_TOKEN
 
 bot = Bot(token=TELEGRAM_BOT_TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
 dp = Dispatcher()
-dp.include_routers(admin_router, get_info_router, admin_content_router, states_router, profile_router,
+dp.include_routers(admin_router, get_info_router, states_router, profile_router,
                    track_code_router, request_router, calc_volume_router, calc_ins_router, calc_shipping_router)
 dp.update.outer_middleware(ExceptionHandlingMiddleware())
-basicConfig(level=INFO, stream=stdout)
+basicConfig(level=DEBUG, stream=stdout)
 logger = getLogger(__name__)
+
+photo_cache = {}  # Кэш для хранения главного фото
+async def get_cached_content(key: str) -> str:
+    """Получает значение из кэша или базы данных, если его нет в кэше."""
+    if key not in photo_cache:
+        photo_cache[key] = await get_info_content(key)
+    return photo_cache[key]
 
 @dp.message(CommandStart())
 @dp.message(F.text == "Вернуться в главное меню")
@@ -39,7 +45,7 @@ async def start_command(message: Message):
 
     Отправляет приветственное фото и текст, проверяет, зарегистрирован ли пользователь в базе данных.
     Если пользователь зарегистрирован, отправляет основное меню; если нет — предлагает регистрацию."""
-    main_menu_photo = await get_info_content("main_menu_photo")
+    main_menu_photo = await get_cached_content("main_menu_photo")
     await message.answer_photo(
         main_menu_photo,
         'Вас приветствует Telegram-бот карго компании <b>FS-33</b> 🚚'
@@ -70,7 +76,6 @@ async def main():
         await setup_database()
         logger.info('База данных инициализирована')
         await dp.start_polling(bot)
-        logger.info('Бот начал polling')
     except Exception as e:
         logger.exception(f'Произошла ошибка при запуске бота: {e}')
     finally:

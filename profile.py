@@ -12,20 +12,21 @@ from registration_process import PHONE_VALIDATION_ERROR, ERROR_MESSAGE
 profile_router = Router()
 logger = getLogger(__name__)
 
-@profile_router.message(F.text == "my_profile")
-async def profile(message: Message):
+@profile_router.callback_query(F.data == "my_profile")
+async def profile(callback: CallbackQuery):
     """Отправляет пользователю информацию о его профиле."""
-    inf = await get_info_profile(message.from_user.id)
+    await callback.message.delete()
+    inf = await get_info_profile(callback.from_user.id)
     if not inf:
-        await message.answer("Профиль не найден.")
+        await callback.message.answer("Профиль не найден.")
         return
     no = "<i>Не заполнено</i>"
-    await message.answer(
+    await callback.message.answer(
         f"Номер для заказов: <code>FS{inf.get('id'):04d}</code>\n"
         f"Имя: {inf.get('name') or no}\n"
         f"Номер: {inf.get('phone') or no}\n"
     )
-    await message.answer("Что нужно сделать ещё?", reply_markup=my_profile_keyboard)
+    await callback.message.answer("Что нужно сделать ещё?", reply_markup=my_profile_keyboard)
 
 
 # --- Процесс изменения данных профиля ---

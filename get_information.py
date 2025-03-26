@@ -79,8 +79,11 @@ async def handle_track_info(callback: CallbackQuery):
 async def send_tariffs(message: Message):
     """Отправляет информацию о тарифах."""
     tariffs_text = await get_info_content("tariffs")
+    tariffs_document = await get_info_content("tariffs_document")
     if tariffs_text:
         await message.answer(tariffs_text)
+    if tariffs_document:
+        await message.answer_document(document=tariffs_document)
     else:
         await message.answer("Информация о тарифах не найдена.")
 

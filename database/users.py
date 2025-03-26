@@ -77,13 +77,8 @@ async def update_user_info(tg_id: int, field: str, value: str) -> None:
         await session.commit()
 
 
-async def get_user_by_id(user_id: str) -> dict | None:
+async def get_user_by_id(user_id: int) -> dict | None:
     """Возвращает информацию о пользователе по его ID (с префиксом FS или без)."""
-    if user_id.startswith("FS"):
-        user_id = int(user_id[2:])
-    else:
-        user_id = int(user_id)
-
     async with async_session() as session:
         result = await session.execute(select(User).where(User.id == user_id))
         user = result.scalar_one_or_none()

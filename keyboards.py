@@ -61,7 +61,7 @@ def get_main_inline_keyboard(user_id: int) -> InlineKeyboardMarkup:
 # Админ-панель
 admin_buttons = [
     ["Список трек-кодов", "Изменить данные"],
-    ["Добавить пребывшие на склад трек-коды"],
+    ["️Добавить пребывшие на склад трек-коды"],
     ["Добавить отправленные трек-коды"],
     ["Удалить отправленные трек-коды"],
     ["Искать инфо по ID", "Вернуться в главное меню"]
@@ -104,10 +104,7 @@ sample_buttons = {
 def create_samples_keyboard(exclude: str = None) -> InlineKeyboardMarkup:
     """Создаёт инлайн-клавиатуру для образцов, исключая указанную кнопку, если нужно."""
     buttons = [btn for key, btn in sample_buttons.items() if key != exclude]
-    if exclude:
-        keyboard_layout = [[btn] for btn in buttons]
-    else:
-        keyboard_layout = [buttons[:2], buttons[2:]]
+    keyboard_layout = [[btn] for btn in buttons] if exclude else [buttons[:2], buttons[2:]]
     return create_inline_keyboard(keyboard_layout)
 
 
@@ -129,9 +126,8 @@ cancel_keyboard = create_keyboard([[create_keyboard_button("Отмена")]])
 
 # Кнопки выбора типа товаров
 item_type_buttons = [
-    ["Объёмный груз", "Электроника"],
-    ["Ноутбуки", "Телефоны", "Аптека"],
-    ["Одежда", "Ткань", "Продукты"]
+    ["Продукты", "Одежда", "Обувь"],
+    ["Электроника", "Хозтовары"],
+    ["Сборный груз",  "Мебель"]
 ]
-
 item_type_keyboard = create_keyboard([[create_keyboard_button(text) for text in row] for row in item_type_buttons])

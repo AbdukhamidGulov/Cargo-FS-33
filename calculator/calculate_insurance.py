@@ -8,14 +8,13 @@ from keyboards import main_keyboard, item_type_keyboard,  get_main_inline_keyboa
 
 calc_ins_router = Router()
 item_types = [
-    "Объёмный груз",
-    "Одежда",
-    "Ткань",
-    "Ноутбуки",
-    "Телефоны",
     "Продукты",
+    "Одежда",
+    "Обувь",
     "Электроника",
-    "Аптека"
+    "Хозтовары",
+    "Сборный груз",
+    "Мебель"
 ]
 
 class InsuranceState(StatesGroup):
