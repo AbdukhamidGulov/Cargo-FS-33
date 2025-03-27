@@ -5,14 +5,14 @@ sample_Taobao = 'AgACAgIAAxkBAAIDeGfFpyKurCfaV4G-2AxLjanLHtKIAAIt7zEbaMApSt-eQmr
 sample_Pinduoduo = 'AgACAgIAAxkBAAIDfGfFp2qGzIFa7OGgGqzggPLYVzOGAAIz7zEbaMApSn-3BT5b6cZHAQADAgADcwADNgQ'
 sample_Poizon = 'AgACAgIAAxkBAAIDemfFpzVmsGJvXy-Dfd47CTlQrchWAAIw7zEbaMApSnvVHScZLkswAQADAgADcwADNgQ'
 order_form = 'BQACAgIAAxkBAAMRZ11L_qP8GqH863RXQA_IpbHxJaoAAks-AAKrjnhJ8To8UNoHItk2BA'
-track_number_info_photo1_1688 = 'AgACAgIAAxkBAAMSZ11MLEQ1fbAPNdBMWdcB-wGF5ZkAAhviMRt3gmhL8JwnniB_WzkBAAMCAANzAAM2BA'
-track_number_info_photo2_1688 = 'AgACAgIAAxkBAAMTZ11MNrv8gH9bWov2fOyr5ElKMhIAAhriMRt3gmhLKx0Zs32DWvcBAAMCAANzAAM2BA'
-track_number_info_photo1_Taobao = 'AgACAgIAAxkBAAMUZ11MQw-_y0Akk19ANFfsaIuhIPUAAiPlMRscVqFKH64EDTAX3tQBAAMCAANzAAM2BA'
-track_number_info_photo2_Taobao = 'AgACAgIAAxkBAAMVZ11MUYOxQrhW-PbfA4l9Ii47U2IAAt3nMRsHSuFKrZy3EMiXD0sBAAMCAANzAAM2BA'
-track_number_info_photo1_Pinduoduo = 'AgACAgIAAxkBAAMWZ11MZoL6cbQmWG4wHfgsX_SXu6YAAtvlMRscVqFKlN1BSDaM2f4BAAMCAANzAAM2BA'
-track_number_info_photo2_Pinduoduo = 'AgACAgIAAxkBAAMXZ11MbXvKqlBV4HRO4WiISlAJj5AAAt3lMRscVqFKuiF4GLEcZ6IBAAMCAANzAAM2BA'
-track_number_info_photo1_Poizon = 'AgACAgIAAxkBAAMYZ11MfIv7EO_P81DAPmx8WU6ISccAAjvlMRscVqFKraK3dSDdXjABAAMCAANzAAM2BA'
-track_number_info_photo2_Poizon = 'AgACAgIAAxkBAAMZZ11Mkd33CFN4QLDFdsly3SOec-0AAjzlMRscVqFKqwABlIts_w-eAQADAgADcwADNgQ'
+track_code_1688_photo1 = 'AgACAgIAAxkBAAMSZ11MLEQ1fbAPNdBMWdcB-wGF5ZkAAhviMRt3gmhL8JwnniB_WzkBAAMCAANzAAM2BA'
+track_code_1688_photo2 = 'AgACAgIAAxkBAAMTZ11MNrv8gH9bWov2fOyr5ElKMhIAAhriMRt3gmhLKx0Zs32DWvcBAAMCAANzAAM2BA'
+track_code_Taobao_photo1 = 'AgACAgIAAxkBAAMUZ11MQw-_y0Akk19ANFfsaIuhIPUAAiPlMRscVqFKH64EDTAX3tQBAAMCAANzAAM2BA'
+track_code_Taobao_photo2 = 'AgACAgIAAxkBAAMVZ11MUYOxQrhW-PbfA4l9Ii47U2IAAt3nMRsHSuFKrZy3EMiXD0sBAAMCAANzAAM2BA'
+track_code_Pinduoduo_photo1 = 'AgACAgIAAxkBAAMWZ11MZoL6cbQmWG4wHfgsX_SXu6YAAtvlMRscVqFKlN1BSDaM2f4BAAMCAANzAAM2BA'
+track_code_Pinduoduo_photo2 = 'AgACAgIAAxkBAAMXZ11MbXvKqlBV4HRO4WiISlAJj5AAAt3lMRscVqFKuiF4GLEcZ6IBAAMCAANzAAM2BA'
+track_code_Poizon_photo1 = 'AgACAgIAAxkBAAMYZ11MfIv7EO_P81DAPmx8WU6ISccAAjvlMRscVqFKraK3dSDdXjABAAMCAANzAAM2BA'
+track_code_Poizon_photo2 = 'AgACAgIAAxkBAAMZZ11Mkd33CFN4QLDFdsly3SOec-0AAjzlMRscVqFKqwABlIts_w-eAQADAgADcwADNgQ'
 calculate_volume_photo1 = 'AgACAgIAAxkBAAIC9mfEO_n5I8rMts7cjIvd5BDf1FenAAJX9TEbaMAhSlTx35KzaCUbAQADAgADcwADNgQ'
 calculate_volume_photo5 = 'AgACAgIAAxkBAAIC-2fEPQtaS9_LWizm3J-twysnCmOdAAJi9TEbaMAhSqVs6D5VQK16AQADAgADcwADNgQ'
 self_purchase = ''' ✅<b><u>САМОВЫКУП</u></b>
@@ -50,8 +50,8 @@ FS0000-2 второй клиент:</i></blockquote>
 
 ➡️  <i>После того как все товары поступят на склад, для подтверждения высылается список трек-номеров. Укажите тип упаковки (коробка, коробка+уголок, деревянная обрешётка ) и способ доставки (авто быстрая/медленная).</i>'''
 
-
-tariffs = '''✅ <b><u>ТАРИФЫ:</u></b>
+tariffs_document = 'BQACAgIAAxkBAAIHaWfj-vjmk9pmv4Vv-Du1MpBrK245AAJkawACSE4hS2Rui06QwV9dNgQ'
+tariffs_text = '''✅ <b><u>ТАРИФЫ:</u></b>
 
 ➡️ Стоимость доставки может быть изменена и будет обновлена.
 ➡️ Для получения оптовых цен, пожалуйста, свяжитесь со мной @fir2201 
@@ -77,7 +77,7 @@ goods_check_video2 = 'BAACAgIAAxkBAAMcZ11M00CgSZzoWLHRzUjt2qXs0JkAAptOAAKQNolL2s
 goods_check_photo2 = 'AgACAgIAAxkBAAMdZ11M2t8GtbZ5EWt2GISorlxIpDsAAlnlMRuQNolLNT4d1IUh7WEBAAMCAANzAAM2BA'
 goods_check_photo3 = 'AgACAgIAAxkBAAMeZ11M6YViTM0EedMnYBC3nmSCue4AAlrlMRuQNolLAlJUMk7HVjMBAAMCAANzAAM2BA'
 
-goods_check = '''✅ ПРОВЕРКА
+goods_check_text = '''✅ ПРОВЕРКА
 
 1🔘Что входит в проверку:
 - Видеообзор товара: показывают цвет, размер, комплектность.
@@ -107,7 +107,7 @@ goods_check = '''✅ ПРОВЕРКА
 
 
 consolidation_photo = 'AgACAgIAAxkBAANqZ12Aa0si3pHNFH-jFtp9iJZczJYAAm_TMRtBtGFKRp2xUk8yylIBAAMCAANzAAM2BA'
-consolidation = '''📌  Отправка грузов📌
+consolidation_text = '''📌  Отправка грузов📌
 
 ➡️Для сбора треков на отправку вам придется их самостоятельно отслеживать. 
 ➡️Только после того, как вы увидите, что весь необходимый товар дошел до склада, отправьте консолидацию.
@@ -131,7 +131,7 @@ forbidden_goods = '''<b>НАШЕ КАРГО НЕ ПРИНИМАЕТ СЛЕДУЮ
 
 
 packing_photo = 'AgACAgIAAxkBAAIDk2fGNGUqRKaIhb5vvO8vUcVUXnH0AAKx6jEbe24wSuOGfNDmu3W4AQADAgADcwADNgQ'
-packing = ''' <b>Коробка+мешок+ скотч: 5$
+packing_text = ''' <b>Коробка+мешок+ скотч: 5$
 
 Мешок+ скотч: 3.5 $
 
@@ -142,8 +142,10 @@ packing = ''' <b>Коробка+мешок+ скотч: 5$
 НАШИ КОНТАКТЫ:
 ✅Telegram:@fir2201'''
 
+prices_document = 'AgACAgIAAxkBAANYZ11s0AJ1HhedVqNTXJD5fX0pZWkAAvnqMRv6E-FJUdKB1YR7H-gBAAMCAANzAAM2BA'
+prices_text = '2,5$/КГ'
 
-blank_info = '''  <b>Мы занимаемся выкупом товаров из Китая по самым выгодным условиям!</b>
+blank_text = '''  <b>Мы занимаемся выкупом товаров из Китая по самым выгодным условиям!</b>
 
 <blockquote><i>Работаем с любыми китайскими интернет-магазинами и приложениями
 Быстро и надежно оформляем заказы
@@ -172,3 +174,61 @@ blank_info = '''  <b>Мы занимаемся выкупом товаров и�
 ➡Товары, поступающие на склад, проверяются на соответствие по количеству, типу и размеру.
 
 ➡ Как только все товары поступят на склад, мы свяжемся с вами, чтобы договориться об отправке.'''
+
+
+# ___________________________________________________________________________________________________
+
+
+
+from aiogram.filters import Command
+from filters_and_config import IsAdmin, admin_ids
+from database.info_content import update_info_content
+from aiogram import Router
+from logging import getLogger
+logger = getLogger(__name__)
+text = Router()
+@text.message(Command(commands="up"), IsAdmin(admin_ids))
+async def migrate_text_info_to_db():
+    """Переносит данные из text_info.py в базу данных info_content."""
+    # Создаём словарь с данными из text_info.py
+    data = {
+        "main_menu_photo": main_menu_photo,
+        "warehouse_address": warehouse_address,
+        "sample_1688": sample_1688,
+        "sample_Taobao": sample_Taobao,
+        "sample_Pinduoduo": sample_Pinduoduo,
+        "sample_Poizon": sample_Poizon,
+        "order_form": order_form,
+        "track_code_1688_photo1": track_code_1688_photo1,
+        "track_code_1688_photo2": track_code_1688_photo2,
+        "track_code_Taobao_photo1": track_code_Taobao_photo1,
+        "track_code_Taobao_photo2": track_code_Taobao_photo2,
+        "track_code_Pinduoduo_photo1": track_code_Pinduoduo_photo1,
+        "track_code_Pinduoduo_photo2": track_code_Pinduoduo_photo2,
+        "track_code_Poizon_photo1": track_code_Poizon_photo1,
+        "track_code_Poizon_photo2": track_code_Poizon_photo2,
+        "calculate_volume_photo1": calculate_volume_photo1,
+        "calculate_volume_photo5": calculate_volume_photo5,
+        "self_purchase": self_purchase,
+        "tariffs_text": tariffs_text,
+        "tariffs_document": tariffs_document,
+        "goods_check_video1": goods_check_video1,
+        "goods_check_photo1": goods_check_photo1,
+        "goods_check_video2": goods_check_video2,
+        "goods_check_photo2": goods_check_photo2,
+        "goods_check_photo3": goods_check_photo3,
+        "goods_check_text": goods_check_text,
+        "consolidation_photo": consolidation_photo,
+        "consolidation_text": consolidation_text,
+        "forbidden_goods": forbidden_goods,
+        "packing_photo": packing_photo,
+        "packing_text": packing_text,
+        "prices_document": prices_document,
+        "prices_text": prices_text,
+        "blank_text": blank_text,
+    }
+
+    # Переносим данные в базу
+    for key, value in data.items():
+        await update_info_content(key, value)
+        logger.info(f"Сохранено в базе данных: {key}")
