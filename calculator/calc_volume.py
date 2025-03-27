@@ -1,13 +1,11 @@
 from aiogram import F, Router
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
-
-from filters_and_config import admin_ids
+from database.info_content import get_info_content
 from keyboards import main_keyboard, get_main_inline_keyboard
-from text_info import calculate_volume_photo1, calculate_volume_photo5
 
-calc_volume = Router()
+calc_volume_router = Router()
 
 class CargoCalculator(StatesGroup):
     length = State()  # длина
@@ -16,79 +14,99 @@ class CargoCalculator(StatesGroup):
     weight = State()  # вес
 
 
-@calc_volume.message(F.text == "Рассчитать объём")
+@calc_volume_router.message(F.text == "Рассчитать объём")
 async def calculate_volume(message: Message, state: FSMContext):
+    """Начинает процесс расчёта объёма груза."""
     await message.delete()
-    await message.answer_photo(
-        calculate_volume_photo1, "❗️<i>Что такое плотность и для чего она нужна? "
-        "<a href='https://t.me/cargoFS33/1426'>Читайте здесь</a></i>\n\n"
-        "Для расчёта плотности груза введите длину груза (в сантиметрах):")
-    await state.set_state(CargoCalculator.length)
+    photo_id = await get_info_content("calculate_volume_photo")
+    if photo_id:
+        await message.answer_photo(
+            photo_id,
+            "❗️<i>Что такое плотность и для чего она нужна? "
+            "<a href='https://t.me/cargoFS33/1426'>Читайте здесь</a></i>\n\n"
+            "Для расчёта плотности груза введите длину груза (в сантиметрах):"
+        )
+        await state.update_data(photo_id=photo_id)
+        await state.set_state(CargoCalculator.length)
+    else:
+        await message.answer("Фото для расчёта объёма не найдено. Обратитесь к администратору.")
+        await state.clear()
+
 
 # Обработка длины
-@calc_volume.message(CargoCalculator.length)
+@calc_volume_router.message(CargoCalculator.length)
 async def input_length(message: Message, state: FSMContext):
+    """Обрабатывает ввод длины груза."""
     if not message.text.isdigit():
         await message.answer("Введите целое числовое значение длины.")
     else:
         await state.update_data(length=int(message.text))
-        await message.answer_photo(calculate_volume_photo1, "Введите ширину упаковки (в сантиметрах):")
-        await state.set_state(CargoCalculator.width)
+        data = await state.get_data()
+        photo_id = data.get("photo_id")
+        if photo_id:
+            await message.answer_photo(photo_id, "Введите ширину упаковки (в сантиметрах):")
+            await state.set_state(CargoCalculator.width)
+        else:
+            await message.answer("Фото не найдено. Начните заново.")
+            await state.clear()
+
 
 # Обработка ширины
-@calc_volume.message(CargoCalculator.width)
+@calc_volume_router.message(CargoCalculator.width)
 async def input_width(message: Message, state: FSMContext):
+    """Обрабатывает ввод ширины груза."""
     if not message.text.isdigit():
         await message.answer("Введите целое числовое значение ширины.")
     else:
         await state.update_data(width=int(message.text))
-        await message.answer_photo(calculate_volume_photo1, "Введите высоту упаковки (в сантиметрах):")
-        await state.set_state(CargoCalculator.height)
+        data = await state.get_data()
+        photo_id = data.get("photo_id")
+        if photo_id:
+            await message.answer_photo(photo_id, "Введите высоту упаковки (в сантиметрах):")
+            await state.set_state(CargoCalculator.height)
+        else:
+            await message.answer("Фото не найдено. Начните заново.")
+            await state.clear()
+
 
 # Обработка высоты
-@calc_volume.message(CargoCalculator.height)
+@calc_volume_router.message(CargoCalculator.height)
 async def input_height(message: Message, state: FSMContext):
+    """Обрабатывает ввод высоты груза."""
     if not message.text.isdigit():
         await message.answer("Введите целое числовое значение высоты.")
     else:
         await state.update_data(height=int(message.text))
-        await message.answer_photo(calculate_volume_photo1, "Теперь введите вес груза (в килограммах):")
-        await state.set_state(CargoCalculator.weight)
+        data = await state.get_data()
+        photo_id = data.get("photo_id")
+        if photo_id:
+            await message.answer_photo(photo_id, "Теперь введите вес груза (в килограммах):")
+            await state.set_state(CargoCalculator.weight)
+        else:
+            await message.answer("Фото не найдено. Начните заново.")
+            await state.clear()
+
 
 # Обработка веса и вывод результата
-@calc_volume.message(CargoCalculator.weight)
+@calc_volume_router.message(CargoCalculator.weight)
 async def input_weight(message: Message, state: FSMContext):
+    """Обрабатывает ввод веса и выводит результат расчёта."""
     try:
         weight = float(message.text)
         data = await state.get_data()
         volume = data["length"] * data["width"] * data["height"] / 1000000
         density = weight / volume
-
-        await message.answer_photo(calculate_volume_photo5,
-            f"Объём груза: {volume:.2f} м³\n"
-            f"Плотность груза: {density:.2f} кг/м³", reply_markup=main_keyboard)
+        result_photo = await get_info_content("calculate_volume_photo_end")
+        if result_photo:
+            await message.answer_photo(
+                result_photo,
+                f"Объём груза: {volume:.2f} м³\n"
+                f"Плотность груза: {density:.2f} кг/м³",
+                reply_markup=main_keyboard
+            )
+            await message.answer('Чем я ещё могу вам помочь?', reply_markup=get_main_inline_keyboard(message.from_user.id))
+        else:
+            await message.answer("Фото результата не найдено.")
         await state.clear()
-        await message.answer('Чем я ещё могу вам помочь?', reply_markup=get_main_inline_keyboard(message.from_user.id))
     except ValueError:
         await message.answer("Введите числовое значение веса.")
-
-# # Обработка кнопок
-# @calc_volume.callback_query(F.data == "main_menu")
-# async def main_menu(callback: CallbackQuery, state: FSMContext):
-#     await callback.message.answer("Вы вернулись в главное меню.")
-#     await state.clear()
-#
-# @calc_volume.callback_query(F.data == "back")
-# async def go_back(callback: CallbackQuery, state: FSMContext):
-#     current_state = await state.get_state()
-#     if current_state == CargoCalculator.weight:
-#         await callback.message.answer("Введите высоту груза (в сантиметрах):")
-#         await state.set_state(CargoCalculator.height)
-#     elif current_state == CargoCalculator.height:
-#         await callback.message.answer("Введите ширину груза (в сантиметрах):")
-#         await state.set_state(CargoCalculator.width)
-#     elif current_state == CargoCalculator.width:
-#         await callback.message.answer("Введите длину груза (в сантиметрах):")
-#         await state.set_state(CargoCalculator.length)
-#     else:
-#         await callback.message.answer("Вы уже в начальном состоянии.")
