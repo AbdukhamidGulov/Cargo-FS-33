@@ -7,6 +7,7 @@ from aiogram.types import Message
 from aiogram.filters import CommandStart
 from aiogram.client.default import DefaultBotProperties
 
+from text_info import text
 from request import request_router
 from profile import profile_router
 from database.base import setup_database
@@ -25,7 +26,7 @@ from filters_and_config import TELEGRAM_BOT_TOKEN
 
 bot = Bot(token=TELEGRAM_BOT_TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
 dp = Dispatcher()
-dp.include_routers(admin_router, get_info_router, states_router, profile_router,
+dp.include_routers(admin_router, get_info_router, states_router, profile_router, text,
                    track_code_router, request_router, calc_volume_router, calc_ins_router, calc_shipping_router)
 dp.update.outer_middleware(ExceptionHandlingMiddleware())
 basicConfig(level=DEBUG, stream=stdout)
