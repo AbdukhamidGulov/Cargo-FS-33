@@ -45,7 +45,7 @@ async def handle_simple(callback: CallbackQuery):
 @get_info_router.message(F.text == "Бланк для заказа")
 async def send_order_form(message: Message):
     """Отправляет бланк для заказа."""
-    blank_info_text = await get_info_content("blank_info")
+    blank_info_text = await get_info_content("blank_text")
     order_form_doc = await get_info_content("order_form")
     if blank_info_text and order_form_doc:
         await message.answer(blank_info_text)
@@ -65,8 +65,8 @@ async def send_track_number_info(message: Message):
 async def handle_track_info(callback: CallbackQuery):
     """Отправляет фото с информацией о трек-номерах для выбранного сайта."""
     key = callback.data.split("_")[-1]
-    photo1 = await get_info_content(f"track_number_info_photo1_{key}")
-    photo2 = await get_info_content(f"track_number_info_photo2_{key}")
+    photo1 = await get_info_content(f"track_code_{key}_photo1")
+    photo2 = await get_info_content(f"track_code_{key}_photo2")
     if photo1 and photo2:
         media = [InputMediaPhoto(media=photo1, caption=key),
                  InputMediaPhoto(media=photo2)]
@@ -78,7 +78,7 @@ async def handle_track_info(callback: CallbackQuery):
 @get_info_router.message(F.text == "Тарифы")
 async def send_tariffs(message: Message):
     """Отправляет информацию о тарифах."""
-    tariffs_text = await get_info_content("tariffs")
+    tariffs_text = await get_info_content("tariffs_text")
     tariffs_document = await get_info_content("tariffs_document")
     if tariffs_text:
         await message.answer(tariffs_text)
@@ -96,7 +96,7 @@ async def send_goods_check(message: Message):
     video2 = await get_info_content("goods_check_video2")
     photo2 = await get_info_content("goods_check_photo2")
     photo3 = await get_info_content("goods_check_photo3")
-    goods_check_text = await get_info_content("goods_check")
+    goods_check_text = await get_info_content("goods_check_text")
     if all([video1, photo1, video2, photo2, photo3, goods_check_text]):
         media = [InputMediaVideo(media=video1),
                  InputMediaPhoto(media=photo1),
@@ -117,7 +117,7 @@ async def send_consolidation(message: Message):
         await message.answer("Профиль не найден.")
         return
     consolidation_photo_id = await get_info_content("consolidation_photo")
-    consolidation_text = await get_info_content("consolidation")
+    consolidation_text = await get_info_content("consolidation_text")
     if consolidation_photo_id and consolidation_text:
         await message.answer_photo(consolidation_photo_id, consolidation_text.format(f'<code>FS{inf.get('id'):04d}</code>'),
                                    show_caption_above_media=True)
@@ -139,7 +139,7 @@ async def send_forbidden_goods(message: Message):
 async def send_packing(message: Message):
     """Отправляет фото и текст об упаковке."""
     packing_photo_id = await get_info_content("packing_photo")
-    packing_text = await get_info_content("packing")
+    packing_text = await get_info_content("packing_text")
     if packing_photo_id and packing_text:
         await message.answer_photo(packing_photo_id, packing_text)
     else:
@@ -150,7 +150,7 @@ async def send_packing(message: Message):
 async def send_prices(message: Message):
     """Отправляет информацию о ценах."""
     prices_document = await get_info_content("prices_document")
-    prices_text = await get_info_content("prices")
+    prices_text = await get_info_content("prices_text")
     if prices_document and prices_text:
         await message.answer_document(document=prices_document, caption=prices_text)
         await message.answer_photo(prices_document, prices_text)

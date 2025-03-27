@@ -18,7 +18,7 @@ class CargoCalculator(StatesGroup):
 async def calculate_volume(message: Message, state: FSMContext):
     """Начинает процесс расчёта объёма груза."""
     await message.delete()
-    photo_id = await get_info_content("calculate_volume_photo1")
+    photo_id = await get_info_content("calculate_volume_photo")
     if photo_id:
         await message.answer_photo(
             photo_id,
@@ -96,7 +96,7 @@ async def input_weight(message: Message, state: FSMContext):
         data = await state.get_data()
         volume = data["length"] * data["width"] * data["height"] / 1000000
         density = weight / volume
-        result_photo = await get_info_content("calculate_volume_photo5")
+        result_photo = await get_info_content("calculate_volume_photo_end")
         if result_photo:
             await message.answer_photo(
                 result_photo,
