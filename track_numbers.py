@@ -2,13 +2,13 @@ from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, CallbackQuery
-import logging
+from logging import getLogger
 
 from database.track_codes import check_or_add_track_code, get_user_track_codes
 from keyboards import main_keyboard, cancel_keyboard
 
 track_code_router = Router()
-logger = logging.getLogger(__name__)
+logger = getLogger(__name__)
 
 
 status_messages = {

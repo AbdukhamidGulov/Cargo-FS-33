@@ -30,6 +30,10 @@ try:
 
     admin_ids = list(map(int, admin_ids_str.split(",")))
     logger.info(f"Загружены ID администраторов: {admin_ids}")
+    WEBHOOK_HOST = getenv('WEBHOOK_HOST', 'fir2201.ru')
+    WEBHOOK_PATH = getenv('WEBHOOK_PATH', '/webhook')
+    WEBAPP_HOST = getenv('WEBAPP_HOST', '0.0.0.0')
+    WEBAPP_PORT = int(getenv('WEBAPP_PORT', '8080'))
 
 except ValueError as e:
     logger.critical(f"Ошибка загрузки конфигурации: {e}")
