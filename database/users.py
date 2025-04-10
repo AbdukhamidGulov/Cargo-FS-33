@@ -42,7 +42,7 @@ async def add_user_info(tg_id: int, username: str, name: str, phone: str = None)
 
 
 @cached(ttl=300)  # Кэш на 5 минут
-async def get_user_by_tg_id(tg_id: int) -> int | None:
+async def get_user_by_tg_id(tg_id: int):
     """Возвращает ID пользователя из таблицы users по его Telegram ID."""
     async with async_session() as session:
         result = await session.execute(select(User.id).where(User.tg_id == tg_id))
@@ -56,7 +56,7 @@ async def get_users_tg_info() -> dict:
         return {row.tg_id: row.username for row in result}
 
 
-async def get_info_profile(tg_id: int) -> dict | None:
+async def get_info_profile(tg_id: int):
     """Возвращает полную информацию о пользователе по его Telegram ID."""
     async with async_session() as session:
         result = await session.execute(select(User).where(User.tg_id == tg_id))
@@ -77,7 +77,7 @@ async def update_user_info(tg_id: int, field: str, value: str) -> None:
         await session.commit()
 
 
-async def get_user_by_id(user_id: int) -> dict | None:
+async def get_user_by_id(user_id: int):
     """Возвращает информацию о пользователе по его ID (с префиксом FS или без)."""
     async with async_session() as session:
         result = await session.execute(select(User).where(User.id == user_id))

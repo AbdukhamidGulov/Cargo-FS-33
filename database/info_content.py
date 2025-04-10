@@ -12,7 +12,7 @@ class InfoContent(Base):
     key = Column(String, unique=True, nullable=False)
     value = Column(String, nullable=False)
 
-async def get_info_content(key: str) -> str | None:
+async def get_info_content(key: str):
     """Получает значение по ключу из таблицы info_content."""
     async with async_session() as session:
         result = await session.execute(select(InfoContent).where(InfoContent.key == key))

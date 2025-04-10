@@ -119,7 +119,7 @@ async def send_consolidation(message: Message):
     consolidation_photo_id = await get_info_content("consolidation_photo")
     consolidation_text = await get_info_content("consolidation_text")
     if consolidation_photo_id and consolidation_text:
-        await message.answer_photo(consolidation_photo_id, consolidation_text.format(f'<code>FS{inf.get('id'):04d}</code>'),
+        await message.answer_photo(consolidation_photo_id, consolidation_text.format(f"<code>FS{inf.get('id'):04d}</code>"),
                                    show_caption_above_media=True)
     else:
         await message.answer("Информация о консолидации не найдена.")
