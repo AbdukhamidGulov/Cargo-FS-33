@@ -3,7 +3,7 @@ from typing import Optional
 
 from aiogram import Bot
 from aiogram.exceptions import TelegramBadRequest
-from sqlalchemy import String, select, delete, BigInteger, update
+from sqlalchemy import select, delete, BigInteger, update, VARCHAR
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import async_session, Base, engine
@@ -13,8 +13,8 @@ logger = getLogger(__name__)
 class TrackCode(Base):
     __tablename__ = 'track_codes'
     id: Mapped[int] = mapped_column(primary_key=True)
-    track_code: Mapped[str] = mapped_column(unique=True)
-    status: Mapped[str] = mapped_column(String(50))
+    track_code: Mapped[str] = mapped_column(VARCHAR(255), unique=True)
+    status: Mapped[str] = mapped_column(VARCHAR(50))
     tg_id: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
 
     def __repr__(self):

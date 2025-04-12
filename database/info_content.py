@@ -1,6 +1,8 @@
 from logging import getLogger
-from sqlalchemy import Column, String, Integer
+from sqlalchemy import VARCHAR, UniqueConstraint
 from sqlalchemy.future import select
+from sqlalchemy.orm import Mapped, mapped_column
+
 from .base import Base, async_session
 
 
@@ -8,9 +10,10 @@ logger = getLogger(__name__)
 
 class InfoContent(Base):
     __tablename__ = 'info_content'
-    id = Column(Integer, primary_key=True)
-    key = Column(String, unique=True, nullable=False)
-    value = Column(String, nullable=False)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    key: Mapped[str] = mapped_column(VARCHAR(255), unique=True, nullable=False)
+    value: Mapped[str] = mapped_column(VARCHAR(2000), nullable=False)
+    __table_args__ = (UniqueConstraint('key', name='unique_key'),)
 
 async def get_info_content(key: str):
     """Получает значение по ключу из таблицы info_content."""

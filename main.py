@@ -73,7 +73,7 @@ async def start_command(message: Message):
 
 
 
-async def on_startup():
+async def on_startup(app):
     """Действия при старте бота (установка вебхука)."""
     webhook_info = await bot.get_webhook_info()
     if webhook_info.url != WEBHOOK_URL:

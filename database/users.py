@@ -1,6 +1,6 @@
 from logging import getLogger
 from aiocache import cached
-from sqlalchemy import select, update, BigInteger
+from sqlalchemy import select, update, BigInteger, VARCHAR
 from sqlalchemy.orm import Mapped, mapped_column
 from .base import async_session, Base, engine
 
@@ -10,9 +10,9 @@ class User(Base):
     __tablename__ = 'users'
     id: Mapped[int] = mapped_column(primary_key=True)
     tg_id: Mapped[int] = mapped_column(BigInteger, unique=True, nullable=False)
-    name: Mapped[str] = mapped_column(nullable=False)
-    username: Mapped[str] = mapped_column(nullable=True)
-    phone: Mapped[str] = mapped_column(nullable=True)
+    name: Mapped[str] = mapped_column(VARCHAR(255), nullable=False)
+    username: Mapped[str] = mapped_column(VARCHAR(255), nullable=True)
+    phone: Mapped[str] = mapped_column(VARCHAR(20), nullable=True)
 
     def to_dict(self) -> dict:
         """Преобразует объект пользователя в словарь."""
