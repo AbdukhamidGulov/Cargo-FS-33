@@ -1,13 +1,11 @@
 from sys import stdout
-from asyncio import run, sleep
+from asyncio import run
 from logging import basicConfig, getLogger, WARNING
 
 from aiogram import Bot, Dispatcher, F
 from aiogram.types import Message
 from aiogram.filters import CommandStart
 from aiogram.client.default import DefaultBotProperties
-from aiogram.webhook.aiohttp_server import SimpleRequestHandler
-from aiohttp import web
 
 from text_info import text
 from request import request_router
@@ -24,14 +22,14 @@ from calculator.calculate_insurance import calc_ins_router
 from calculator.calculate_shipping import calc_shipping_router
 from keyboards import main_keyboard, reg_keyboard, get_main_inline_keyboard
 from middlewares.middleware import ExceptionHandlingMiddleware
-from filters_and_config import TELEGRAM_BOT_TOKEN, WEBHOOK_HOST, WEBHOOK_PATH, WEBAPP_HOST, WEBAPP_PORT
+from filters_and_config import TELEGRAM_BOT_TOKEN
 
 bot = Bot(token=TELEGRAM_BOT_TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
 dp = Dispatcher()
 dp.include_routers(admin_router, get_info_router, states_router, profile_router, text,
                    track_code_router, request_router, calc_volume_router, calc_ins_router, calc_shipping_router)
 dp.update.outer_middleware(ExceptionHandlingMiddleware())
-WEBHOOK_URL = f'https://{WEBHOOK_HOST}{WEBHOOK_PATH}'
+
 basicConfig(level=WARNING, stream=stdout)
 logger = getLogger(__name__)
 
@@ -71,60 +69,13 @@ async def start_command(message: Message):
             reply_markup=reg_keyboard
         )
 
-
-
-async def on_startup(app):
-    """Действия при старте бота (установка вебхука)."""
-    webhook_info = await bot.get_webhook_info()
-    if webhook_info.url != WEBHOOK_URL:
-        try:
-            await bot.set_webhook(url=WEBHOOK_URL)
-            logger.info(f"Вебхук установлен на: {WEBHOOK_URL}")
-        except Exception as e:
-            logger.error(f"Не удалось установить вебхук: {e}")
-
-async def on_shutdown():
-    """Действия при завершении работы бота (удаление вебхука)."""
-    try:
-        await bot.delete_webhook()
-        logger.info("Вебхук удален.")
-    except Exception as e:
-        logger.error(f"Не удалось удалить вебхук: {e}")
-    finally:
-        await bot.session.close()
-        logger.info('Сессия бота закрыта')
-
-
 async def main():
-    """Основная функция для запуска Telegram-бота с использованием webhook."""
+    """Основная функция для запуска Telegram-бота с использованием long polling."""
     await setup_database()
     logger.info('База данных инициализирована')
 
-    app = web.Application()
-    # Создать экземпляр WebhookRequestHandler с диспетчером и ботом
-    webhook_handler = SimpleRequestHandler(
-        dispatcher=dp,
-        bot=bot,
-    )
-    # Зарегистрировать обработчик вебхука по пути
-    webhook_handler.register(app, path=WEBHOOK_PATH)
-
-    # Вызвать действия при старте (установить вебхук)
-    app.on_startup.append(on_startup)
-    # Вызвать действия при завершении работы (удалить вебхук)
-    app.on_shutdown.append(on_shutdown)
-
-    # Настроить приложение и запустить веб-сервер
-    runner = web.AppRunner(app)
-    await runner.setup()
-    site = web.TCPSite(runner, WEBAPP_HOST, WEBAPP_PORT)
-    await site.start()
-    logger.info(f"Веб-сервер запущен на http://{WEBAPP_HOST}:{WEBAPP_PORT}{WEBHOOK_PATH}")
-
-    # Поддерживать работу сервера до ручной остановки
-    while True:
-        await sleep(3600)  # Спать один час
-
+    # Запуск polling
+    await dp.start_polling(bot)
 
 if __name__ == "__main__":
     run(main())
