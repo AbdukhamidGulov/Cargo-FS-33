@@ -48,10 +48,20 @@ async def start_command(message: Message):
     Отправляет приветственное фото и текст, проверяет, зарегистрирован ли пользователь в базе данных.
     Если пользователь зарегистрирован, отправляет основное меню; если нет — предлагает регистрацию."""
     main_menu_photo = await get_cached_content("main_menu_photo")
-    await message.answer_photo(
-        main_menu_photo,
-        'Вас приветствует Telegram-бот карго компании <b>FS-33</b> 🚚'
-    )
+    default_photo_token = "AgACAgIAAxkBAAMFZ1x08p0YNMLAtVs8dKOunkv7RlsAAvrlMRvicFhKsRcQclEx8ucBAAMCAANzAAM2BA"
+
+    if main_menu_photo:
+        await message.answer_photo(
+            main_menu_photo,
+            'Вас приветствует Telegram-бот карго компании <b>FS-33</b> 🚚'
+        )
+    else:
+        await message.answer_photo(
+            default_photo_token,
+            'Вас приветствует Telegram-бот карго компании <b>FS-33</b> 🚚\n\n'
+            'Нажмите /up чтобы база данных info_content заполнилась данными.'
+        )
+
     user = await get_user_by_tg_id(message.from_user.id)
     if user:
         await message.answer(

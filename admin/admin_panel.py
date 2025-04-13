@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, CallbackQuery
 
-
+from database.info_content import drop_info_content_table
 from .admin_content import admin_content_router
 from filters_and_config import IsAdmin, admin_ids
 from keyboards import admin_keyboard, confirm_keyboard
@@ -102,7 +102,6 @@ async def initiate_delete_shipped(message: Message, state: FSMContext):
         action_type='delete_tracks',
         warning_text="Это удалит ВСЕ отправленные трек-коды!"
     )
-
 @admin_router.message(Command(commands="dp_users"), IsAdmin(admin_ids))
 async def initiate_recreate_users(message: Message, state: FSMContext):
     """Начинает процесс пересоздания таблицы пользователей с запросом подтверждения."""
@@ -121,6 +120,16 @@ async def initiate_recreate_tracks(message: Message, state: FSMContext):
         state=state,
         action_type='recreate_tracks',
         warning_text="Это ПОЛНОСТЬЮ удалит таблицу трек-кодов и создаст её заново!"
+    )
+
+@admin_router.message(Command(commands="dp_info"), IsAdmin(admin_ids))
+async def initiate_recreate_info(message: Message, state: FSMContext):
+    """Начинает процесс пересоздания таблицы info_content с запросом подтверждения."""
+    await ask_confirmation(
+        message=message,
+        state=state,
+        action_type='recreate_info',
+        warning_text="Это ПОЛНОСТЬЮ удалит таблицу info_content и создаст её заново!"
     )
 
 async def ask_confirmation(message: Message, state: FSMContext, action_type: str, warning_text: str):
@@ -150,4 +159,8 @@ async def execute_danger_action(callback: CallbackQuery, state: FSMContext):
             await drop_track_codes_table()
             await setup_database()
             msg = "Таблица трек-кодов пересоздана!"
+        elif action_type == 'recreate_info':
+            await drop_info_content_table()
+            await setup_database()
+            msg = "Таблица info_content пересоздана!"
         await callback.message.answer(f"✅ Успех!\n{msg}")

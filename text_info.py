@@ -188,7 +188,7 @@ from logging import getLogger
 logger = getLogger(__name__)
 text = Router()
 @text.message(Command(commands="up"), IsAdmin(admin_ids))
-async def migrate_text_info_to_db():
+async def migrate_text_info_to_db(_):
     """Переносит данные из text_info.py в базу данных info_content."""
     # Создаём словарь с данными из text_info.py
     data = {
@@ -232,3 +232,4 @@ async def migrate_text_info_to_db():
     for key, value in data.items():
         await update_info_content(key, value)
         logger.info(f"Сохранено в базе данных: {key}")
+    print("База данных info_content заполнилась данными")

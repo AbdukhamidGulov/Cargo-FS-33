@@ -8,7 +8,6 @@ from logging import getLogger
 from aiogram.filters import BaseFilter
 from aiogram.types import Message
 from dotenv import load_dotenv
-
 logger = getLogger(__name__)
 
 # Загрузка конфигурации из .env
