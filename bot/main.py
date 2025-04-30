@@ -9,7 +9,6 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler
 from aiohttp import web
 
-from text_info import text
 from request import request_router
 from profile import profile_router
 from database.base import setup_database
@@ -28,7 +27,7 @@ from filters_and_config import TELEGRAM_BOT_TOKEN, WEBHOOK_HOST, WEBHOOK_PATH, W
 
 bot = Bot(token=TELEGRAM_BOT_TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
 dp = Dispatcher()
-dp.include_routers(admin_router, get_info_router, states_router, profile_router, text,
+dp.include_routers(admin_router, get_info_router, states_router, profile_router,
                    track_code_router, request_router, calc_volume_router, calc_ins_router, calc_shipping_router)
 dp.update.outer_middleware(ExceptionHandlingMiddleware())
 WEBHOOK_URL = f'https://{WEBHOOK_HOST}{WEBHOOK_PATH}'

@@ -3,7 +3,7 @@ import logging
 from aiogram import Router, F
 from aiogram.types import CallbackQuery, Message
 
-from keyboards import main_keyboard
+from bot.keyboards import main_keyboard
 
 calc_shipping_router = Router()
 

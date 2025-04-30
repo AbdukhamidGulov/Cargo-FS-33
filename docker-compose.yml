@@ -1,0 +1,41 @@
+version: '3.9'
+services:
+  db:
+    image: postgres:17-bookworm
+    container_name: db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres_user} # Используем значение из .env или 'postgres_user' по умолчанию
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-934214545} # Используем значение из .env или '934214545' по умолчанию
+      POSTGRES_DB: ${POSTGRES_DB:-cargo_bot_db} # Используем значение из .env или 'cargo_bot_db' по умолчанию
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "8081:5432" # Можно удалить или изменить порт хоста, если не планируете внешний доступ
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  bot:
+    build: ./bot
+    container_name: bot
+    working_dir: /app
+    environment:
+      - BOT_TOKEN=${BOT_TOKEN}
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - ADMIN_IDS=${ADMIN_IDS}
+      - WEBHOOK_HOST=${WEBHOOK_HOST}
+      - WEBHOOK_PATH=${WEBHOOK_PATH}
+      - WEBAPP_HOST=${WEBAPP_HOST}
+      - WEBAPP_PORT=${WEBAPP_PORT}
+    depends_on:
+      - db
+    ports:
+      - "443:8443"  # Рекомендую использовать порт 443 на VPS и пробросить его на порт 8443 внутри контейнера
+    restart: always
+    command: bash -c "sleep 10 && python migrate_data.py && python main.py"
+
+volumes:
+  db_data:

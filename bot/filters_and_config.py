@@ -33,7 +33,7 @@ try:
     WEBHOOK_HOST = getenv('WEBHOOK_HOST', 'fir2201.ru')
     WEBHOOK_PATH = getenv('WEBHOOK_PATH', '/webhook')
     WEBAPP_HOST = getenv('WEBAPP_HOST', '0.0.0.0')
-    WEBAPP_PORT = int(getenv('WEBAPP_PORT', '8080'))
+    WEBAPP_PORT = int(getenv('WEBAPP_PORT', '8443'))
 
 except ValueError as e:
     logger.critical(f"Ошибка загрузки конфигурации: {e}")

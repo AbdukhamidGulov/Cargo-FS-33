@@ -2,7 +2,7 @@ from aiogram import BaseMiddleware
 from aiogram.types import Update, Message, CallbackQuery
 import logging
 
-from filters_and_config import admin_ids
+from bot.filters_and_config import admin_ids
 
 logger = logging.getLogger(__name__)
 
