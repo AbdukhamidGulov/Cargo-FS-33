@@ -28,12 +28,12 @@ def create_inline_keyboard(buttons: list[list[InlineKeyboardButton]]) -> InlineK
 
 # Клавиатуры главного меню
 main_menu_buttons = [
-    ["Бланк для заказа", "Где брать трек-номер"],
-    ["Запрещённые товары", "Консолидация"],
+    ["Адрес склада", "Бланк для заказа"],
+    ["Где брать трек-номер", "Консолидация"],
     ["Проверка трек-кода", "Проверка товаров"],
     ["Рассчитать объём", "Рассчитать страховку"],
     ["Тарифы", "Упаковка"]
-]
+]  # "Запрещённые товары"
 
 main_keyboard = create_keyboard([[create_keyboard_button(text) for text in row] for row in main_menu_buttons])
 
@@ -44,7 +44,6 @@ def get_main_inline_keyboard(user_id: int) -> InlineKeyboardMarkup:
     is_admin = user_id in admin_ids
     main_inline_buttons = [
         [
-            create_inline_button("Адрес склада", callback_data="warehouse_address"),
             create_inline_button("Админ", callback_data="admin_panel" if is_admin else None,
                                  url="https://t.me/fir2201" if not is_admin else None),
             create_inline_button("Курс Alipay", url="https://t.me/Alipay_Chat_ru")
@@ -68,6 +67,14 @@ admin_buttons = [
 ]
 
 admin_keyboard = create_keyboard([[create_keyboard_button(text) for text in row] for row in admin_buttons])
+
+# Кнопки связи с админами
+contact_admin_keyboard = create_inline_keyboard(
+    [
+        [create_inline_button(text="👤 Главный админ (Фируз)", url="https://t.me/fir2201")],
+        [create_inline_button(text="⚙️ Технический админ (Абдулхамид)", url="https://t.me/abdulhamidgulov")]
+    ]
+)
 
 # Кнопки подтверждения действий
 yes_btn = create_inline_button(text="✅ Да", callback_data="danger_confirm")

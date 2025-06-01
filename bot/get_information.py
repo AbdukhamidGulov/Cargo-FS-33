@@ -9,21 +9,21 @@ get_info_router = Router()
 
 
 # ВСЯ ОБРАБОТКА ДЛЯ АДРЕСА СКЛАДА И ОБРАЗЦОВ
-@get_info_router.callback_query(F.data == "warehouse_address")
-async def address(callback: CallbackQuery):
+@get_info_router.message(F.text == "Адрес склада")
+async def address(message: Message):
     """Отправляет адрес склада пользователю."""
-    id_from_user = await get_user_by_tg_id(callback.from_user.id)
+    id_from_user = await get_user_by_tg_id(message.from_user.id)
     if not id_from_user:
-        await callback.answer(
+        await message.answer(
             "❌ Вы не зарегистрированы!\n\nХотите зарегистрироваться?", reply_markup=reg_keyboard)
         return
     fs = f"{id_from_user:04d}"
     warehouse_address_template = await get_info_content("warehouse_address")
     if warehouse_address_template:
-        await callback.message.answer(warehouse_address_template.format(fs))
-        await callback.message.answer("Нажмите чтобы увидеть образцы", reply_markup=create_samples_keyboard())
+        await message.answer(warehouse_address_template.format(fs))
+        await message.answer("Нажмите чтобы увидеть образцы", reply_markup=create_samples_keyboard())
     else:
-        await callback.message.answer("Адрес склада не найден. Обратитесь к администратору.")
+        await message.answer("Адрес склада не найден. Обратитесь к техническому администратору @abdulhamidgulov")
 
 
 @get_info_router.callback_query(F.data.startswith("simple_"))
