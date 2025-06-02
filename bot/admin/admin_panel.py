@@ -1,18 +1,18 @@
 from logging import getLogger
 
-from aiogram import F, Router, Bot
+from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, CallbackQuery
 
-from bot.admin.admins_trackcode import admin_tc_router
-from bot.filters_and_config import IsAdmin, admin_ids
-from bot.keyboards import admin_keyboard, confirm_keyboard, contact_admin_keyboard, main_keyboard, cancel_keyboard
-from bot.database.base import setup_database
-from bot.database.users import get_user_by_id, drop_users_table
-from bot.database.track_codes import delete_shipped_track_codes, drop_track_codes_table
-from bot.admin.admin_content import admin_content_router
+from admin.admins_trackcode import admin_tc_router
+from filters_and_config import IsAdmin, admin_ids
+from keyboards import admin_keyboard, confirm_keyboard, contact_admin_keyboard, main_keyboard, cancel_keyboard
+from database.base import setup_database
+from database.users import get_user_by_id, drop_users_table
+from database.track_codes import delete_shipped_track_codes, drop_track_codes_table
+from admin.admin_content import admin_content_router
 
 admin_router = Router()
 admin_router.include_routers(admin_content_router, admin_tc_router)

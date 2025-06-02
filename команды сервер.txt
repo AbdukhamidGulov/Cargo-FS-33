@@ -2,5 +2,5 @@ cd www/fir2201.ru
 source venv/bin/activate
 pkill -f "python main.py"
 ps aux | grep "python main.py"
-nohup python main.py
+nohup python main.py > bot_output.log 2>&1 &
 deactivate

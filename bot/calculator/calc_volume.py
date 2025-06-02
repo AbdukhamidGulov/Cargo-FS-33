@@ -1,7 +1,8 @@
 from aiogram import F, Router
+from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.fsm.context import FSMContext
+
 from database.info_content import get_info_content
 from keyboards import main_keyboard, get_main_inline_keyboard
 
@@ -14,7 +15,7 @@ class CargoCalculator(StatesGroup):
     weight = State()  # вес
 
 
-@calc_volume_router.message(F.text == "Рассчитать объём")
+@calc_volume_router.message(F.text == "Калькулятор объёма")
 async def calculate_volume(message: Message, state: FSMContext):
     """Начинает процесс расчёта объёма груза."""
     await message.delete()
