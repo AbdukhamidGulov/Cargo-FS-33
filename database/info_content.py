@@ -1,5 +1,5 @@
 from logging import getLogger
-from sqlalchemy import VARCHAR, TEXT
+from sqlalchemy import VARCHAR, UniqueConstraint, TEXT
 from sqlalchemy.future import select
 from sqlalchemy.orm import Mapped, mapped_column
 

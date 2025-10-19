@@ -13,9 +13,9 @@ class ExceptionHandlingMiddleware(BaseMiddleware):
         except Exception as e:
             logger.error(f"Ошибка в хендлере для события {event.__class__.__name__}: {e}", exc_info=True)
             if isinstance(event, (Message, CallbackQuery)):
-                await event.answer("Произошла ошибка. Попробуйте позже или обратитесь к администратору.")
+                await event.answer("Произошла ошибка. Попробуйте позже или обратитесь к техническому администратору @abdulhamidgulov")
                 if admin_ids:
-                    await data["bot"].send_message(admin_ids[0], f"Ошибка: {e}\nUser: {event.from_user.id}")
+                    await data["bot"].send_message(admin_ids[1], f"Ошибка: {e}\nUser: {event.from_user.id}")
             else:
                 logger.debug(f"Необработанное событие: {event.__class__.__name__}")
             return

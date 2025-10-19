@@ -16,11 +16,13 @@ async def calculate_volume(callback: CallbackQuery):  # , state: FSMContext
 # Не обработанные хендлерамы
 @calc_shipping_router.message(F.text)
 async def end_text_handler(message: Message):
-    await message.answer(f'Кнопка <code>"{message.text}"</code> не попала в функции! Напишите администратору!')
+    await message.answer(f'Команда <blockquote>{message.text}</blockquote>не распознана!\n'
+                                  f'Скорее всего это сообщение вы должны были отправить главному администратору\n'
+                                  f'@fir2201', reply_markup=main_keyboard)
     logging.debug(f'Кнопка "{message.text}" не попала в функции!')
 
 
 @calc_shipping_router.message(F.data)
 async def end_data_handler(callback: CallbackQuery):
-    await callback.message.answer(f'Кнопка <code>"{callback.message.text}"</code> не попала в функции! Напишите администратору!')
+    await callback.message.answer(f'Кнопка <code>"{callback.message.text}"</code> не попала в функции! Напишите техническому администратору @abdulhamidgulov', reply_markup=main_keyboard)
     logging.debug(f'Кнопка "{callback.message.text}" не попала в функции!')

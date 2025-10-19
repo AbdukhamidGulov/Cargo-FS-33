@@ -3,18 +3,19 @@ from typing import Optional
 
 from aiogram import Bot
 from aiogram.exceptions import TelegramBadRequest
-from sqlalchemy import select, delete, BigInteger, update, VARCHAR
+from sqlalchemy import select, delete, BigInteger, update, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import async_session, Base, engine
+from .users import get_user_by_id
 
 logger = getLogger(__name__)
 
 class TrackCode(Base):
     __tablename__ = 'track_codes'
     id: Mapped[int] = mapped_column(primary_key=True)
-    track_code: Mapped[str] = mapped_column(VARCHAR(255), unique=True)
-    status: Mapped[str] = mapped_column(VARCHAR(50))
+    track_code: Mapped[str] = mapped_column(String, unique=True)
+    status: Mapped[str] = mapped_column(String)
     tg_id: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
 
     def __repr__(self):
@@ -49,62 +50,111 @@ async def get_user_track_codes(tg_id: int) -> list[tuple[str, str]]:
         return result.all()
 
 
-async def add_or_update_track_codes_list(track_codes: list[str], status: str, bot) -> None:
-    """Добавляет или обновляет список трек-кодов в базе данных и отправляет уведомления."""
+async def add_or_update_track_codes_list(codes_data: list[tuple[str, Optional[int]]], status: str, bot: Bot) -> None:
+    """
+    Добавляет или обновляет список трек-кодов в базе данных и отправляет уведомления.
+    Принимает список кортежей (track_code: str, user_internal_id_from_input: Optional[int]).
+    """
     async with async_session() as session:
-        for track_code in track_codes:
-            # Проверяем, существует ли трек-код
-            existing = await session.execute(select(TrackCode).where(TrackCode.track_code == track_code))
-            existing = existing.scalar_one_or_none()
-            if existing:
-                existing.status = status  # Если существует, обновляем статус
-                if existing.tg_id:  # Если есть tg_id, отправляем уведомление
-                    await safe_send_notification(bot, track_code, existing.tg_id, status, session)
-            else:
-                # Если не существует, добавляем новую запись
-                new_track_code = TrackCode(track_code=track_code, status=status, tg_id=None)
-                session.add(new_track_code)  # Добавляем в сессию
-        await session.commit()  # Сохраняем все изменения
+        for track_code, user_internal_id_from_input in codes_data: # Переименовал переменную для ясности
+            query_result = await session.execute(
+                select(TrackCode).where(TrackCode.track_code == track_code)
+            )
+            existing = query_result.scalar_one_or_none()
 
+            tg_id_for_notification = None # Изначально нет ID для уведомления
+
+            # *********** НАЧАЛО ИЗМЕНЕНИЙ ***********
+            # Получаем реальный Telegram ID по внутреннему ID пользователя, если он есть
+            actual_tg_id_from_internal_id = None
+            if user_internal_id_from_input is not None:
+                user_info = await get_user_by_id(user_internal_id_from_input)
+                if user_info and 'tg_id' in user_info:
+                    actual_tg_id_from_internal_id = user_info['tg_id']
+                    logger.debug(f"Найден TG ID {actual_tg_id_from_internal_id} для внутреннего ID {user_internal_id_from_input}")
+                else:
+                    logger.warning(f"Не удалось найти TG ID для внутреннего ID пользователя: {user_internal_id_from_input} для трек-кода {track_code}. Уведомление не будет отправлено по этому ID.")
+            # *********** КОНЕЦ ИЗМЕНЕНИЙ ***********
+
+            if existing:
+                existing.status = status
+                # Если статус "arrived" и у нас есть актуальный TG ID из внутреннего ID
+                if status == "arrived" and actual_tg_id_from_internal_id is not None:
+                    # ОБНОВЛЯЕМ tg_id В БАЗЕ НА ПОЛУЧЕННЫЙ АКТУАЛЬНЫЙ TG ID
+                    existing.tg_id = actual_tg_id_from_internal_id
+                # Если статус не "arrived" или actual_tg_id_from_internal_id был None,
+                # existing.tg_id остается как есть (либо уже был, либо None).
+                # Это сохраняет привязку, если пользователь сам отслеживал.
+
+                # TG ID для уведомления берется из существующей записи (возможно, обновленной)
+                tg_id_for_notification = existing.tg_id
+            else:
+                # Если трек-код не существует, создаем новую запись
+                new_track_code = TrackCode(track_code=track_code, status=status)
+
+                # Для 'arrived' статуса используем найденный TG ID
+                if status == "arrived":
+                    new_track_code.tg_id = actual_tg_id_from_internal_id
+                    tg_id_for_notification = actual_tg_id_from_internal_id
+                else:
+                    # Для 'in_stock' или 'shipped' (новой записи) tg_id в базе будет None
+                    new_track_code.tg_id = None
+                    tg_id_for_notification = None # Уведомление не отправляется для новых кодов без ID
+                session.add(new_track_code)
+
+            # Отправляем уведомление, если tg_id для него определен и не None
+            if tg_id_for_notification is not None:
+                await safe_send_notification(bot, track_code, tg_id_for_notification, status, session)
+        await session.commit()
 
 async def safe_send_notification(bot: Bot, track_code: str, chat_id: int, status: str, session) -> bool:
-    """Безопасно отправляет уведомление пользователю и обновляет tg_id при ошибке."""
-    if not chat_id:  # Если chat_id отсутствует
+    """Безопасно отправляет уведомление пользователю и обновляет tg_id на None при ошибке."""
+    if not chat_id:
+        return False
+
+    notification_text = ""
+    if status == "in_stock":
+        notification_text = f"Ваш товар с трек-кодом <code>{track_code}</code> <b>прибыл на склад</b>."
+    elif status == "shipped":
+        notification_text = f"Ваш товар с трек-кодом <code>{track_code}</code> <b>отправлен</b>."
+    elif status == "arrived":
+        notification_text = (
+            f"Ваш товар с трек-кодом <code>{track_code}</code> <b>прибыл на место назначения</b>.\n\n"
+            "Пожалуйста, свяжитесь с главным администратором для получения товара: @fir2201"
+        )
+    else:
+        logger.warning(f"Неизвестный статус для уведомления: {status}")
         return False
 
     try:
-        status_text = "на складе" if status == "in_stock" else "отправлен"
-        logger.debug(status_text)
         await bot.send_message(
             chat_id=chat_id,
-            text=f"Ваш товар с трек-кодом <code>{track_code}</code> {status_text}."
+            text=notification_text
         )
-        logger.debug(f"Уведомление отправлено пользователю {chat_id} для трек-кода {track_code}")
+        logger.debug(f"Уведомление отправлено пользователю {chat_id} для трек-кода {track_code} со статусом '{status}'.")
         return True
     except TelegramBadRequest as e:
         if "chat not found" in str(e).lower() or "blocked" in str(e).lower():
-            logger.warning(f"Не удалось отправить уведомление: чат {chat_id} не найден или бот заблокирован")
+            logger.warning(f"Не удалось отправить уведомление: чат {chat_id} не найден или бот заблокирован. Для трек-кода {track_code} tg_id будет обнулен.")
             await session.execute(
                 update(TrackCode).where(TrackCode.track_code == track_code).values(tg_id=None)
-            ) # Обновляем tg_id на None в базе
-            await session.commit()
+            )
+            # Примечание: в этой функции session.commit() не нужен, т.к. это в рамках общей сессии add_or_update_track_codes_list
         else:
-            logger.error(f"Ошибка Telegram API для {chat_id}: {e}")
+            logger.error(f"Ошибка Telegram API для {chat_id} (трек-код {track_code}, статус {status}): {e}")
         return False
     except Exception as e:
-        logger.error(f"Неизвестная ошибка при отправке уведомления {chat_id}: {e}")
+        logger.error(f"Неизвестная ошибка при отправке уведомления пользователю {chat_id} (трек-код {track_code}, статус {status}): {e}")
         return False
-
 
 
 async def check_or_add_track_code(track_code: str, tg_id: int) -> str:
     """Оптимизированная проверка/добавление трек-кода."""
     async with async_session() as session:
         async with session.begin():
-            # Блокировка строки для предотвращения race condition
             stmt = select(TrackCode).where(TrackCode.track_code == track_code).with_for_update()
-            result = await session.execute(stmt)
-            tc = result.scalar_one_or_none()
+            query_result = await session.execute(stmt)
+            tc = query_result.scalar_one_or_none()
 
             if tc:
                 if tc.tg_id is None:
