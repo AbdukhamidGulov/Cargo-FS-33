@@ -29,11 +29,11 @@ def create_inline_keyboard(buttons: list[list[InlineKeyboardButton]]) -> InlineK
 # Клавиатуры главного меню
 main_menu_buttons = [
     ["Адрес склада", "Бланк для заказа"],
-    ["Где брать трек-номер", "Калькулятор объёма"],
-    ["Консолидация", "Проверка трек-кода"],
-    ["Проверка товаров", "Рассчитать страховку"],
-    ["Тарифы", "Упаковка"]
-]  # "Запрещённые товары"
+    ["Где брать трек-номер", "Добавить трек-кода"],
+    ["Калькулятор объёма", "Консолидация"],
+    ["Проверка трек-кода", "Проверка товаров"],
+    ["Расчёт страховки", "Тарифы", "Упаковка"]
+]
 
 main_keyboard = create_keyboard([[create_keyboard_button(text) for text in row] for row in main_menu_buttons])
 
@@ -73,8 +73,8 @@ admin_keyboard = create_keyboard([[create_keyboard_button(text) for text in row]
 contact_admin_keyboard = create_inline_keyboard(
     [
         [create_inline_button(text="👤 Главный админ (Фируз)", url="https://t.me/fir2201")],
-        [create_inline_button(text="Админ (Иван)", url="https://t.me/cargooFS33")]
-        [create_inline_button(text="Админ (Дарья)", url="https://t.me/FS_Admin33")]
+        [create_inline_button(text="Админ (Иван)", url="https://t.me/cargooFS33")],
+        [create_inline_button(text="Админ (Дарья)", url="https://t.me/FS_Admin33")],
         [create_inline_button(text="⚙️ Разработчик бота (Абдулхамид)", url="https://t.me/abdulhamidgulov")]
     ]
 )
@@ -141,3 +141,7 @@ item_type_buttons = [
     ["Сборный груз",  "Мебель"]
 ]
 item_type_keyboard = create_keyboard([[create_keyboard_button(text) for text in row] for row in item_type_buttons])
+
+# Кнопки после успешного добавления трек-кодов
+add_more_codes_btn = create_inline_button("➕ Добавить ещё трек-коды", "add_more_track_codes")
+add_track_codes_follow_up_keyboard = create_inline_keyboard([[add_more_codes_btn, my_track_codes_btn]])
