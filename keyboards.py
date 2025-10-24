@@ -31,7 +31,7 @@ main_menu_buttons = [
     ["Адрес склада", "Бланк для заказа"],
     ["Где брать трек-номер", "Добавить трек-кода"],
     ["Калькулятор объёма", "Консолидация"],
-    ["Проверка трек-кода", "Проверка товаров"],
+    ["Проверка трек-кодов", "Проверка товаров"],
     ["Расчёт страховки", "Тарифы", "Упаковка"]
 ]
 
@@ -144,4 +144,9 @@ item_type_keyboard = create_keyboard([[create_keyboard_button(text) for text in 
 
 # Кнопки после успешного добавления трек-кодов
 add_more_codes_btn = create_inline_button("➕ Добавить ещё трек-коды", "add_more_track_codes")
-add_track_codes_follow_up_keyboard = create_inline_keyboard([[add_more_codes_btn, my_track_codes_btn]])
+check_codes_btn = create_inline_button("🔎 Проверить статус трек-кода", "start_check_codes")
+
+add_track_codes_follow_up_keyboard = create_inline_keyboard([
+    [add_more_codes_btn],
+    [check_codes_btn, my_track_codes_btn]
+])

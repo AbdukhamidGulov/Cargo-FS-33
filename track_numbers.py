@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, CallbackQuery, base
 
-from database.track_codes import get_track_code_status, add_multiple_track_codes
+from database.track_codes import add_multiple_track_codes
 from keyboards import main_keyboard, cancel_keyboard, add_track_codes_follow_up_keyboard
 
 track_code_router = Router()
@@ -25,69 +25,9 @@ status_messages = {
 
 
 class TrackCodeStates(StatesGroup):
-    """Состояния для обработки ввода трек-кодов."""
-    check_single_code = State()  # Для проверки одного трек-кода
+    """Состояния для обработки ввода трек-кодов. Состояния используются в обоих файлах."""
+    check_single_code = State()
     add_multiple_codes = State()  # Для массового добавления трек-кодов
-
-
-# ************************************************
-# 1. ПРОВЕРКА ОДНОГО ТРЕК-КОДА
-# ************************************************
-
-@track_code_router.message(F.text == "Проверка трек-кода")
-async def check_track_code(message: Message, state: FSMContext) -> None:
-    """Запускает процесс проверки статуса трек-кода."""
-    await message.answer(
-        "Отправьте ваш <b>трек-код</b> для проверки.",
-        reply_markup=cancel_keyboard
-    )
-    await state.set_state(TrackCodeStates.check_single_code)
-    logger.info(f"Пользователь {message.from_user.id} начал проверку трек-кода.")
-
-
-@track_code_router.message(TrackCodeStates.check_single_code)
-async def process_track_code(message: Message, state: FSMContext) -> None:
-    """Обрабатывает введённый пользователем трек-код, проверяет его статус."""
-    if message.text == "Отмена":
-        await message.answer("Режим проверки трек-кодов завершён.", reply_markup=main_keyboard)
-        await state.clear()
-        logger.info(f"Пользователь {message.from_user.id} завершил проверку трек-кода.")
-        return
-
-    tg_id: int = message.from_user.id
-    track_code_text: str = message.text.strip()
-
-    if not track_code_text:
-        await message.answer("Трек-код не может быть пустым.")
-        logger.warning(f"Пользователь {tg_id} отправил пустой трек-код.")
-    else:
-        try:
-            # Используем get_track_code_status для чистой проверки статуса
-            track_info = await get_track_code_status(track_code_text)
-
-            if track_info:
-                # Трек-код найден, отправляем его статус
-                status = track_info['status']
-                response = status_messages.get(status, "Статус трек-кода неизвестен. Обратитесь к администратору.")
-                await message.answer(f"<b>Трек-код {track_code_text}</b>:\n{response}")
-                logger.info(f"Пользователь {tg_id} проверил трек-код {track_code_text}: статус {status}")
-            else:
-                # Трек-код не найден
-                await message.answer(
-                    f"Трек-код <code>{track_code_text}</code> не найден в нашей системе.\n\n"
-                    f"Если вы хотите <b>начать его отслеживать</b>, воспользуйтесь командой <code>Добавить трек-коды</code>."
-                )
-                logger.info(f"Пользователь {tg_id} проверил несуществующий трек-код {track_code_text}.")
-
-        except Exception as e:
-            logger.error(f"Ошибка при обработке трек-кода {track_code_text} для пользователя {tg_id}: {e}")
-            await message.answer(
-                "Произошла ошибка при проверке трек-кода. Попробуйте позже или обратитесь к администратору.")
-
-    await message.answer(
-        "Вы можете отправить следующий <b>трек-код</b> или нажать '<code>Отмена</code>', чтобы завершить проверку.",
-        reply_markup=cancel_keyboard
-    )
 
 
 # --- Вспомогательная функция для запуска режима добавления трек-кодов ---
@@ -106,7 +46,7 @@ async def start_add_codes_process(responder: base.TelegramObject, state: FSMCont
 
 
 # ************************************************
-# 2. МАССОВОЕ ДОБАВЛЕНИЕ ТРЕК-КОДОВ
+# 1. МАССОВОЕ ДОБАВЛЕНИЕ ТРЕК-КОДОВ
 # ************************************************
 
 @track_code_router.message(F.text == "Добавить трек-кода")
@@ -197,13 +137,13 @@ async def process_multiple_track_codes(message: Message, state: FSMContext) -> N
 
 
 # ************************************************
-# 4. ДОПОЛНИТЕЛЬНЫЕ ДЕЙСТВИЯ ПОСЛЕ ДОБАВЛЕНИЯ (Inline Handlers)
+# 2. ДОПОЛНИТЕЛЬНЫЕ ДЕЙСТВИЯ ПОСЛЕ ДОБАВЛЕНИЯ (Inline Handlers)
 # ************************************************
 
 @track_code_router.callback_query(F.data == "add_more_track_codes")
 async def restart_add_track_codes(callback: CallbackQuery, state: FSMContext) -> None:
     """Перезапускает процесс массового добавления трек-кодов по нажатию inline-кнопки."""
-    await callback.message.delete()  # Удаляем предыдущее сообщение с кнопками
+    await callback.message.delete() # Удаляем предыдущее сообщение с кнопками
     # Используем общую вспомогательную функцию для запуска режима добавления
     await start_add_codes_process(callback.message, state, callback.from_user.id)
-    await callback.answer()  # Отключаем "часики" на кнопке
+    await callback.answer() # Отключаем "часики" на кнопке

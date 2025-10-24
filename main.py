@@ -24,8 +24,8 @@ from filters_and_config import TELEGRAM_BOT_TOKEN
 bot = Bot(token=TELEGRAM_BOT_TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
 dp = Dispatcher()
 dp.include_routers(commands_router, admin_router, get_info_router, states_router, profile_router, text,
-                   track_code_router, request_router, calc_volume_router, calc_ins_router, calc_shipping_router,
-                   track_code_search_router)
+                   track_code_router, track_code_search_router, request_router, calc_volume_router, calc_ins_router,
+                   calc_shipping_router)
 dp.update.outer_middleware(ExceptionHandlingMiddleware())
 
 basicConfig(level=WARNING, stream=stdout)
@@ -43,3 +43,15 @@ async def main():
 
 if __name__ == "__main__":
     run(main())
+
+
+# я создал файл track_codes_search.py, создал роутер и добавил в mail.py в список роутеров и перенёсь этот часть кода, чтобы увеличит функционал этой функции. При поиске массовых трек кодов все пока что окай, если ты не можешь предложить что-то лучше
+# Но когда ищет один трек код то нужно более подробное его оборажение
+
+# В будущем нужно добавить возможность добавить имя трек-коду, даты поступления на склад, отправки из слада и поступлению в пункт выдачи
+
+
+# В админ панели нужно добавить функцию удаление одного или многих трек-кодов
+# В админ панели нужно добавить функцию поиска владелца трек-кода
+
+# При добавление трек кодов админом, добавить что-то вроде Kafka, потому что при добавлении более 400 разом, часть не добавляется
