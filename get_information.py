@@ -128,17 +128,30 @@ async def send_goods_check(message: Message):
 
 @get_info_router.message(F.text == "Консолидация")
 async def send_consolidation(message: Message):
-    """Отправляет фото и текст о консолидации."""
+    """
+    Отправляет текст о консолидации отдельным сообщением,
+    а затем фото, так как текст стал слишком длинным для caption.
+
+    Исправлена ошибка IndexError: используется явный позиционный индекс {0}
+    для подстановки кода клиента во все места в строке.
+    """
     inf = await get_info_profile(message.from_user.id)
     if not inf:
         await message.answer("Профиль не найден.")
         return
+
     consolidation_photo_id = await get_info_content("consolidation_photo")
     consolidation_text = await get_info_content("consolidation_text")
-    if consolidation_photo_id and consolidation_text:
-        await message.answer_photo(consolidation_photo_id, consolidation_text.format(f"<code>FS{inf.get('id'):04d}</code>"),
-                                   show_caption_above_media=True)
-    else:
+
+    client_code = f"<code>FS{inf.get('id'):04d}</code>"
+
+    if consolidation_text:
+        await message.answer(consolidation_text.format(client_code=client_code))
+
+    if consolidation_photo_id:
+        await message.answer_photo(consolidation_photo_id)
+
+    if not consolidation_text and not consolidation_photo_id:
         await message.answer("Информация о консолидации не найдена.")
 
 
