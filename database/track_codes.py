@@ -27,16 +27,12 @@ class TrackCode(Base):
         return f"TrackCode(id={self.id}, code={self.track_code}, status={self.status}, tg_id={self.tg_id})"
 
 
-# ************************************************
-# НОВЫЙ ФУНКЦИОНАЛ ДЛЯ ПОЛЬЗОВАТЕЛЕЙ
-# ************************************************
+# --- Функции для работы с трек-кодами ---
 
 async def get_track_code_status(track_code: str) -> Optional[dict]:
     """
-    Ищет трек-код в базе и возвращает его статус.
+    Ищет трек-код в базе и возвращает его статус и TG ID владельца.
     Используется для проверки статуса пользователем.
-
-    Исправлена типизация возвращаемого значения для совместимости.
     """
     async with async_session() as session:
         result = await session.execute(
@@ -46,9 +42,28 @@ async def get_track_code_status(track_code: str) -> Optional[dict]:
         row = result.one_or_none()
 
         if row:
-            # Преобразуем Row в словарь, включая статус и tg_id (если есть)
-            # RowProxy ключи TrackCode.track_code, TrackCode.status, TrackCode.tg_id
-            # Используем dict(row._mapping) или аналогичный подход для преобразования
+            return {
+                'track_code': row[0],
+                'status': row[1],
+                'tg_id': row[2]
+            }
+        return None
+
+
+# ФУНКЦИЯ ДЛЯ ПОИСКА ВЛАДЕЛЬЦА ТРЕК-КОДА
+async def get_track_code_info(track_code: str) -> Optional[dict]:
+    """
+    Ищет трек-код в базе данных и возвращает полную информацию о нем:
+    трек-код, статус и TG ID владельца. Используется в админ-панели.
+    """
+    async with async_session() as session:
+        result = await session.execute(
+            select(TrackCode.track_code, TrackCode.status, TrackCode.tg_id)
+            .where(TrackCode.track_code == track_code)
+        )
+        row = result.one_or_none()
+
+        if row:
             return {
                 'track_code': row[0],
                 'status': row[1],
@@ -59,10 +74,9 @@ async def get_track_code_status(track_code: str) -> Optional[dict]:
 
 async def add_multiple_track_codes(track_codes: List[str], tg_id: int) -> Tuple[int, List[str]]:
     """
-    Добавляет список трек-кодов в базу данных, если они еще не существуют.
-    Новым кодам присваивается DEFAULT_TRACK_STATUS и tg_id пользователя.
-
-    Обновлено: Возвращает кортеж (количество добавленных, список добавленных кодов).
+    Добавляет список трек-кодов в базу данных, если они еще не существуют,
+    присваивая им статус по умолчанию и TG ID пользователя.
+    Возвращает кортеж (количество добавленных, список добавленных кодов).
     """
     new_codes_added_count = 0
     added_codes: List[str] = []
@@ -83,15 +97,27 @@ async def add_multiple_track_codes(track_codes: List[str], tg_id: int) -> Tuple[
                 )
                 session.add(new_track)
                 new_codes_added_count += 1
-                added_codes.append(track_code)  # Добавляем код в список
-
+                added_codes.append(track_code)
         await session.commit()
-        return new_codes_added_count, added_codes  # Обновленное возвращаемое значение
+        return new_codes_added_count, added_codes
 
 
-# ************************************************
-# СУЩЕСТВУЮЩИЕ ФУНКЦИИ
-# ************************************************
+async def delete_multiple_track_codes(track_codes: List[str]) -> int:
+    """
+    Удаляет трек-коды из базы данных по списку кодов.
+    Возвращает количество удалённых записей.
+    """
+    async with async_session() as session:
+        result = await session.execute(
+            delete(TrackCode)
+            .where(TrackCode.track_code.in_(track_codes))
+        )
+        deleted_count = result.rowcount
+        await session.commit()
+        return deleted_count
+
+
+# --- Административные и вспомогательные функции ---
 
 async def drop_track_codes_table():
     """Удаляет таблицу track_codes из базы данных."""
@@ -127,15 +153,14 @@ async def add_or_update_track_codes_list(codes_data: List[Tuple[str, Optional[in
     Принимает список кортежей (track_code: str, user_internal_id_from_input: Optional[int]).
     """
     async with async_session() as session:
-        for track_code, user_internal_id_from_input in codes_data:  # Переименовал переменную для ясности
+        for track_code, user_internal_id_from_input in codes_data:
             query_result = await session.execute(
                 select(TrackCode).where(TrackCode.track_code == track_code)
             )
             existing = query_result.scalar_one_or_none()
 
-            tg_id_for_notification = None  # Изначально нет ID для уведомления
+            tg_id_for_notification = None
 
-            # *********** НАЧАЛО ИЗМЕНЕНИЙ ***********
             # Получаем реальный Telegram ID по внутреннему ID пользователя, если он есть
             actual_tg_id_from_internal_id = None
             if user_internal_id_from_input is not None:
@@ -147,7 +172,6 @@ async def add_or_update_track_codes_list(codes_data: List[Tuple[str, Optional[in
                 else:
                     logger.warning(
                         f"Не удалось найти TG ID для внутреннего ID пользователя: {user_internal_id_from_input} для трек-кода {track_code}. Уведомление не будет отправлено по этому ID.")
-            # *********** КОНЕЦ ИЗМЕНЕНИЙ ***********
 
             if existing:
                 existing.status = status
@@ -155,11 +179,8 @@ async def add_or_update_track_codes_list(codes_data: List[Tuple[str, Optional[in
                 if status == "arrived" and actual_tg_id_from_internal_id is not None:
                     # ОБНОВЛЯЕМ tg_id В БАЗЕ НА ПОЛУЧЕННЫЙ АКТУАЛЬНЫЙ TG ID
                     existing.tg_id = actual_tg_id_from_internal_id
-                # Если статус не "arrived" или actual_tg_id_from_internal_id был None,
-                # existing.tg_id остается как есть (либо уже был, либо None).
-                # Это сохраняет привязку, если пользователь сам отслеживал.
 
-                # TG ID для уведомления берется из существующей записи (возможно, обновленной)
+                # TG ID для уведомления берется из существующей записи
                 tg_id_for_notification = existing.tg_id
             else:
                 # Если трек-код не существует, создаем новую запись
@@ -172,17 +193,17 @@ async def add_or_update_track_codes_list(codes_data: List[Tuple[str, Optional[in
                 else:
                     # Для 'in_stock' или 'shipped' (новой записи) tg_id в базе будет None
                     new_track_code.tg_id = None
-                    tg_id_for_notification = None  # Уведомление не отправляется для новых кодов без ID
+                    tg_id_for_notification = None
                 session.add(new_track_code)
 
-            # Отправляем уведомление, если tg_id для него определен и не None
+            # Отправляем уведомление
             if tg_id_for_notification is not None:
                 await safe_send_notification(bot, track_code, tg_id_for_notification, status, session)
         await session.commit()
 
 
 async def safe_send_notification(bot: Bot, track_code: str, chat_id: int, status: str, session) -> bool:
-    """Безопасно отправляет уведомление пользователю и обновляет tg_id на None при ошибке."""
+    """Безопасно отправляет уведомление пользователю и обновляет tg_id на None при ошибке, если чат недоступен."""
     if not chat_id:
         return False
 
@@ -212,10 +233,10 @@ async def safe_send_notification(bot: Bot, track_code: str, chat_id: int, status
         if "chat not found" in str(e).lower() or "blocked" in str(e).lower():
             logger.warning(
                 f"Не удалось отправить уведомление: чат {chat_id} не найден или бот заблокирован. Для трек-кода {track_code} tg_id будет обнулен.")
+            # Обнуляем TG ID в базе данных, чтобы больше не пытаться отправить уведомление
             await session.execute(
                 update(TrackCode).where(TrackCode.track_code == track_code).values(tg_id=None)
             )
-            # Примечание: в этой функции session.commit() не нужен, т.к. это в рамках общей сессии add_or_update_track_codes_list
         else:
             logger.error(f"Ошибка Telegram API для {chat_id} (трек-код {track_code}, статус {status}): {e}")
         return False
@@ -226,18 +247,21 @@ async def safe_send_notification(bot: Bot, track_code: str, chat_id: int, status
 
 
 async def check_or_add_track_code(track_code: str, tg_id: int) -> str:
-    """Оптимизированная проверка/добавление трек-кода."""
+    """Проверяет наличие трек-кода и добавляет его с привязкой к пользователю, если он отсутствует."""
     async with async_session() as session:
         async with session.begin():
+            # Запрос с блокировкой для избежания состояния гонки
             stmt = select(TrackCode).where(TrackCode.track_code == track_code).with_for_update()
             query_result = await session.execute(stmt)
             tc = query_result.scalar_one_or_none()
 
             if tc:
+                # Если код найден, но не привязан к пользователю, привязываем
                 if tc.tg_id is None:
                     tc.tg_id = tg_id
                 return tc.status
             else:
+                # Если код не найден, создаем новый
                 new_tc = TrackCode(
                     track_code=track_code,
                     status="out_of_stock",
