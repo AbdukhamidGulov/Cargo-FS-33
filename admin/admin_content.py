@@ -22,8 +22,8 @@ class ContentEdit(StatesGroup):
 # Классификация ключей по типам контента
 CONTENT_TYPES = {
     "text": [
-        "warehouse_address", "blank_info", "tariffs", "goods_check", "consolidation",
-        "forbidden_goods", "packing", "prices"
+        "warehouse_address", "blank_text", "tariffs_text", "goods_check_text", "consolidation_text",
+        "forbidden_goods", "packing_text", "prices_text", "customs_form_text"
     ],
     "photo": [
         "main_menu_photo", "sample_1688", "sample_Taobao", "sample_Pinduoduo", "sample_Poizon",
@@ -35,7 +35,7 @@ CONTENT_TYPES = {
         "packing_photo", "goods_check_photo1", "goods_check_photo2", "goods_check_photo3"
     ],
     "video": ["goods_check_video1", "goods_check_video2"],
-    "document": ["order_form", "prices_document", "tariffs_document"]
+    "document": ["order_form", "prices_document", "tariffs_document", "customs_form_document"]
 }
 
 

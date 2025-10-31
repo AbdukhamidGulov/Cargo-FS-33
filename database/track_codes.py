@@ -38,6 +38,7 @@ async def get_track_code_status(track_code: str) -> Optional[dict]:
         result = await session.execute(
             select(TrackCode.track_code, TrackCode.status, TrackCode.tg_id)
             .where(TrackCode.track_code == track_code)
+            .execution_options(autocommit=True)
         )
         row = result.one_or_none()
 
@@ -60,6 +61,7 @@ async def get_track_code_info(track_code: str) -> Optional[dict]:
         result = await session.execute(
             select(TrackCode.track_code, TrackCode.status, TrackCode.tg_id)
             .where(TrackCode.track_code == track_code)
+            .execution_options(autocommit=True)
         )
         row = result.one_or_none()
 

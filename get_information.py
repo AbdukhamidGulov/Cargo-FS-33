@@ -59,7 +59,7 @@ async def handle_simple(callback: CallbackQuery):
 
 
 # Другие обработчики
-@get_info_router.message(F.text == "Бланк для заказа")
+@get_info_router.message(F.text == "Бланк Заказа")
 async def send_order_form(message: Message):
     """Отправляет бланк для заказа."""
     blank_info_text = await get_info_content("blank_text")
@@ -69,6 +69,21 @@ async def send_order_form(message: Message):
         await message.answer_document(document=order_form_doc, caption="Вот ваш бланк для заказа. Заполните его и отправьте нам!")
     else:
         await message.answer("Информация о бланке не найдена.")
+
+
+@get_info_router.message(F.text == "Бланк Таможни")
+async def send_customs_form(message: Message):
+    """Отправляет текст и файл-образец 'Бланка Таможни'."""
+    customs_text = await get_info_content("customs_form_text")
+    customs_doc = await get_info_content("customs_form_document")
+    if customs_text and customs_doc:
+        await message.answer(customs_text)
+        await message.answer_document(
+            document=customs_doc,
+            caption="Вот ваш бланк таможни. Пожалуйста, следуйте инструкциям в тексте."
+        )
+    else:
+        await message.answer("Информация о бланке таможни пока не заполнена. Администратор скоро добавит ее.")
 
 
 @get_info_router.message(F.text == "Где брать трек-номер")
