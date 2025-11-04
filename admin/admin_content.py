@@ -15,11 +15,12 @@ logger = getLogger(__name__)
 
 # Определяем состояния FSM
 class ContentEdit(StatesGroup):
-    select_key = State()  # Выбор ключа для редактирования
-    input_content = State()  # Ввод нового значения
+    select_category = State()
+    select_key = State()
+    input_content = State()
 
 
-# Классификация ключей по типам контента
+# Классификация ключей по типам контента (без изменений)
 CONTENT_TYPES = {
     "text": [
         "warehouse_address", "blank_text", "tariffs_text", "goods_check_text", "consolidation_text",
@@ -39,28 +40,158 @@ CONTENT_TYPES = {
 }
 
 
-# Старт процесса изменения контента
+# 1. Названия категорий
+CATEGORY_NAMES = {
+    "text": "📝 Текстовые блоки",
+    "photo": "🖼️ Фотографии",
+    "video": "🎬 Видео",
+    "document": "📄 Документы"
+}
+
+# 2. Названия самих ключей (для удобства админа)
+KEY_NAMES = {
+    # Текст
+    "warehouse_address": "Адрес склада",
+    "blank_text": "Текст 'Бланк Заказа'",
+    "tariffs_text": "Текст 'Тарифы'",
+    "goods_check_text": "Текст 'Проверка товаров'",
+    "consolidation_text": "Текст 'Консолидация'",
+    "forbidden_goods": "Запрещённые товары",
+    "packing_text": "Текст 'Упаковка'",
+    "prices_text": "Текст 'Цены'",
+    "customs_form_text": "Текст 'Бланк Таможни'",
+
+    # Фото
+    "main_menu_photo": "Фото 'Главное меню'",
+    "sample_1688": "Фото 'Образец 1688'",
+    "sample_Taobao": "Фото 'Образец Taobao'",
+    "sample_Pinduoduo": "Фото 'Образец Pinduoduo'",
+    "sample_Poizon": "Фото 'Образец Poizon'",
+    "track_number_info_photo1_1688": "Фото 'Трек-код 1 (1688)'",
+    "track_number_info_photo2_1688": "Фото 'Трек-код 2 (1688)'",
+    "track_number_info_photo1_Taobao": "Фото 'Трек-код 1 (Taobao)'",
+    "track_number_info_photo2_Taobao": "Фото 'Трек-код 2 (Taobao)'",
+    "track_number_info_photo1_Pinduoduo": "Фото 'Трек-код 1 (Pinduoduo)'",
+    "track_number_info_photo2_Pinduoduo": "Фото 'Трек-код 2 (Pinduoduo)'",
+    "track_number_info_photo1_Poizon": "Фото 'Трек-код 1 (Poizon)'",
+    "track_number_info_photo2_Poizon": "Фото 'Трек-код 2 (Poizon)'",
+    "calculate_volume_photo1": "Фото 'Калькулятор основной'",
+    "calculate_volume_photo5": "Фото 'Калькулятор финалный'",
+    "consolidation_photo": "Фото 'Консолидация'",
+    "packing_photo": "Фото 'Упаковка'",
+    "goods_check_photo1": "Фото 'Проверка (1)'",
+    "goods_check_photo2": "Фото 'Проверка (2)'",
+    "goods_check_photo3": "Фото 'Проверка (3)'",
+
+    # Видео
+    "goods_check_video1": "Видео 'Проверка (1)'",
+    "goods_check_video2": "Видео 'Проверка (2)'",
+
+    # Документы
+    "order_form": "Файл 'Бланк Заказа'",
+    "prices_document": "Файл 'Цены'",
+    "tariffs_document": "Файл 'Тарифы'",
+    "customs_form_document": "Файл 'Бланк Таможни'"
+}
+
+
+# --- ОБНОВЛЕННЫЙ FSM FLOW ---
+
+# Шаг 1: Показать Категории
 @admin_content_router.message(F.text == "Изменить данные", IsAdmin(admin_ids))
 async def start_edit_content(message: Message, state: FSMContext):
-    """Показывает список ключей для изменения, отсортированный по алфавиту."""
-    all_keys = []
-    for type_keys in CONTENT_TYPES.values():
-        all_keys.extend(type_keys)
+    """
+    Показывает администратору выбор КАТЕГОРИИ контента.
+    """
+    buttons = []
+    # Создаем кнопки для каждой категории
+    for category_key, category_name in CATEGORY_NAMES.items():
+        buttons.append([
+            create_inline_button(
+                text=category_name,
+                callback_data=f"select_category_{category_key}"
+            )
+        ])
 
-    buttons = [[create_inline_button(key, callback_data=f"edit_{key}")] for key in sorted(all_keys)]
-    buttons.append([create_inline_button("Отмена", callback_data="cancel_edit")]) # Инлайн-кнопка отмены
+    buttons.append([create_inline_button("Отмена", callback_data="cancel_edit")])
     keyboard = create_inline_keyboard(buttons)
 
-    await message.answer("Выберите, что хотите изменить:", reply_markup=keyboard)
-    await state.set_state(ContentEdit.select_key)
+    await message.answer("Выберите категорию контента, которую хотите изменить:", reply_markup=keyboard)
+    await state.set_state(ContentEdit.select_category)  # Устанавливаем состояние выбора категории
 
 
-# Обработка выбора ключа
+# Шаг 2: Показать Ключи в Категории
+@admin_content_router.callback_query(ContentEdit.select_category, F.data.startswith("select_category_"),
+                                     IsAdmin(admin_ids))
+async def handle_category_selection(callback: CallbackQuery, state: FSMContext):
+    """
+    Показывает список ключей (на русском) в выбранной категории.
+    """
+    category_key = callback.data.split("_", 2)[-1]  # e.g., "text"
+    keys_in_category = CONTENT_TYPES.get(category_key)
+
+    if not keys_in_category:
+        await callback.answer("Ошибка: категория не найдена.", show_alert=True)
+        return
+
+    buttons = []
+    # Создаем кнопки для каждого ключа в категории
+    for key in sorted(keys_in_category):
+        display_name = KEY_NAMES.get(key, key)  # Получаем русское имя
+        buttons.append([
+            create_inline_button(
+                text=display_name,
+                callback_data=f"edit_{key}"  # callback_data остается прежним
+            )
+        ])
+
+    buttons.append([create_inline_button("« Назад (к категориям)", callback_data="back_to_categories")])
+    keyboard = create_inline_keyboard(buttons)
+
+    # Редактируем сообщение, чтобы не слать новое
+    await callback.message.edit_text(
+        f"Выбрана категория: <b>{CATEGORY_NAMES[category_key]}</b>\n\nВыберите, что хотите изменить:",
+        reply_markup=keyboard
+    )
+    await state.set_state(ContentEdit.select_key)  # Устанавливаем состояние выбора ключа
+    await callback.answer()
+
+
+# Шаг 2.5: Кнопка "Назад" (возврат к Шагу 1)
+@admin_content_router.callback_query(ContentEdit.select_key, F.data == "back_to_categories", IsAdmin(admin_ids))
+async def go_back_to_categories(callback: CallbackQuery, state: FSMContext):
+    """
+    Возвращает пользователя к выбору категорий (по сути, дублирует start_edit_content).
+    """
+    buttons = []
+    for category_key, category_name in CATEGORY_NAMES.items():
+        buttons.append([
+            create_inline_button(
+                text=category_name,
+                callback_data=f"select_category_{category_key}"
+            )
+        ])
+
+    buttons.append([create_inline_button("Отмена", callback_data="cancel_edit")])
+    keyboard = create_inline_keyboard(buttons)
+
+    await callback.message.edit_text(
+        "Выберите категорию контента, которую хотите изменить:",
+        reply_markup=keyboard
+    )
+    await state.set_state(ContentEdit.select_category)  # Возвращаем состояние выбора категории
+    await callback.answer()
+
+
+# Шаг 3: Обработка выбора Ключа (Почти без изменений)
 @admin_content_router.callback_query(ContentEdit.select_key, F.data.startswith("edit_"), IsAdmin(admin_ids))
 async def select_key(callback: CallbackQuery, state: FSMContext):
     """Запрашивает новое значение для выбранного ключа и показывает текущее."""
     key = callback.data.replace("edit_", "")
     await state.update_data(selected_key=key)
+
+    # Получаем русское имя для отображения
+    display_name = KEY_NAMES.get(key, key)
 
     content_type = "text"
     for type_, keys in CONTENT_TYPES.items():
@@ -68,34 +199,41 @@ async def select_key(callback: CallbackQuery, state: FSMContext):
             content_type = type_
             break
 
+    await state.update_data(content_type=content_type)  # Сохраняем тип для проверки
+
     current_value = await get_info_content(key)
 
+    # Используем display_name в сообщениях
     if current_value:
         try:
             if content_type == "text":
-                await callback.message.answer(f"Текущий текст для <code>{key}</code>:\n")
+                await callback.message.answer(f"Текущий текст для <b>{display_name}</b> (<code>{key}</code>):\n")
                 await callback.message.answer(current_value)
                 await callback.message.answer("Отправьте новый текст.\n")
             elif content_type == "photo":
-                await callback.message.answer_photo(photo=current_value, caption=f"Текущее фото для <code>{key}</code>.\n\nОтправьте новое фото.")
+                await callback.message.answer_photo(photo=current_value,
+                                                    caption=f"Текущее фото для <b>{display_name}</b> (<code>{key}</code>).\n\nОтправьте новое фото.")
             elif content_type == "video":
-                await callback.message.answer_video(video=current_value, caption=f"Текущее видео для <code>{key}</code>.\n\nОтправьте новое видео.")
+                await callback.message.answer_video(video=current_value,
+                                                    caption=f"Текущее видео для <b>{display_name}</b> (<code>{key}</code>).\n\nОтправьте новое видео.")
             elif content_type == "document":
-                await callback.message.answer_document(document=current_value, caption=f"Текущий документ для <code>{key}</code>.\n\nОтправьте новый документ.")
-            else:
-                await callback.message.answer(f"Текущее значение для <code>{key}</code>: (неизвестный тип контента).\n\nОтправьте новое значение.")
+                await callback.message.answer_document(document=current_value,
+                                                       caption=f"Текущий документ для <b>{display_name}</b> (<code>{key}</code>).\n\nОтправьте новый документ.")
         except Exception as e:
             logger.error(f"Ошибка при показе текущего контента для {key}: {e}")
-            await callback.message.answer(f"Не удалось показать текущий контент для <code>{key}</code>. Возможно, он отсутствует или поврежден. Пожалуйста, отправьте новое значение.")
+            await callback.message.answer(
+                f"Не удалось показать текущий контент для <b>{display_name}</b> (<code>{key}</code>). Возможно, file_id устарел. Пожалуйста, отправьте новое значение.")
     else:
-        await callback.message.answer(f"Для <code>{key}</code> пока нет сохраненного контента. Пожалуйста, отправьте новое значение.")
+        await callback.message.answer(
+            f"Для <b>{display_name}</b> (<code>{key}</code>) пока нет сохраненного контента. Пожалуйста, отправьте новое значение.")
 
     await callback.message.answer("Для отмены нажмите кнопку 'Отмена'.", reply_markup=cancel_keyboard)
     await state.set_state(ContentEdit.input_content)
     await callback.answer()
 
 
-# Обработка текста
+# Шаг 4: Обработка Ввода (хендлеры почти без изменений)
+
 @admin_content_router.message(ContentEdit.input_content, F.text, IsAdmin(admin_ids))
 async def process_text(message: Message, state: FSMContext):
     """Обновляет текстовое значение с сохранением HTML-разметки."""
@@ -105,61 +243,75 @@ async def process_text(message: Message, state: FSMContext):
 
     data = await state.get_data()
     key = data.get("selected_key")
-    if key in CONTENT_TYPES["text"]:
+    content_type = data.get("content_type")  # Получаем тип из FSM
+
+    if content_type == "text":
         new_text = message.html_text
         await update_info_content(key, new_text)
         await message.answer(f"Текст для <code>{key}</code> обновлён.", reply_markup=main_keyboard)
+        await state.clear()
     else:
-        await message.answer("Ожидался текст, но выбранный ключ не текстовый. Пожалуйста, отправьте текст.", reply_markup=cancel_keyboard)
-    await state.clear()
+        await message.answer(f"Ожидался {content_type}, а не текст. Пожалуйста, отправьте корректный формат.",
+                             reply_markup=cancel_keyboard)
+        # Не очищаем state, даем админу попробовать еще раз
 
 
-# Обработка фото
 @admin_content_router.message(ContentEdit.input_content, F.photo, IsAdmin(admin_ids))
 async def process_photo(message: Message, state: FSMContext):
     """Обновляет токен фото в базе."""
     data = await state.get_data()
     key = data.get("selected_key")
-    if key in CONTENT_TYPES["photo"]:
+    content_type = data.get("content_type")
+
+    if content_type == "photo":
         photo_token = message.photo[-1].file_id
         await update_info_content(key, photo_token)
         await message.answer(f"Фото для <code>{key}</code> обновлено.", reply_markup=main_keyboard)
+        await state.clear()
     else:
-        await message.answer("Ожидалось фото, но выбранный ключ не соответствует типу. Пожалуйста, отправьте фото.", reply_markup=cancel_keyboard)
-    await state.clear()
+        await message.answer(f"Ожидался {content_type}, а не фото. Пожалуйста, отправьте корректный формат.",
+                             reply_markup=cancel_keyboard)
+        # Не очищаем state
 
 
-# Обработка видео
 @admin_content_router.message(ContentEdit.input_content, F.video, IsAdmin(admin_ids))
 async def process_video(message: Message, state: FSMContext):
     """Обновляет токен видео в базе."""
     data = await state.get_data()
     key = data.get("selected_key")
-    if key in CONTENT_TYPES["video"]:
+    content_type = data.get("content_type")
+
+    if content_type == "video":
         video_token = message.video.file_id
         await update_info_content(key, video_token)
         await message.answer(f"Видео для <code>{key}</code> обновлено.", reply_markup=main_keyboard)
+        await state.clear()
     else:
-        await message.answer("Ожидалось видео, но выбранный ключ не соответствует типу. Пожалуйста, отправьте видео.", reply_markup=cancel_keyboard)
-    await state.clear()
+        await message.answer(f"Ожидался {content_type}, а не видео. Пожалуйста, отправьте корректный формат.",
+                             reply_markup=cancel_keyboard)
+        # Не очищаем state
 
 
-# Обработка документа
 @admin_content_router.message(ContentEdit.input_content, F.document, IsAdmin(admin_ids))
 async def process_document(message: Message, state: FSMContext):
     """Обновляет токен документа в базе."""
     data = await state.get_data()
     key = data.get("selected_key")
-    if key in CONTENT_TYPES["document"]:
+    content_type = data.get("content_type")
+
+    if content_type == "document":
         document_token = message.document.file_id
         await update_info_content(key, document_token)
         await message.answer(f"Документ для <code>{key}</code> обновлён.", reply_markup=main_keyboard)
+        await state.clear()
     else:
-        await message.answer("Ожидался документ, но выбранный ключ не соответствует типу. Пожалуйста, отправьте документ.", reply_markup=cancel_keyboard)
-    await state.clear()
+        await message.answer(f"Ожидался {content_type}, а не документ. Пожалуйста, отправьте корректный формат.",
+                             reply_markup=cancel_keyboard)
+        # Не очищаем state
 
 
-# Обработка отмены (инлайн-кнопка)
+# --- Хендлеры Отмены (без изменений) ---
+
 @admin_content_router.callback_query(F.data == "cancel_edit", IsAdmin(admin_ids))
 async def cancel_edit_inline(callback: CallbackQuery, state: FSMContext):
     """Отменяет процесс редактирования через инлайн-кнопку."""
@@ -168,35 +320,36 @@ async def cancel_edit_inline(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
 
 
-# Новый хендлер для текстовой кнопки "Отмена"
-@admin_content_router.message(F.text == "отмена", IsAdmin(admin_ids))
+@admin_content_router.message(F.text.lower() == "отмена", IsAdmin(admin_ids))  # Используем lower() для надежности
 async def cancel_edit_text_button(message: Message, state: FSMContext):
     """Отменяет процесс редактирования через текстовую кнопку."""
     await cancel_edit_process(message, state)
 
 
-# Вспомогательная функция для отмены, чтобы избежать дублирования кода
 async def cancel_edit_process(message: Message, state: FSMContext):
     """Общая логика отмены редактирования контента."""
     current_state = await state.get_state()
-    if current_state:
+    if current_state:  # Проверяем, есть ли активное состояние
         await state.clear()
         await message.answer("Редактирование отменено.", reply_markup=main_keyboard)
     else:
+        # Если нажали "Отмена" без активного состояния FSM (маловероятно, но возможно)
         await message.answer("Вы уже находитесь в главном меню.", reply_markup=main_keyboard)
 
 
 # Обработка некорректного ввода
 @admin_content_router.message(ContentEdit.input_content, IsAdmin(admin_ids))
 async def invalid_input(message: Message, state: FSMContext):
-    """Обрабатывает некорректный ввод."""
-    # Если это не кнопка "Отмена" (уже обработанная выше)
-    if message.text.lower() != "отмена":
-        data = await state.get_data()
-        key = data.get("selected_key")
-        content_type = "text"
-        for type_, keys in CONTENT_TYPES.items():
-            if key in keys:
-                content_type = type_
-                break
-        await message.answer(f"Ожидался {content_type}. Пожалуйста, отправьте корректный формат для '{key}'.", reply_markup=cancel_keyboard)
+    """Обрабатывает некорректный ввод (например, стикер или аудио)."""
+    if message.text and message.text.lower() == "отмена":
+        # Этот блок уже не нужен, так как хендлер cancel_edit_text_button стоит выше,
+        # но оставим на всякий случай, если порядок регистрации изменится.
+        await cancel_edit_process(message, state)
+        return
+
+    data = await state.get_data()
+    content_type = data.get("content_type", "ожидаемый формат")
+    await message.answer(
+        f"Ошибка. Ожидался {content_type}. Пожалуйста, отправьте корректный формат или нажмите 'Отмена'.",
+        reply_markup=cancel_keyboard)
+
