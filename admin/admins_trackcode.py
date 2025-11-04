@@ -10,9 +10,11 @@ from openpyxl.styles import Alignment
 from openpyxl.workbook import Workbook
 from re import search
 
-# Добавлена get_track_code_info для поиска владельца
-from database.track_codes import add_or_update_track_codes_list, get_track_codes_list, delete_multiple_track_codes, \
-    get_track_code_info
+
+from database.track_codes import (add_or_update_track_codes_list, get_track_codes_list,
+                                  delete_multiple_track_codes, get_track_code_info)
+from database.users import get_info_profile
+from keyboards import get_admin_edit_user_keyboard, cancel_keyboard, main_keyboard
 from filters_and_config import IsAdmin, admin_ids
 
 admin_tc_router = Router()
@@ -40,8 +42,8 @@ async def extract_parsed_codes(content: str, status: str) -> List[Tuple[str, Opt
         for line in lines:
             match = search(r"FS(\d{4})-\d{4}-\d+", line)
             if match:
-                full_track_code = match.group(0)  # Например, "FS0294-0514-2"
-                user_internal_id_str = match.group(1)  # Например, "0294" - это внутренний ID пользователя
+                full_track_code = match.group(0)
+                user_internal_id_str = match.group(1)
                 try:
                     user_internal_id = int(user_internal_id_str)
                     codes_data.append((full_track_code, user_internal_id))
@@ -53,7 +55,7 @@ async def extract_parsed_codes(content: str, status: str) -> List[Tuple[str, Opt
     else:
         for line in lines:
             if line:
-                codes_data.append((line, None))  # Для "in_stock" и "shipped" user_internal_id не нужен
+                codes_data.append((line, None))
     return codes_data
 
 
@@ -103,7 +105,7 @@ async def process_track_codes(message: Message, state: FSMContext, bot: Bot):
     Поддерживает текстовый ввод и загрузку файла, а также различные статусы.
     """
     data = await state.get_data()
-    status = data.get("status")  # Получаем статус из состояния FSM
+    status = data.get("status")
     codes_to_process: List[Tuple[str, Optional[int]]] = []
 
     if message.text:
@@ -129,24 +131,22 @@ async def process_track_codes(message: Message, state: FSMContext, bot: Bot):
         await state.clear()
         return
 
-    # Определяем текст для ответа пользователю
     action_text = "добавлено"
     status_display_text = ""
     if status == "in_stock":
         status_display_text = "На складе"
     elif status == "shipped":
         status_display_text = "Отправлен"
-        action_text = "обновлено"  # Обычно "отправлен" это обновление статуса
+        action_text = "обновлено"
     elif status == "arrived":
         status_display_text = "Прибыл на место назначения"
-        action_text = "обновлено"  # Обычно "прибыл" это обновление статуса
+        action_text = "обновлено"
 
-    # Обрабатываем трек-коды и отправляем уведомления внутри функции add_or_update_track_codes_list
     await add_or_update_track_codes_list(codes_to_process, status, bot)
 
     await message.answer(
         f"Успешно {action_text} {len(codes_to_process)} трек-кодов со статусом '{status_display_text}'.")
-    await state.clear()  # Очищаем состояние
+    await state.clear()
 
 
 # ************************************************
@@ -157,7 +157,8 @@ async def process_track_codes(message: Message, state: FSMContext, bot: Bot):
 async def delete_track_codes_start(message: Message, state: FSMContext):
     """Начинает процесс удаления трек-кодов, запрашивая список."""
     await message.answer("Пожалуйста, отправьте один или несколько трек-кодов, которые нужно удалить:\n"
-                         "<i>(каждый трек-код с новой строки)</i>.")
+                         "<i>(каждый трек-код с новой строки)</i>.",
+                         reply_markup=cancel_keyboard)  # Добавляем клавиатуру отмены
     await state.set_state(TrackCodeStates.waiting_for_codes_to_delete)
     logger.debug("Старт процесс удаления трек-кодов.")
 
@@ -165,37 +166,38 @@ async def delete_track_codes_start(message: Message, state: FSMContext):
 @admin_tc_router.message(TrackCodeStates.waiting_for_codes_to_delete)
 async def process_track_codes_deletion(message: Message, state: FSMContext):
     """Обрабатывает введенный список трек-кодов и удаляет их из базы данных."""
-    # Извлекаем коды, разделяя по переводу строки и убирая пустые строки
+    if message.text == "Отмена":
+        await message.answer("Удаление трек-кодов отменено.", reply_markup=main_keyboard)
+        await state.clear()
+        return
+
     codes_to_delete = list(filter(None, map(str.strip, message.text.splitlines())))
 
     if not codes_to_delete:
         await message.answer(
-            "Не удалось получить трек-коды для удаления. Пожалуйста, введите коды (каждый с новой строки).")
-        await state.clear()
-        return
+            "Не удалось получить трек-коды для удаления. Пожалуйста, введите коды (каждый с новой строки) или нажмите 'Отмена'.",
+            reply_markup=cancel_keyboard)
+        return  # Остаемся в состоянии
 
-    # Вызываем функцию удаления из базы данных
     try:
         deleted_count = await delete_multiple_track_codes(codes_to_delete)
-
-        # Отправляем подтверждение администратору
         await message.answer(
-            f"✅ Успешно удалено <b>{deleted_count}</b> трек-кодов из <b>{len(codes_to_delete)}</b> указанных."
+            f"✅ Успешно удалено <b>{deleted_count}</b> трек-кодов из <b>{len(codes_to_delete)}</b> указанных.",
+            reply_markup=main_keyboard
         )
         logger.info(f"Админ {message.from_user.id} удалил {deleted_count} трек-кодов.")
+        await state.clear()  # Успешно, выходим
 
     except Exception as e:
         logger.error(f"Ошибка при удалении трек-кодов для админа {message.from_user.id}: {e}")
-        await message.answer("Произошла ошибка при удалении трек-кодов. Попробуйте позже.")
-
-    await state.clear()
+        await message.answer("Произошла ошибка при удалении трек-кодов. Попробуйте позже.", reply_markup=main_keyboard)
+        await state.clear()
 
 
 # ************************************************
 # 3. ПОЛУЧЕНИЕ СПИСКА ТРЕК-КОДОВ (ОТЧЕТ)
 # ************************************************
 
-# Получение списка трек-кодов
 async def generate_track_codes_report(track_codes: list, users: dict) -> Tuple[str, str]:
     """Генерирует Excel и текстовый файлы со списком трек-кодов."""
     excel_file_path = "track_codes.xlsx"
@@ -204,7 +206,7 @@ async def generate_track_codes_report(track_codes: list, users: dict) -> Tuple[s
     sheet = excel_workbook.active
     sheet.title = "Track Codes"
 
-    headers = ["ID", "Track Code", "Status", "User TG_ID"]  # Изменено на User TG_ID, так как username может не быть
+    headers = ["ID", "Track Code", "Status", "User TG_ID"]
     sheet.append(headers)
     for col in sheet.iter_cols(min_row=1, max_row=1, min_col=1, max_col=len(headers)):
         for cell in col:
@@ -214,7 +216,6 @@ async def generate_track_codes_report(track_codes: list, users: dict) -> Tuple[s
         text_file.write("Список трек-кодов\n")
         text_file.write("=" * 40 + "\n")
         for row in track_codes:
-            # Используем TG_ID напрямую, так как username может быть недоступен или измениться
             user_info = f"TG_ID: {row['tg_id']}" if row["tg_id"] else "Не привязан"
             sheet.append([row["id"], row["track_code"], row["status"], user_info])
             text_file.write(
@@ -224,15 +225,13 @@ async def generate_track_codes_report(track_codes: list, users: dict) -> Tuple[s
     return excel_file_path, text_file_path
 
 
-@admin_tc_router.message(F.text == "Список трек-кодов", IsAdmin(admin_ids))  # Добавлен IsAdmin фильтр
+@admin_tc_router.message(F.text == "Список трек-кодов", IsAdmin(admin_ids))
 async def generate_track_codes_list(message: Message):
     """Генерирует и отправляет список всех трек-кодов в виде Excel и текстового файла."""
-    await message.delete()  # Удаляем сообщение, чтобы не засорять чат админа
+    await message.delete()
     track_codes = await get_track_codes_list()
-    # users = await get_users_tg_info() # Это больше не нужно, т.к. мы берем tg_id напрямую
 
-    excel_file_path, text_file_path = await generate_track_codes_report(track_codes,
-                                                                        {})  # Передаем пустой словарь, т.к. users не используется
+    excel_file_path, text_file_path = await generate_track_codes_report(track_codes, {})
     excel_file_input = FSInputFile(excel_file_path)
     text_file_input = FSInputFile(text_file_path)
 
@@ -244,28 +243,34 @@ async def generate_track_codes_list(message: Message):
 
 
 # ************************************************
-# 4. ПОИСК ВЛАДЕЛЬЦА ТРЕК-КОДА
+# 4. ПОИСК ВЛАДЕЛЬЦА ТРЕК-КОДА (ОБНОВЛЕНО)
 # ************************************************
 
 @admin_tc_router.message(F.text == "Найти владельца трек-кода", IsAdmin(admin_ids))
 async def find_owner_start(message: Message, state: FSMContext):
     """Начинает процесс поиска владельца по трек-коду."""
-    await message.answer("Пожалуйста, отправьте трек-код для поиска владельца.")
+    await message.answer("Пожалуйста, отправьте трек-код для поиска владельца.",
+                         reply_markup=cancel_keyboard)  # Добавляем клавиатуру отмены
     await state.set_state(TrackCodeStates.waiting_for_owner_search_code)
+
+
+@admin_tc_router.message(TrackCodeStates.waiting_for_owner_search_code, F.text == "Отмена")
+async def cancel_owner_search(message: Message, state: FSMContext):
+    """Отменяет режим поиска владельца."""
+    await message.answer("Поиск владельца отменен.", reply_markup=main_keyboard)
+    await state.clear()
 
 
 @admin_tc_router.message(TrackCodeStates.waiting_for_owner_search_code)
 async def process_owner_search(message: Message, state: FSMContext):
     """Ищет владельца и статус по введенному трек-коду."""
     if not message.text:
-        await message.answer("Пожалуйста, введите корректный трек-код.")
-        await state.clear()
-        return
+        await message.answer("Пожалуйста, введите корректный трек-код.", reply_markup=cancel_keyboard)
+        return  # Остаемся в состоянии
 
     track_code = message.text.strip()
 
-    # Предполагаем, что get_track_code_info возвращает dict с tg_id и status
-    # Пример: {'tg_id': 12345678, 'track_code': 'ABC12345', 'status': 'shipped'}
+    # get_track_code_info возвращает dict {'tg_id': 123, 'status': 'shipped', ...}
     track_info = await get_track_code_info(track_code)
 
     if track_info:
@@ -273,22 +278,64 @@ async def process_owner_search(message: Message, state: FSMContext):
         status = track_info.get('status', 'неизвестен')
 
         if user_tg_id:
-            response = (
-                f"✅ <b>Информация о трек-коде:</b>\n"
-                f"Код: <code>{track_code}</code>\n"
-                f"Статус: <b>{status}</b>\n"
-                f"Владелец (TG ID): <code>{user_tg_id}</code>\n"
-                f"Ссылка на чат: <a href='tg://user?id={user_tg_id}'>Написать пользователю</a>"
-            )
+            # --- ЛОГИКА ДОБАВЛЕНИЯ КНОПОК РЕДАКТИРОВАНИЯ ---
+
+            # 1. Получаем полный профиль пользователя по tg_id, чтобы найти внутренний ID
+            user_data = await get_info_profile(user_tg_id)
+
+            if user_data:
+                internal_user_id = user_data.get('id')
+                username = user_data.get('username')
+                phone = user_data.get('phone')
+
+                # 2. Отправляем основную информацию
+                response = (
+                    f"✅ <b>Информация о трек-коде:</b>\n"
+                    f"Код: <code>{track_code}</code>\n"
+                    f"Статус: <b>{status}</b>\n"
+                    f"Владелец (TG ID): <code>{user_tg_id}</code>\n"
+                    f"Внутренний ID: <code>FS{internal_user_id:04d}</code>\n"
+                    f"Ссылка на чат: <a href='tg://user?id={user_tg_id}'>Написать пользователю</a>"
+                )
+                await message.answer(response)
+
+                # 3. Генерируем клавиатуру редактирования
+                edit_keyboard = get_admin_edit_user_keyboard(
+                    internal_user_id=internal_user_id,
+                    has_username=bool(username),
+                    has_phone=bool(phone)
+                )
+
+                # 4. Отправляем второе сообщение с кнопками
+                await message.answer(
+                    "Вы можете <b>изменить данные</b> этого пользователя, "
+                    "ввести следующий трек-код для поиска или нажать '<b>Отмена</b>'.",
+                    reply_markup=edit_keyboard
+                )
+
+            else:
+                # Странная ситуация: трек-код привязан к tg_id, которого нет в таблице users
+                response = (
+                    f"⚠️ <b>Информация о трек-коде:</b>\n"
+                    f"Код: <code>{track_code}</code>\n"
+                    f"Статус: <b>{status}</b>\n"
+                    f"Владелец (TG ID): <code>{user_tg_id}</code>\n"
+                    f"<b>Ошибка:</b> Не удалось найти профиль пользователя с этим TG ID в базе `users`."
+                )
+                await message.answer(response, reply_markup=cancel_keyboard)
+
         else:
             response = (
                 f"⚠️ <b>Информация о трек-коде:</b>\n"
                 f"Код: <code>{track_code}</code>\n"
                 f"Статус: <b>{status}</b>\n"
-                f"Владелец: <b>Не привязан к пользователю.</b>"
+                f"Владелец: <b>Не привязан к пользователю.</b>\n\n"
+                f"Вы можете ввести следующий трек-код или нажать 'Отмена'."
             )
+            await message.answer(response, reply_markup=cancel_keyboard)
     else:
         response = f"❌ Трек-код <code>{track_code}</code> не найден в базе данных."
+        await message.answer(response, reply_markup=cancel_keyboard)
 
-    await message.answer(response)
-    await state.clear()
+    # НЕ очищаем состояние, остаемся в режиме поиска
+

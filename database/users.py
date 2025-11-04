@@ -83,3 +83,23 @@ async def get_user_by_id(user_id: int):
         result = await session.execute(select(User).where(User.id == user_id))
         user = result.scalar_one_or_none()
         return user.to_dict() if user else None
+
+
+async def update_user_by_internal_id(internal_id: int, **kwargs) -> bool:
+    """
+    Обновляет данные пользователя по его внутреннему ID (primary key).
+    Принимает именованные аргументы (например, username="test", phone="123").
+    """
+    if not kwargs:
+        return False
+
+    async with async_session() as session:
+        try:
+            stmt = update(User).where(User.id == internal_id).values(**kwargs)
+            result = await session.execute(stmt)
+            await session.commit()
+            return result.rowcount > 0  # Возвращает True, если строка была обновлена
+        except Exception as e:
+            logger.error(f"Ошибка при обновлении пользователя по ID {internal_id}: {e}")
+            await session.rollback()
+            return False

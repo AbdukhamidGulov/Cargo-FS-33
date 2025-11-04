@@ -150,3 +150,18 @@ add_track_codes_follow_up_keyboard = create_inline_keyboard([
     [add_more_codes_btn],
     [check_codes_btn, my_track_codes_btn]
 ])
+
+
+def get_admin_edit_user_keyboard(internal_user_id: int, has_username: bool, has_phone: bool) -> InlineKeyboardMarkup:
+    """
+    Создает инлайн-клавиатуру для админа для редактирования данных пользователя.
+    """
+    # Меняем текст кнопки в зависимости от того, есть ли данные
+    username_text = "Изменить никнейм" if has_username else "Добавить никнейм"
+    phone_text = "Изменить телефон" if has_phone else "Добавить телефон"
+
+    buttons = [
+        [create_inline_button(f"👤 {username_text}", callback_data=f"admin_edit_username:{internal_user_id}")],
+        [create_inline_button(f"📞 {phone_text}", callback_data=f"admin_edit_phone:{internal_user_id}")]
+    ]
+    return create_inline_keyboard(buttons)
