@@ -6,17 +6,17 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, CallbackQuery
 
+from admin.admin_search import admin_search_router
 from admin.admins_trackcode import admin_tc_router
 from filters_and_config import IsAdmin, admin_ids
-from keyboards import admin_keyboard, confirm_keyboard, contact_admin_keyboard, main_keyboard, cancel_keyboard, \
-    get_admin_edit_user_keyboard
+from keyboards import admin_keyboard, confirm_keyboard, contact_admin_keyboard
 from database.base import setup_database
-from database.users import get_user_by_id, drop_users_table, update_user_by_internal_id
+from database.users import drop_users_table
 from database.track_codes import delete_shipped_track_codes, drop_track_codes_table
 from admin.admin_content import admin_content_router
 
 admin_router = Router()
-admin_router.include_routers(admin_content_router, admin_tc_router)
+admin_router.include_routers(admin_content_router, admin_search_router, admin_tc_router)
 logger = getLogger(__name__)
 
 @admin_router.callback_query(F.data == "admin_panel")
@@ -45,202 +45,67 @@ async def admin_contact_command(message: Message):
 # ------------------------------------------------------------------------------------------
 
 
-# Искать информацию по ID
-class SearchUserStates(StatesGroup):
-    waiting_for_user_id = State()
+# Обработка функций для удаления с подтверждением
+class DangerActions(StatesGroup):
+    confirm_action = State()
 
 
-class AdminEditUserStates(StatesGroup):
-    waiting_for_new_username = State()
-    waiting_for_new_phone = State()
-    user_id_to_edit = State()
-
-
-@admin_router.message(F.text == "Искать инфо по ID")
-async def start_user_search(message: Message, state: FSMContext):
-    """Начинает процесс поиска информации о пользователе по ID, запрашивая ввод ID."""
-    await message.answer("Введите ID пользователя (например, FS0001 или просто 1):")
-    await state.set_state(SearchUserStates.waiting_for_user_id)
-    logger.info(f"Админ {message.from_user.id} начал поиск пользователя по ID.")
-
-
-@admin_router.message(SearchUserStates.waiting_for_user_id)
-async def process_user_search_input(message: Message, state: FSMContext):
-    """Обрабатывает введенный ID пользователя, возвращая его данные или сообщение об ошибке."""
-    if message.text == "Отмена":
-        await message.answer("Поиск пользователя по ID завершен.", reply_markup=main_keyboard)
-        await state.clear()
-        logger.info(f"Админ {message.from_user.id} завершил поиск пользователя по ID.")
-        return
-
-    user_id_str = message.text.strip()  # Удаляем лишние пробелы для точности
-
-    if user_id_str.startswith("FS"):  # Проверяем и преобразуем ID в зависимости от формата
-        numeric_part = user_id_str[2:]  # Если ID начинается с "FS", извлекаем числовую часть
-        if numeric_part.isdigit():
-            user_id = int(numeric_part)
-        else:
-            await message.answer("Пожалуйста, введите корректный ID пользователя в формате FSXXXX, где XXXX — число.",
-                                 reply_markup=cancel_keyboard)
-            return
-
-    elif user_id_str.isdigit():
-        user_id = int(user_id_str)  # Если ID — это просто число
-
-    else:
-        await message.answer("Пожалуйста, введите числовой ID пользователя или в формате FSXXXX."
-                             "\nИли напишите <code>Отмена</code> чтобы остановить режим поиска по  ID",
-                             reply_markup=cancel_keyboard)  # Если формат неверный
-        return
-
-    user_data = await get_user_by_id(user_id)  # Получаем данные пользователя
-
-    if not user_data:
-        await message.answer("Пользователь с таким ID не найден.")
-        return
-
-
-    # Формируем ответ с данными пользователя
-    no_value = "<i>Не заполнено</i>"
-    username = user_data.get('username')
-    phone = user_data.get('phone')
-
-    # Создаем инфо-сообщение
-    await message.answer(
-        f"ID: <code>FS{user_data['id']:04d}</code>\n"
-        f"Имя: {user_data.get('name') or no_value}\n"
-        f"Username: @{username or no_value}\n"
-        f"Номер телефона: {phone or no_value}\n\n",
-        # reply_markup=cancel_keyboard # <-- Убираем старую клавиатуру
+@admin_tc_router.message(F.text == "Удалить отправленные трек-коды", IsAdmin(admin_ids))
+async def initiate_delete_shipped(message: Message, state: FSMContext):
+    """Начинает процесс удаления отправленных трек-кодов с запросом подтверждения."""
+    await message.delete()
+    await ask_confirmation(
+        message=message,
+        state=state,
+        action_type='delete_tracks',
+        warning_text="Это удалит ВСЕ отправленные трек-коды!"
     )
 
-    # Создаем новую инлайн-клавиатуру для редактирования
-    edit_keyboard = get_admin_edit_user_keyboard(
-        internal_user_id=user_data['id'],
-        has_username=bool(username),
-        has_phone=bool(phone)
+@admin_router.message(Command(commands="dp_users"), IsAdmin(admin_ids))
+async def initiate_recreate_users(message: Message, state: FSMContext):
+    """Начинает процесс пересоздания таблицы пользователей с запросом подтверждения."""
+    await ask_confirmation(
+        message=message,
+        state=state,
+        action_type='recreate_users',
+        warning_text="Это ПОЛНОСТЬЮ удалит таблицу пользователей и создаст её заново!"
     )
 
-    # Отправляем отдельное сообщение с кнопками редактирования и инструкцией
-    await message.answer(
-        "Вы можете изменить данные этого пользователя, нажав кнопки ниже, "
-        "ввести следующий ID для поиска или нажать '<code>Отмена</code>'.",
-        reply_markup=edit_keyboard
+@admin_router.message(Command(commands="dp_tracks"), IsAdmin(admin_ids))
+async def initiate_recreate_tracks(message: Message, state: FSMContext):
+    """Начинает процесс пересоздания таблицы трек-кодов с запросом подтверждения."""
+    await ask_confirmation(
+        message=message,
+        state=state,
+        action_type='recreate_tracks',
+        warning_text="Это ПОЛНОСТЬЮ удалит таблицу трек-кодов и создаст её заново!"
     )
-    # НЕ очищаем состояние SearchUserStates.waiting_for_user_id,
-    # чтобы админ мог сразу искать следующий ID
-    logger.info(f"Админ {message.from_user.id} получил информацию о пользователе с ID {user_id}.")
 
+async def ask_confirmation(message: Message, state: FSMContext, action_type: str, warning_text: str):
+    """Запрашивает подтверждение у администратора перед выполнением опасных действий."""
+    await state.update_data(action_type=action_type)
+    await message.answer(f"⚠️ {warning_text}\n\nВы уверены?", reply_markup=confirm_keyboard)
+    await state.set_state(DangerActions.confirm_action)
 
-# ------------------------------------------------------------------------------------------
-# --- НОВЫЕ ХЕНДЛЕРЫ ДЛЯ РЕДАКТИРОВАНИЯ ---
-# ------------------------------------------------------------------------------------------
-
-# --- Редактирование НИКНЕЙМА ---
-
-@admin_router.callback_query(F.data.startswith("admin_edit_username:"))
-async def start_edit_username(callback: CallbackQuery, state: FSMContext):
-    """Начинает FSM для изменения никнейма пользователя."""
-    try:
-        user_id_to_edit = int(callback.data.split(":")[1])
-    except (IndexError, ValueError):
-        await callback.answer("Ошибка: неверный ID пользователя.", show_alert=True)
-        return
-
-    # Очищаем старое состояние (поиска) и устанавливаем новое (редактирования)
-    await state.clear()
-    await state.set_state(AdminEditUserStates.waiting_for_new_username)
-    await state.update_data(user_id_to_edit=user_id_to_edit)
-
-    await callback.message.answer(
-        f"Вы редактируете пользователя <code>FS{user_id_to_edit:04d}</code>.\n"
-        "Отправьте новый никнейм (без @) или '<code>-</code>' (дефис) для удаления никнейма.",
-        reply_markup=cancel_keyboard
-    )
-    await callback.answer()
-
-
-@admin_router.message(AdminEditUserStates.waiting_for_new_username, F.text)
-async def process_edit_username(message: Message, state: FSMContext):
-    """Сохраняет новый никнейм."""
-    if message.text == "Отмена":
-        await message.answer("Редактирование отменено.", reply_markup=main_keyboard)
-        await state.clear()
-        return
-
+@admin_router.callback_query(F.data.startswith("danger_"), DangerActions.confirm_action)
+async def execute_danger_action(callback: CallbackQuery, state: FSMContext):
+    """Обрабатывает подтверждение или отмену опасных действий, выполняя их при подтверждении."""
     data = await state.get_data()
-    user_id_to_edit = data.get('user_id_to_edit')
+    action_type = data.get('action_type')
 
-    new_username = message.text.strip().replace("@", "")  # Очищаем от @
-
-    if new_username == "-":
-        new_username = None  # Устанавливаем None для удаления
-
-    success = await update_user_by_internal_id(user_id_to_edit, username=new_username)
-
-    if success:
-        await message.answer(f"✅ Никнейм для <code>FS{user_id_to_edit:04d}</code> успешно обновлен.",
-                             reply_markup=main_keyboard)
-    else:
-        await message.answer("❌ Произошла ошибка при обновлении никнейма.", reply_markup=main_keyboard)
-
+    await callback.message.delete()
     await state.clear()
 
-
-# --- Редактирование ТЕЛЕФОНА ---
-
-@admin_router.callback_query(F.data.startswith("admin_edit_phone:"))
-async def start_edit_phone(callback: CallbackQuery, state: FSMContext):
-    """Начинает FSM для изменения телефона пользователя."""
-    try:
-        user_id_to_edit = int(callback.data.split(":")[1])
-    except (IndexError, ValueError):
-        await callback.answer("Ошибка: неверный ID пользователя.", show_alert=True)
-        return
-
-    # Очищаем старое состояние (поиска) и устанавливаем новое (редактирования)
-    await state.clear()
-    await state.set_state(AdminEditUserStates.waiting_for_new_phone)
-    await state.update_data(user_id_to_edit=user_id_to_edit)
-
-    await callback.message.answer(
-        f"Вы редактируете пользователя <code>FS{user_id_to_edit:04d}</code>.\n"
-        "Отправьте новый номер телефона или '<code>-</code>' (дефис) для удаления номера.",
-        reply_markup=cancel_keyboard
-    )
-    await callback.answer()
-
-
-@admin_router.message(AdminEditUserStates.waiting_for_new_phone, F.text)
-async def process_edit_phone(message: Message, state: FSMContext):
-    """Сохраняет новый телефон."""
-    if message.text == "Отмена":
-        await message.answer("Редактирование отменено.", reply_markup=main_keyboard)
-        await state.clear()
-        return
-
-    data = await state.get_data()
-    user_id_to_edit = data.get('user_id_to_edit')
-
-    new_phone = message.text.strip()
-
-    if new_phone == "-":
-        new_phone = None  # Устанавливаем None для удаления
-
-    success = await update_user_by_internal_id(user_id_to_edit, phone=new_phone)
-
-    if success:
-        await message.answer(f"✅ Телефон для <code>FS{user_id_to_edit:04d}</code> успешно обновлен.",
-                             reply_markup=main_keyboard)
-    else:
-        await message.answer("❌ Произошла ошибка при обновлении телефона.", reply_markup=main_keyboard)
-
-    await state.clear()
-
-
-# --- Обработка "Отмены" для новых состояний ---
-@admin_router.message(AdminEditUserStates.waiting_for_new_username, F.text == "Отмена")
-@admin_router.message(AdminEditUserStates.waiting_for_new_phone, F.text == "Отмена")
-async def cancel_admin_edit(message: Message, state: FSMContext):
-    await message.answer("Редактирование отменено.", reply_markup=main_keyboard)
-    await state.clear()
+    if callback.data == "danger_confirm":
+        if action_type == 'delete_tracks':
+            await delete_shipped_track_codes()
+            msg = "Все отправленные трек-коды удалены!"
+        elif action_type == 'recreate_users':
+            await drop_users_table()
+            await setup_database()
+            msg = "Таблица пользователей пересоздана!"
+        elif action_type == 'recreate_tracks':
+            await drop_track_codes_table()
+            await setup_database()
+            msg = "Таблица трек-кодов пересоздана!"
+        await callback.message.answer(f"✅ Успех!\n{msg}")

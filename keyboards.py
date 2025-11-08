@@ -12,7 +12,7 @@ def create_keyboard_button(text: str) -> KeyboardButton:
 
 def create_keyboard(buttons: list[list[KeyboardButton]], resize: bool = True) -> ReplyKeyboardMarkup:
     """Создаёт обычную клавиатуру с заданными кнопками."""
-    return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=resize)
+    return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=resize, selective=True)
 
 
 def create_inline_button(text: str, callback_data: str = None, url: str = None) -> InlineKeyboardButton:
@@ -85,7 +85,6 @@ no_btn = create_inline_button(text="❌ Нет", callback_data="danger_cancel")
 
 confirm_keyboard = create_inline_keyboard([[yes_btn, no_btn]])
 
-
 # Кнопки регистрации
 skip_registration_btn = create_inline_button("️Пропустить", "pass_reg")
 start_registration_btn = create_inline_button("️Пройти регистрацию", "do_reg")
@@ -100,7 +99,6 @@ my_profile_keyboard = create_inline_keyboard([[edit_profile_data_btn, my_track_c
 change_name_btn = create_inline_button("Имя и фамилию", "change_name")
 change_phone_btn = create_inline_button("Телефон", "change_phone")
 change_data_keyboard = create_inline_keyboard([[change_name_btn], [change_phone_btn]])
-
 
 # Кнопки образцов
 sample_buttons = {
@@ -138,7 +136,7 @@ cancel_keyboard = create_keyboard([[create_keyboard_button("Отмена")]])
 item_type_buttons = [
     ["Продукты", "Одежда", "Обувь"],
     ["Электроника", "Хозтовары"],
-    ["Сборный груз",  "Мебель"]
+    ["Сборный груз", "Мебель"]
 ]
 item_type_keyboard = create_keyboard([[create_keyboard_button(text) for text in row] for row in item_type_buttons])
 
@@ -152,6 +150,8 @@ add_track_codes_follow_up_keyboard = create_inline_keyboard([
 ])
 
 
+# --- ФУНКЦИЯ ДЛЯ РЕДАКТИРОВАНИЯ ПОЛЬЗОВАТЕЛЯ ---
+
 def get_admin_edit_user_keyboard(internal_user_id: int, has_username: bool, has_phone: bool) -> InlineKeyboardMarkup:
     """
     Создает инлайн-клавиатуру для админа для редактирования данных пользователя.
@@ -160,8 +160,19 @@ def get_admin_edit_user_keyboard(internal_user_id: int, has_username: bool, has_
     username_text = "Изменить никнейм" if has_username else "Добавить никнейм"
     phone_text = "Изменить телефон" if has_phone else "Добавить телефон"
 
+    # Создаем кнопки
+    username_btn = create_inline_button(
+        text=f"👤 {username_text}",
+        callback_data=f"admin_edit_username:{internal_user_id}"
+    )
+    phone_btn = create_inline_button(
+        text=f"📞 {phone_text}",
+        callback_data=f"admin_edit_phone:{internal_user_id}"
+    )
+
     buttons = [
-        [create_inline_button(f"👤 {username_text}", callback_data=f"admin_edit_username:{internal_user_id}")],
-        [create_inline_button(f"📞 {phone_text}", callback_data=f"admin_edit_phone:{internal_user_id}")]
+        [username_btn],
+        [phone_btn]
     ]
+
     return create_inline_keyboard(buttons)
