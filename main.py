@@ -1,6 +1,6 @@
 from sys import stdout
 from asyncio import run
-from logging import basicConfig, getLogger, WARNING
+from logging import basicConfig, getLogger, WARNING, INFO
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
@@ -28,7 +28,7 @@ dp.include_routers(commands_router, admin_router, get_info_router, states_router
                    calc_shipping_router)
 dp.update.outer_middleware(ExceptionHandlingMiddleware())
 
-basicConfig(level=WARNING, stream=stdout)
+basicConfig(level=INFO, stream=stdout)
 logger = getLogger(__name__)
 
 
@@ -54,8 +54,10 @@ if __name__ == "__main__":
 # ✅ Сделал новую вкладку для Бланка таможни с кучей доработок и написание новой функции
 # ✅ Переписал функцию "Изменит данные" для админов, создав категории и русские имена
 # ✅ Добавил заполнение никнейма - админами
-# ✅ Изменил функцию найти по ID добавив Ссылка на чат: Написать пользователю
-# Х Проверка большего количества трек кодов + файлом
+# ✅ Изменил функцию найти по ID добавив "Ссылка на чат: Написать пользователю"
+# ✅ Добавил проверку большего количества трек кодов - файлом
+# ✅ Плюс добавил проверку трек кодов - файлом
+# ✅ Добавил для админов функцию привязки трек-кодов пользователям
 
 
 # В будущем нужно добавить возможность добавить имя трек-коду, даты поступления на склад, отправки из слада и поступлению в пункт выдачи

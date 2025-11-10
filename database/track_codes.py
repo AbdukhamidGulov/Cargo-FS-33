@@ -57,21 +57,24 @@ async def get_track_code_info(track_code: str) -> Optional[dict]:
     Ищет трек-код в базе данных и возвращает полную информацию о нем:
     трек-код, статус и TG ID владельца. Используется в админ-панели.
     """
+    logger.debug(f"В файле database/track_codes.py - Поиск трек-кода: '{track_code}'")
     async with async_session() as session:
         result = await session.execute(
             select(TrackCode.track_code, TrackCode.status, TrackCode.tg_id)
             .where(TrackCode.track_code == track_code)
-            .execution_options(autocommit=True)
         )
         row = result.one_or_none()
 
         if row:
+            logger.debug(f"В файле database/track_codes.py - Найден трек-код: {row[0]}, статус: {row[1]}, tg_id: {row[2]}")
             return {
                 'track_code': row[0],
                 'status': row[1],
                 'tg_id': row[2]
             }
-        return None
+        else:
+            logger.debug(f"В файле database/track_codes.py - Трек-код '{track_code}' не найден")
+            return None
 
 
 async def add_multiple_track_codes(track_codes: List[str], tg_id: int) -> Tuple[int, List[str]]:
@@ -156,52 +159,74 @@ async def add_or_update_track_codes_list(codes_data: List[Tuple[str, Optional[in
     """
     async with async_session() as session:
         for track_code, user_internal_id_from_input in codes_data:
+            logger.info(
+                f"Обработка трек-кода: '{track_code}', внутренний ID: {user_internal_id_from_input}, статус: {status}")
+
+            # Ищем существующий трек-код
             query_result = await session.execute(
                 select(TrackCode).where(TrackCode.track_code == track_code)
             )
             existing = query_result.scalar_one_or_none()
 
-            tg_id_for_notification = None
-
-            # Получаем реальный Telegram ID по внутреннему ID пользователя, если он есть
+            # Получаем реальный Telegram ID по внутреннему ID пользователя
             actual_tg_id_from_internal_id = None
             if user_internal_id_from_input is not None:
                 user_info = await get_user_by_id(user_internal_id_from_input)
                 if user_info and 'tg_id' in user_info:
                     actual_tg_id_from_internal_id = user_info['tg_id']
-                    logger.debug(
+                    logger.info(
                         f"Найден TG ID {actual_tg_id_from_internal_id} для внутреннего ID {user_internal_id_from_input}")
                 else:
                     logger.warning(
-                        f"Не удалось найти TG ID для внутреннего ID пользователя: {user_internal_id_from_input} для трек-кода {track_code}. Уведомление не будет отправлено по этому ID.")
+                        f"Не удалось найти TG ID для внутреннего ID пользователя: {user_internal_id_from_input}")
 
             if existing:
+                logger.info(
+                    f"Трек-код '{track_code}' существует. Старый статус: {existing.status}, старый TG ID: {existing.tg_id}")
+
+                # Обновляем статус
                 existing.status = status
-                # Если статус "arrived" и у нас есть актуальный TG ID из внутреннего ID
-                if status == "arrived" and actual_tg_id_from_internal_id is not None:
-                    # ОБНОВЛЯЕМ tg_id В БАЗЕ НА ПОЛУЧЕННЫЙ АКТУАЛЬНЫЙ TG ID
+
+                # ПРИВЯЗЫВАЕМ ВЛАДЕЛЬЦА В ЛЮБОМ СТАТУСЕ, если есть данные пользователя
+                if actual_tg_id_from_internal_id is not None:
+                    logger.info(
+                        f"Обновляем TG ID для '{track_code}' с {existing.tg_id} на {actual_tg_id_from_internal_id}")
                     existing.tg_id = actual_tg_id_from_internal_id
-
-                # TG ID для уведомления берется из существующей записи
-                tg_id_for_notification = existing.tg_id
-            else:
-                # Если трек-код не существует, создаем новую запись
-                new_track_code = TrackCode(track_code=track_code, status=status)
-
-                # Для 'arrived' статуса используем найденный TG ID
-                if status == "arrived":
-                    new_track_code.tg_id = actual_tg_id_from_internal_id
                     tg_id_for_notification = actual_tg_id_from_internal_id
                 else:
-                    # Для 'in_stock' или 'shipped' (новой записи) tg_id в базе будет None
+                    # Если нет нового TG ID, но есть старый - используем старый для уведомления
+                    tg_id_for_notification = existing.tg_id
+                    if existing.tg_id:
+                        logger.info(f"Используем существующий TG ID {existing.tg_id} для уведомления")
+                    else:
+                        logger.warning(f"Трек-код '{track_code}' не привязан к пользователю")
+
+            else:
+                # Создаем новую запись
+                logger.info(f"Создаем новый трек-код: '{track_code}'")
+                new_track_code = TrackCode(track_code=track_code, status=status)
+
+                # ПРИВЯЗЫВАЕМ ВЛАДЕЛЬЦА ПРИ СОЗДАНИИ В ЛЮБОМ СТАТУСЕ
+                if actual_tg_id_from_internal_id is not None:
+                    new_track_code.tg_id = actual_tg_id_from_internal_id
+                    tg_id_for_notification = actual_tg_id_from_internal_id
+                    logger.info(f"Новый трек-код '{track_code}' привязан к TG ID {actual_tg_id_from_internal_id}")
+                else:
                     new_track_code.tg_id = None
                     tg_id_for_notification = None
+                    logger.warning(f"Новый трек-код '{track_code}' создан без привязки к пользователю")
+
                 session.add(new_track_code)
 
-            # Отправляем уведомление
+            # Отправляем уведомление если есть кому отправлять
             if tg_id_for_notification is not None:
+                logger.info(f"Пытаемся отправить уведомление для '{track_code}' пользователю {tg_id_for_notification}")
                 await safe_send_notification(bot, track_code, tg_id_for_notification, status, session)
+            else:
+                logger.warning(f"Нельзя отправить уведомление для '{track_code}' - нет TG ID пользователя")
+
         await session.commit()
+        logger.info("Все изменения в трек-кодах сохранены в базу данных")
 
 
 async def safe_send_notification(bot: Bot, track_code: str, chat_id: int, status: str, session) -> bool:
@@ -284,3 +309,36 @@ async def delete_shipped_track_codes() -> int:
         deleted_count = len(result.all())
         await session.commit()
         return deleted_count
+
+
+async def bulk_assign_track_codes(track_codes: List[str], tg_id: int) -> Tuple[int, List[str]]:
+    """
+    Массово привязывает список трек-кодов к пользователю.
+    Возвращает кортеж (количество успешных, список неудачных трек-кодов).
+    """
+    success_count = 0
+    failed_codes = []
+
+    async with async_session() as session:
+        for track_code in track_codes:
+            try:
+                result = await session.execute(
+                    select(TrackCode).where(TrackCode.track_code == track_code)
+                )
+                track = result.scalar_one_or_none()
+
+                if track:
+                    track.tg_id = tg_id
+                    success_count += 1
+                    logger.info(f"Трек-код {track_code} привязан к пользователю {tg_id}")
+                else:
+                    failed_codes.append(track_code)
+                    logger.warning(f"Трек-код {track_code} не найден для привязки")
+
+            except Exception as e:
+                failed_codes.append(track_code)
+                logger.error(f"Ошибка при привязке {track_code}: {e}")
+
+        await session.commit()
+
+    return success_count, failed_codes
