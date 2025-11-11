@@ -2,7 +2,7 @@ from logging import getLogger
 from aiocache import cached
 from sqlalchemy import select, update, BigInteger, VARCHAR
 from sqlalchemy.orm import Mapped, mapped_column
-from .base import async_session, Base, engine
+from .db_base import async_session, Base, engine
 
 logger = getLogger(__name__)
 

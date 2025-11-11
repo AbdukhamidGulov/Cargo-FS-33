@@ -4,8 +4,8 @@ from aiogram import Router, F
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message, BotCommand, BotCommandScopeAllPrivateChats
 
-from database.info_content import get_info_content
-from database.users import get_user_by_tg_id
+from database.db_info_content import get_info_content
+from database.db_users import get_user_by_tg_id
 from keyboards import main_keyboard, get_main_inline_keyboard, reg_keyboard
 
 commands_router = Router()

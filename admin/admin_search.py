@@ -5,8 +5,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, CallbackQuery
 
-from database.track_codes import get_track_code_info, bulk_assign_track_codes
-from database.users import get_info_profile, get_user_by_id, update_user_by_internal_id
+from database.db_track_codes import get_track_code_info, bulk_assign_track_codes
+from database.db_users import get_info_profile, get_user_by_id, update_user_by_internal_id
 from keyboards import (
     get_admin_edit_user_keyboard,
     cancel_keyboard,

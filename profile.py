@@ -5,7 +5,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import CallbackQuery, Message
 
-from database.users import get_info_profile, update_user_info
+from database.db_users import get_info_profile, update_user_info
 from keyboards import my_profile_keyboard, change_data_keyboard, main_keyboard
 from registration_process import PHONE_VALIDATION_ERROR, ERROR_MESSAGE
 

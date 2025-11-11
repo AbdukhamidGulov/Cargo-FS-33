@@ -9,7 +9,7 @@ from text_info import text
 from request import request_router
 from profile import profile_router
 from commands import commands_router
-from database.base import setup_database
+from database.db_base import setup_database
 from admin.admin_panel import admin_router
 from track_numbers import track_code_router
 from get_information import get_info_router
@@ -28,7 +28,7 @@ dp.include_routers(commands_router, admin_router, get_info_router, states_router
                    calc_shipping_router)
 dp.update.outer_middleware(ExceptionHandlingMiddleware())
 
-basicConfig(level=INFO, stream=stdout)
+basicConfig(level=WARNING, stream=stdout)
 logger = getLogger(__name__)
 
 
@@ -60,7 +60,7 @@ if __name__ == "__main__":
 # ✅ Добавил для админов функцию привязки трек-кодов пользователям
 
 
-# В будущем нужно добавить возможность добавить имя трек-коду, даты поступления на склад, отправки из слада и поступлению в пункт выдачи
+# В будущем нужно добавить возможность добавить имя трек-коду, даты поступления на склад, отправки из склада и поступлению в пункт выдачи
 
 
 # При добавление трек кодов админом, добавить что-то вроде Kafka, потому что при добавлении более 400 разом, часть не добавляется

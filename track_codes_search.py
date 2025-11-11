@@ -6,9 +6,10 @@ from aiogram import Router, F, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 
-from database.track_codes import get_track_code_status, get_user_track_codes
+from database.db_track_codes import get_track_code_status, get_user_track_codes
 from keyboards import main_keyboard, cancel_keyboard, add_track_codes_follow_up_keyboard
 from track_numbers import TRACK_CODE_PATTERN, status_messages, TrackCodeStates
+from utils.message_common import send_chunked_response
 
 track_code_search_router = Router()
 logger = getLogger(__name__)
@@ -17,33 +18,6 @@ logger = getLogger(__name__)
 def parse_track_codes(text: str) -> List[str]:
     """Разделяет введенный текст на список потенциальных трек-кодов."""
     return re.findall(TRACK_CODE_PATTERN, text, re.IGNORECASE)
-
-
-async def send_chunked_response(message: Message, text: str):
-    """
-    Отправляет длинный текст, разбивая его на части по 4096 символов.
-    """
-    LIMIT = 4096
-    if len(text) <= LIMIT:
-        await message.answer(text)
-        return
-
-    lines = text.splitlines()
-    current_chunk = []
-    current_length = 0
-
-    for line in lines:
-        line_len = len(line) + 1
-        if current_length + line_len > LIMIT:
-            await message.answer("\n".join(current_chunk))
-            current_chunk = [line]
-            current_length = line_len
-        else:
-            current_chunk.append(line)
-            current_length += line_len
-
-    if current_chunk:
-        await message.answer("\n".join(current_chunk))
 
 
 # ************************************************
@@ -137,7 +111,7 @@ async def process_track_code(message: Message, state: FSMContext, bot: Bot) -> N
                     f"ℹ️ Статус: <b>{status_message}</b>\n"
                     f"🔐 {ownership_status}\n"
                 )
-                await message.answer(response)
+                await send_chunked_response(message, response)  # Используем функцию для отправки больших сообщений
             else:
                 await message.answer(
                     f"❌ Трек-код <code>{track_code_text}</code> не найден в системе.\n"
@@ -190,7 +164,7 @@ async def view_my_track_codes(callback: CallbackQuery):
             status_message = status_messages.get(status, "Неизвестный статус")
             response_lines.append(f"• <code>{my_track_code}</code> — <i>{status_message}</i>")
 
-        await send_chunked_response(callback.message, "\n".join(response_lines))
+        await send_chunked_response(callback, "\n".join(response_lines))
 
         await callback.message.answer(
             "Что хотите сделать дальше?",

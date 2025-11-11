@@ -10,9 +10,9 @@ from admin.admin_search import admin_search_router
 from admin.admins_trackcode import admin_tc_router
 from filters_and_config import IsAdmin, admin_ids
 from keyboards import admin_keyboard, confirm_keyboard, contact_admin_keyboard
-from database.base import setup_database
-from database.users import drop_users_table
-from database.track_codes import delete_shipped_track_codes, drop_track_codes_table
+from database.db_base import setup_database
+from database.db_users import drop_users_table
+from database.db_track_codes import delete_shipped_track_codes, drop_track_codes_table
 from admin.admin_content import admin_content_router
 
 admin_router = Router()

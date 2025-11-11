@@ -4,15 +4,14 @@ from logging import getLogger
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
-from aiogram.types import Message, CallbackQuery, base
+from aiogram.types import Message, CallbackQuery
 
-from database.track_codes import add_multiple_track_codes
+from database.db_track_codes import add_multiple_track_codes
 from keyboards import main_keyboard, cancel_keyboard, add_track_codes_follow_up_keyboard
 
 track_code_router = Router()
 logger = getLogger(__name__)
 
-# Шаблон для поиска трек-кодов:
 # Ищем последовательности из 8 и более символов, состоящие из латинских букв (A-Z) и цифр (0-9).
 TRACK_CODE_PATTERN = r'[A-Z0-9]{8,}'
 
@@ -27,13 +26,13 @@ status_messages = {
 class TrackCodeStates(StatesGroup):
     """Состояния для обработки ввода трек-кодов. Состояния используются в обоих файлах."""
     check_single_code = State()
-    add_multiple_codes = State()  # Для массового добавления трек-кодов
+    add_multiple_codes = State()
 
 
 # --- Вспомогательная функция для запуска режима добавления трек-кодов ---
-async def start_add_codes_process(responder: base.TelegramObject, state: FSMContext, user_id: int) -> None:
+async def start_add_codes_process(message: Message, state: FSMContext, user_id: int) -> None:
     """Общая логика запуска процесса добавления трек-кодов, вызываемая как из Message, так и из CallbackQuery."""
-    await responder.answer(
+    await message.answer(
         "Отправьте <b>трек-код или список трек-кодов</b> для отслеживания.\n"
         "Вы можете вставить текст любого формата: бот автоматически извлечет все коды, разделенные пробелом, запятой или новой строкой.\n\n"
         "Пример:\n"
@@ -82,8 +81,8 @@ async def process_multiple_track_codes(message: Message, state: FSMContext) -> N
         return
 
     try:
-        # ВНИМАНИЕ: Предполагается, что add_multiple_track_codes возвращает
-        # кортеж (количество_добавлено, список_добавленных_кодов)
+        # ВНИМАНИЕ: Предполагается, что add_multiple_track_codes возвращает кортеж
+        # (количество_добавлено, список_добавленных_кодов)
         result = await add_multiple_track_codes(input_codes, tg_id)
 
         # Проверяем, что возвращаемое значение является кортежем с двумя элементами
@@ -99,10 +98,9 @@ async def process_multiple_track_codes(message: Message, state: FSMContext) -> N
         response_parts = [f"Обработано <b>{len(input_codes)}</b> потенциальных трек-кодов."]
 
         if added_count > 0:
-            # 1. Показываем список добавленных кодов
+            # Показываем список добавленных кодов
             added_codes_list_text = "\n".join([f"• <code>{code}</code>" for code in added_codes])
 
-            # 2. Убрано упоминание статуса в скобках
             response_parts.append(
                 f"✅ Успешно добавлены <b>{added_count}</b> трек-коды в ваш список отслеживания:\n"
                 f"{added_codes_list_text}"
@@ -120,7 +118,7 @@ async def process_multiple_track_codes(message: Message, state: FSMContext) -> N
         # 1. Основное сообщение о результате
         await message.answer("\n".join(response_parts), reply_markup=main_keyboard)
         logger.info(f"Пользователь {tg_id} добавил {added_count} новых трек-кодов (всего {len(input_codes)}).")
-        await state.clear()  # Очищаем FSMState
+        await state.clear()
 
         # 2. Сообщение с дополнительными действиями (inline-клавиатура)
         await message.answer(
@@ -143,7 +141,6 @@ async def process_multiple_track_codes(message: Message, state: FSMContext) -> N
 @track_code_router.callback_query(F.data == "add_more_track_codes")
 async def restart_add_track_codes(callback: CallbackQuery, state: FSMContext) -> None:
     """Перезапускает процесс массового добавления трек-кодов по нажатию inline-кнопки."""
-    await callback.message.delete() # Удаляем предыдущее сообщение с кнопками
-    # Используем общую вспомогательную функцию для запуска режима добавления
+    await callback.message.delete()
     await start_add_codes_process(callback.message, state, callback.from_user.id)
     await callback.answer() # Отключаем "часики" на кнопке

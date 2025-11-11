@@ -3,8 +3,8 @@ from aiogram.exceptions import TelegramBadRequest
 from aiogram.types import CallbackQuery, Message, InputMediaPhoto, InputMediaVideo
 from aiogram import F, Router
 
-from database.info_content import get_info_content
-from database.users import get_info_profile, get_user_by_tg_id
+from database.db_info_content import get_info_content
+from database.db_users import get_info_profile, get_user_by_tg_id
 from keyboards import main_keyboard, where_get_keyboard, reg_keyboard, create_samples_keyboard
 
 logger = getLogger(__name__)

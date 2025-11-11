@@ -9,7 +9,7 @@ from aiogram.types import Message, FSInputFile
 from openpyxl.styles import Alignment
 from openpyxl.workbook import Workbook
 
-from database.track_codes import (
+from database.db_track_codes import (
     add_or_update_track_codes_list,
     get_track_codes_list,
     delete_multiple_track_codes,
@@ -17,6 +17,7 @@ from database.track_codes import (
 from keyboards import cancel_keyboard, main_keyboard
 from filters_and_config import IsAdmin, admin_ids
 from admin.admin_search import TrackCodeStates
+from utils.message_common import extract_text_from_message
 
 admin_tc_router = Router()
 logger = getLogger(__name__)
@@ -25,7 +26,7 @@ logger = getLogger(__name__)
 # Функция для извлечения и парсинга трек-кодов
 async def extract_parsed_codes(content: str, status: str) -> List[Tuple[str, Optional[int]]]:
     """
-    Извлекает трек-коды и, при необходимости, внутренний ID пользователя из текста или файла.
+    Извлекает трек-коды и при необходимости, внутренний ID пользователя из текста или файла.
     """
     codes_data = []
     lines = list(filter(None, map(str.strip, content.splitlines())))
@@ -34,16 +35,22 @@ async def extract_parsed_codes(content: str, status: str) -> List[Tuple[str, Opt
         # Ожидаем формат типа FSXXXX-YYMM-Z
         for line in lines:
             # Ищем шаблон FSXXXX, чтобы извлечь ID пользователя
-            match = search(r"FS(\d{4})-\d{4}-\d+", line)
+            match = search(r"(FS\d{4}-\d{4}-\d+)", line)
             if match:
-                full_track_code = match.group(0)
-                user_internal_id_str = match.group(1)
-                try:
-                    user_internal_id = int(user_internal_id_str)
-                    codes_data.append((full_track_code, user_internal_id))
-                except ValueError:
-                    logger.warning(
-                        f"Не удалось преобразовать внутренний ID пользователя '{user_internal_id_str}' в число для трек-кода '{full_track_code}'. Пропускаем.")
+                full_track_code = match.group(1)
+                # Ищем внутренний ID пользователя в коде (XXXX в FSXXXX)
+                user_internal_id_match = search(r"FS(\d{4})", full_track_code)
+
+                if user_internal_id_match:
+                    user_internal_id_str = user_internal_id_match.group(1)
+                    try:
+                        user_internal_id = int(user_internal_id_str)
+                        codes_data.append((full_track_code, user_internal_id))
+                    except ValueError:
+                        logger.warning(
+                            f"Не удалось преобразовать внутренний ID пользователя '{user_internal_id_str}' в число для трек-кода '{full_track_code}'. Пропускаем.")
+                else:
+                    logger.warning(f"Не найден внутренний ID в трек-коде 'прибывший': '{full_track_code}'. Пропускаем.")
             else:
                 logger.warning(f"Не удалось распарсить 'прибывший' трек-код из строки: '{line}'. Пропускаем.")
     else:
@@ -80,7 +87,7 @@ async def add_shipped_track_codes(message: Message, state: FSMContext):
 async def add_arrived_track_codes(message: Message, state: FSMContext):
     """Начинает процесс добавления трек-кодов, прибывших на место назначения."""
     await message.answer(
-        "Отправьте список трек-кодов, прибывших на место назначения (формат: <code>[FSXXXX-YYMM-Z]</code>) "
+        "Отправьте список трек-кодов, прибывших на место назначения (формат: <code>FSXXXX-YYMM-Z</code>) "
         "или загрузите файл (.txt).\n"
         "<i>(каждый трек-код с новой строки)</i>.")
     await state.set_state(TrackCodeStates.waiting_for_arrived_codes)
@@ -91,26 +98,19 @@ async def add_arrived_track_codes(message: Message, state: FSMContext):
 @admin_tc_router.message(TrackCodeStates.waiting_for_arrived_codes)
 async def process_track_codes(message: Message, state: FSMContext, bot: Bot):
     """Обрабатывает ввод трек-кодов, добавляя или обновляя их в базе данных."""
+    # 1. Используем утилиту для извлечения текста (из Message или Document)
+    content = await extract_text_from_message(message, bot)
+
+    if not content:
+        # Утилита сама отправляет сообщение об ошибке, если файл не читается
+        await state.clear()
+        return
+
     data = await state.get_data()
     status = data.get("status")
-    codes_to_process: List[Tuple[str, Optional[int]]] = []
 
-    if message.text:
-        codes_to_process = await extract_parsed_codes(message.text, status)
-    elif message.document:
-        try:
-            file_id = message.document.file_id
-            file = await bot.get_file(file_id)
-            file_path = file.file_path
-            file_content = await bot.download_file(file_path)
-            content = file_content.read().decode('utf-8')
-            codes_to_process = await extract_parsed_codes(content, status)
-        except Exception as e:
-            logger.error(f"Ошибка при чтении файла трек-кодов: {e}")
-            await message.answer(
-                "Произошла ошибка при обработке файла. Пожалуйста, убедитесь, что это текстовый файл и попробуйте снова.")
-            await state.clear()
-            return
+    # Парсинг данных
+    codes_to_process: List[Tuple[str, Optional[int]]] = await extract_parsed_codes(content, status)
 
     if not codes_to_process:
         await message.answer(
@@ -129,6 +129,7 @@ async def process_track_codes(message: Message, state: FSMContext, bot: Bot):
         status_display_text = "Прибыл на место назначения"
         action_text = "обновлено"
 
+    # Добавление/обновление в БД
     await add_or_update_track_codes_list(codes_to_process, status, bot)
 
     await message.answer(

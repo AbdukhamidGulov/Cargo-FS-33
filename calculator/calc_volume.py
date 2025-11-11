@@ -3,7 +3,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from aiogram.fsm.state import State, StatesGroup
 
-from database.info_content import get_info_content
+from database.db_info_content import get_info_content
 from keyboards import main_keyboard, get_main_inline_keyboard
 
 calc_volume_router = Router()

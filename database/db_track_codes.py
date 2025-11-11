@@ -6,8 +6,8 @@ from aiogram.exceptions import TelegramBadRequest
 from sqlalchemy import select, delete, BigInteger, update, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .base import async_session, Base, engine
-from .users import get_user_by_id
+from .db_base import async_session, Base, engine
+from .db_users import get_user_by_id
 
 logger = getLogger(__name__)
 

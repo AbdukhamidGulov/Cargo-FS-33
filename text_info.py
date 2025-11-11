@@ -182,7 +182,7 @@ blank_text = '''  <b>Мы занимаемся выкупом товаров и�
 
 from aiogram.filters import Command
 from filters_and_config import IsAdmin, admin_ids
-from database.info_content import update_info_content
+from database.db_info_content import update_info_content
 from aiogram import Router
 from logging import getLogger
 logger = getLogger(__name__)

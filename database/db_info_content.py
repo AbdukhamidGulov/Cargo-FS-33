@@ -3,7 +3,7 @@ from sqlalchemy import VARCHAR, UniqueConstraint, TEXT
 from sqlalchemy.future import select
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .base import Base, async_session, engine
+from .db_base import Base, async_session, engine
 
 logger = getLogger(__name__)
 

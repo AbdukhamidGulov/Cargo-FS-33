@@ -5,7 +5,7 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 
-from database.info_content import get_info_content, update_info_content
+from database.db_info_content import get_info_content, update_info_content
 from filters_and_config import IsAdmin, admin_ids
 from keyboards import create_inline_button, create_inline_keyboard, main_keyboard, cancel_keyboard
 
