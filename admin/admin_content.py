@@ -13,14 +13,13 @@ admin_content_router = Router()
 logger = getLogger(__name__)
 
 
-# Определяем состояния FSM
 class ContentEdit(StatesGroup):
     select_category = State()
     select_key = State()
     input_content = State()
 
 
-# Классификация ключей по типам контента (без изменений)
+# Классификация ключей по типам контента
 CONTENT_TYPES = {
     "text": [
         "warehouse_address", "blank_text", "tariffs_text", "goods_check_text", "consolidation_text",
@@ -95,7 +94,7 @@ KEY_NAMES = {
 }
 
 
-# --- ОБНОВЛЕННЫЙ FSM FLOW ---
+# --- FSM FLOW ---
 
 # Шаг 1: Показать Категории
 @admin_content_router.message(F.text == "Изменить данные", IsAdmin(admin_ids))
@@ -117,7 +116,7 @@ async def start_edit_content(message: Message, state: FSMContext):
     keyboard = create_inline_keyboard(buttons)
 
     await message.answer("Выберите категорию контента, которую хотите изменить:", reply_markup=keyboard)
-    await state.set_state(ContentEdit.select_category)  # Устанавливаем состояние выбора категории
+    await state.set_state(ContentEdit.select_category)
 
 
 # Шаг 2: Показать Ключи в Категории
@@ -141,7 +140,7 @@ async def handle_category_selection(callback: CallbackQuery, state: FSMContext):
         buttons.append([
             create_inline_button(
                 text=display_name,
-                callback_data=f"edit_{key}"  # callback_data остается прежним
+                callback_data=f"edit_{key}"
             )
         ])
 
@@ -183,7 +182,7 @@ async def go_back_to_categories(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
 
 
-# Шаг 3: Обработка выбора Ключа (Почти без изменений)
+# Шаг 3: Обработка выбора Ключа
 @admin_content_router.callback_query(ContentEdit.select_key, F.data.startswith("edit_"), IsAdmin(admin_ids))
 async def select_key(callback: CallbackQuery, state: FSMContext):
     """Запрашивает новое значение для выбранного ключа и показывает текущее."""
@@ -232,7 +231,7 @@ async def select_key(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
 
 
-# Шаг 4: Обработка Ввода (хендлеры почти без изменений)
+# Шаг 4: Обработка Ввода
 
 @admin_content_router.message(ContentEdit.input_content, F.text, IsAdmin(admin_ids))
 async def process_text(message: Message, state: FSMContext):
@@ -310,7 +309,7 @@ async def process_document(message: Message, state: FSMContext):
         # Не очищаем state
 
 
-# --- Хендлеры Отмены (без изменений) ---
+# --- Хендлеры Отмены ---
 
 @admin_content_router.callback_query(F.data == "cancel_edit", IsAdmin(admin_ids))
 async def cancel_edit_inline(callback: CallbackQuery, state: FSMContext):
@@ -342,8 +341,6 @@ async def cancel_edit_process(message: Message, state: FSMContext):
 async def invalid_input(message: Message, state: FSMContext):
     """Обрабатывает некорректный ввод (например, стикер или аудио)."""
     if message.text and message.text.lower() == "отмена":
-        # Этот блок уже не нужен, так как хендлер cancel_edit_text_button стоит выше,
-        # но оставим на всякий случай, если порядок регистрации изменится.
         await cancel_edit_process(message, state)
         return
 
@@ -352,4 +349,3 @@ async def invalid_input(message: Message, state: FSMContext):
     await message.answer(
         f"Ошибка. Ожидался {content_type}. Пожалуйста, отправьте корректный формат или нажмите 'Отмена'.",
         reply_markup=cancel_keyboard)
-

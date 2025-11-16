@@ -5,22 +5,32 @@ from re import search
 
 from aiogram import Bot, Router, F
 from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message, FSInputFile
 from openpyxl.styles import Alignment
 from openpyxl.workbook import Workbook
 
-from database.db_track_codes import (
+from database.db_track_admin import (
     add_or_update_track_codes_list,
     get_track_codes_list,
-    delete_multiple_track_codes,
+    bulk_delete_track_codes
 )
 from keyboards import cancel_keyboard, main_keyboard
 from filters_and_config import IsAdmin, admin_ids
-from admin.admin_search import TrackCodeStates
 from utils.message_common import extract_text_from_message
 
-admin_tc_router = Router()
 logger = getLogger(__name__)
+
+
+# Определение состояний FSM для этого модуля с уникальным именем
+class AdminTrackCodeStates(StatesGroup):
+    """Состояния для обработки ввода трек-кодов в админ-панели."""
+    waiting_for_codes = State()  # Ожидание ввода кодов для in_stock/shipped
+    waiting_for_arrived_codes = State()  # Ожидание ввода кодов для arrived (с парсингом ID)
+    waiting_for_codes_to_delete = State()  # Ожидание ввода кодов для удаления
+
+
+admin_tc_router = Router()
 
 
 # Функция для извлечения и парсинга трек-кодов
@@ -70,7 +80,7 @@ async def add_in_stock_track_codes(message: Message, state: FSMContext):
     """Начинает процесс добавления трек-кодов, находящихся на складе."""
     await message.answer("Пожалуйста, отправьте список трек-кодов или загрузите файл (формат .txt):\n"
                          "<i>(каждый трек-код с новой строки или через пробел)</i>.")
-    await state.set_state(TrackCodeStates.waiting_for_codes)
+    await state.set_state(AdminTrackCodeStates.waiting_for_codes)
     await state.update_data(status="in_stock")
 
 
@@ -79,7 +89,7 @@ async def add_shipped_track_codes(message: Message, state: FSMContext):
     """Начинает процесс добавления отправленных трек-кодов."""
     await message.answer("Отправьте список отправленных трек-кодов или загрузите файл (формат .txt):\n"
                          "<i>(каждый трек-код с новой строки или через пробел)</i>.")
-    await state.set_state(TrackCodeStates.waiting_for_codes)
+    await state.set_state(AdminTrackCodeStates.waiting_for_codes)
     await state.update_data(status="shipped")
 
 
@@ -90,12 +100,12 @@ async def add_arrived_track_codes(message: Message, state: FSMContext):
         "Отправьте список трек-кодов, прибывших на место назначения (формат: <code>FSXXXX-YYMM-Z</code>) "
         "или загрузите файл (.txt).\n"
         "<i>(каждый трек-код с новой строки)</i>.")
-    await state.set_state(TrackCodeStates.waiting_for_arrived_codes)
+    await state.set_state(AdminTrackCodeStates.waiting_for_arrived_codes)
     await state.update_data(status="arrived")
 
 
-@admin_tc_router.message(TrackCodeStates.waiting_for_codes)
-@admin_tc_router.message(TrackCodeStates.waiting_for_arrived_codes)
+@admin_tc_router.message(AdminTrackCodeStates.waiting_for_codes)
+@admin_tc_router.message(AdminTrackCodeStates.waiting_for_arrived_codes)
 async def process_track_codes(message: Message, state: FSMContext, bot: Bot):
     """Обрабатывает ввод трек-кодов, добавляя или обновляя их в базе данных."""
     # 1. Используем утилиту для извлечения текста (из Message или Document)
@@ -147,10 +157,10 @@ async def delete_track_codes_start(message: Message, state: FSMContext):
     await message.answer("Пожалуйста, отправьте один или несколько трек-кодов, которые нужно удалить:\n"
                          "<i>(каждый трек-код с новой строки)</i>.",
                          reply_markup=cancel_keyboard)
-    await state.set_state(TrackCodeStates.waiting_for_codes_to_delete)
+    await state.set_state(AdminTrackCodeStates.waiting_for_codes_to_delete)
 
 
-@admin_tc_router.message(TrackCodeStates.waiting_for_codes_to_delete)
+@admin_tc_router.message(AdminTrackCodeStates.waiting_for_codes_to_delete)
 async def process_track_codes_deletion(message: Message, state: FSMContext):
     """Обрабатывает введенный список трек-кодов и удаляет их из базы данных."""
     if message.text == "Отмена":
@@ -159,6 +169,7 @@ async def process_track_codes_deletion(message: Message, state: FSMContext):
         return
 
     codes_to_delete = list(filter(None, map(str.strip, message.text.splitlines())))
+    total_count = len(codes_to_delete)
 
     if not codes_to_delete:
         await message.answer(
@@ -167,9 +178,17 @@ async def process_track_codes_deletion(message: Message, state: FSMContext):
         return
 
     try:
-        deleted_count = await delete_multiple_track_codes(codes_to_delete)
+        # Используем функцию, возвращающую (удалено, не найдено)
+        deleted_count, failed_count = await bulk_delete_track_codes(codes_to_delete)
+
+        response_text = f"✅ Результат удаления из <b>{total_count}</b> указанных кодов:\n"
+        response_text += f"— Успешно удалено: <b>{deleted_count}</b>."
+
+        if failed_count > 0:
+            response_text += f"\n— Не найдено в БД: <b>{failed_count}</b>."
+
         await message.answer(
-            f"✅ Успешно удалено <b>{deleted_count}</b> трек-кодов из <b>{len(codes_to_delete)}</b> указанных.",
+            response_text,
             reply_markup=main_keyboard
         )
         await state.clear()

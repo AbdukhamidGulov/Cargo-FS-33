@@ -1,13 +1,14 @@
 import re
 from logging import getLogger
 
-from aiogram import Router, F
+from aiogram import Router, F, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, CallbackQuery
 
 from database.db_track_codes import add_multiple_track_codes
 from keyboards import main_keyboard, cancel_keyboard, add_track_codes_follow_up_keyboard
+from utils.message_common import extract_text_from_message
 
 track_code_router = Router()
 logger = getLogger(__name__)
@@ -24,7 +25,7 @@ status_messages = {
 
 
 class TrackCodeStates(StatesGroup):
-    """Состояния для обработки ввода трек-кодов. Состояния используются в обоих файлах."""
+    """Состояния для обработки ввода трек-кодов."""
     check_single_code = State()
     add_multiple_codes = State()
 
@@ -55,7 +56,7 @@ async def add_track_codes(message: Message, state: FSMContext) -> None:
 
 
 @track_code_router.message(TrackCodeStates.add_multiple_codes)
-async def process_multiple_track_codes(message: Message, state: FSMContext) -> None:
+async def process_multiple_track_codes(message: Message, state: FSMContext, bot: Bot) -> None:
     """Обрабатывает список трек-кодов, добавленных пользователем (один или несколько)."""
     if message.text == "Отмена":
         await message.answer("Режим добавления трек-кодов завершён.", reply_markup=main_keyboard)
@@ -64,7 +65,12 @@ async def process_multiple_track_codes(message: Message, state: FSMContext) -> N
         return
 
     tg_id: int = message.from_user.id
-    raw_text = message.text
+    raw_text = await extract_text_from_message(message, bot)
+
+    if not raw_text:
+        # Если функция не смогла извлечь текст (например, ошибка чтения файла),
+        # она сама отправляет пользователю сообщение об ошибке, поэтому просто выходим.
+        return
 
     # ИСПОЛЬЗУЕМ ПОЗИТИВНУЮ ФИЛЬТРАЦИЮ: Извлекаем только те строки, которые соответствуют шаблону.
     input_codes = re.findall(TRACK_CODE_PATTERN, raw_text, re.IGNORECASE)
@@ -81,8 +87,6 @@ async def process_multiple_track_codes(message: Message, state: FSMContext) -> N
         return
 
     try:
-        # ВНИМАНИЕ: Предполагается, что add_multiple_track_codes возвращает кортеж
-        # (количество_добавлено, список_добавленных_кодов)
         result = await add_multiple_track_codes(input_codes, tg_id)
 
         # Проверяем, что возвращаемое значение является кортежем с двумя элементами

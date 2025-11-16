@@ -83,7 +83,8 @@ async def send_customs_form(message: Message):
             caption="Вот ваш бланк таможни. Пожалуйста, следуйте инструкциям в тексте."
         )
     else:
-        await message.answer("Информация о бланке таможни пока не заполнена. Администратор скоро добавит ее.")
+        await message.answer("Информация о бланке таможни не найден. "
+                             "Обратитесь к техническому администратору @abdulhamidgulov")
 
 
 @get_info_router.message(F.text == "Где брать трек-номер")
