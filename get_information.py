@@ -12,21 +12,22 @@ get_info_router = Router()
 
 
 # ВСЯ ОБРАБОТКА ДЛЯ АДРЕСА СКЛАДА И ОБРАЗЦОВ
-@get_info_router.message(F.text == "Адрес склада")
-async def address(message: Message):
+@get_info_router.callback_query(F.data == "warehouse_address")
+async def address(callback: CallbackQuery):
     """Отправляет адрес склада пользователю."""
-    id_from_user = await get_user_by_tg_id(message.from_user.id)
+    await callback.message.delete()
+    id_from_user = await get_user_by_tg_id(callback.from_user.id)
     if not id_from_user:
-        await message.answer(
+        await callback.message.answer(
             "❌ Вы не зарегистрированы!\n\nХотите зарегистрироваться?", reply_markup=reg_keyboard)
         return
     fs = f"{id_from_user:04d}"
     warehouse_address_template = await get_info_content("warehouse_address")
     if warehouse_address_template:
-        await message.answer(warehouse_address_template.format(fs))
-        await message.answer("Нажмите чтобы увидеть образцы", reply_markup=create_samples_keyboard())
+        await callback.message.answer(warehouse_address_template.format(fs))
+        await callback.message.answer("Нажмите чтобы увидеть образцы", reply_markup=create_samples_keyboard())
     else:
-        await message.answer("Адрес склада не найден. Обратитесь к техническому администратору @abdulhamidgulov")
+        await callback.message.answer("Адрес склада не найден. Обратитесь к техническому администратору @abdulhamidgulov")
 
 
 @get_info_router.callback_query(F.data.startswith("simple_"))
@@ -59,7 +60,7 @@ async def handle_simple(callback: CallbackQuery):
 
 
 # Другие обработчики
-@get_info_router.message(F.text == "Бланк Заказа")
+@get_info_router.message(F.text == "Бланк для Заказа")
 async def send_order_form(message: Message):
     """Отправляет бланк для заказа."""
     blank_info_text = await get_info_content("blank_text")
@@ -71,7 +72,7 @@ async def send_order_form(message: Message):
         await message.answer("Информация о бланке не найдена.")
 
 
-@get_info_router.message(F.text == "Бланк Таможни")
+@get_info_router.message(F.text == "Бланк для Таможни")
 async def send_customs_form(message: Message):
     """Отправляет текст и файл-образец 'Бланка Таможни'."""
     customs_text = await get_info_content("customs_form_text")
@@ -108,17 +109,18 @@ async def handle_track_info(callback: CallbackQuery):
         await callback.message.answer("Информация о трек-номерах не найдена.")
 
 
-@get_info_router.message(F.text == "Тарифы")
-async def send_tariffs(message: Message):
+@get_info_router.callback_query(F.data == "tariffs")
+async def send_tariffs(callback: CallbackQuery):
     """Отправляет информацию о тарифах."""
+    await callback.message.delete()
     tariffs_text = await get_info_content("tariffs_text")
     tariffs_document = await get_info_content("tariffs_document")
     if tariffs_text:
-        await message.answer(tariffs_text)
+        await callback.message.answer(tariffs_text)
     if tariffs_document:
-        await message.answer_document(document=tariffs_document)
+        await callback.message.answer_document(document=tariffs_document)
     else:
-        await message.answer("Информация о тарифах не найдена.")
+        await callback.message.answer("Информация о тарифах не найдена.")
 
 
 @get_info_router.message(F.text == "Проверка товаров")

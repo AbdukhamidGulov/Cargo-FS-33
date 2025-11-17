@@ -14,6 +14,8 @@ from admin.admin_panel import admin_router
 from track_numbers import track_code_router
 from get_information import get_info_router
 from registration_process import states_router
+from order_maker.create_order import order_router
+from order_maker.user_collector import user_data_router
 from calculator.calc_volume import calc_volume_router
 from track_codes_search import track_code_search_router
 from calculator.calculate_insurance import calc_ins_router
@@ -24,8 +26,8 @@ from filters_and_config import TELEGRAM_BOT_TOKEN
 bot = Bot(token=TELEGRAM_BOT_TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
 dp = Dispatcher()
 dp.include_routers(commands_router, admin_router, get_info_router, states_router, profile_router, text,
-                   track_code_router, track_code_search_router, request_router, calc_volume_router, calc_ins_router,
-                   calc_shipping_router)
+                   track_code_router, track_code_search_router, user_data_router, order_router, request_router,
+                   calc_volume_router, calc_ins_router, calc_shipping_router)
 dp.update.outer_middleware(ExceptionHandlingMiddleware())
 
 basicConfig(level=WARNING, stream=stdout)
@@ -59,6 +61,6 @@ if __name__ == "__main__":
 # ✅ Плюс добавил проверку трек кодов - файлом
 # ✅ Добавил для админов функцию привязки трек-кодов пользователям
 # ✅ кейбоард разделил
-# разделить создание таблиц и добавить новую для ексел таблицы
+# изменит кнопки
 
 # В будущем нужно добавить возможность добавить имя трек-коду, даты поступления на склад, отправки из склада и поступлению в пункт выдачи

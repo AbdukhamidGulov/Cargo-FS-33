@@ -22,11 +22,7 @@ async def calculate_volume(message: Message, state: FSMContext):
     photo_id = await get_info_content("calculate_volume_photo")
     if photo_id:
         await message.answer_photo(
-            photo_id,
-            "❗️<i>Что такое плотность и для чего она нужна? "
-            "<a href='https://t.me/cargoFS33/1426'>Читайте здесь</a></i>\n\n"
-            "Для расчёта плотности груза введите длину груза (в сантиметрах):"
-        )
+            photo_id,"Для расчёта плотности груза введите длину груза (в сантиметрах):")
         await state.update_data(photo_id=photo_id)
         await state.set_state(CargoCalculator.length)
     else:

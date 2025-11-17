@@ -12,9 +12,9 @@ def create_keyboard_button(text: str) -> KeyboardButton:
     return KeyboardButton(text=text)
 
 
-def create_keyboard(buttons: list[list[KeyboardButton]], resize: bool = True) -> ReplyKeyboardMarkup:
+def create_keyboard(buttons: list[list[KeyboardButton]], resize: bool = True, selective: bool = False) -> ReplyKeyboardMarkup:
     """Создаёт обычную клавиатуру с заданными кнопками."""
-    return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=resize, selective=True)
+    return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=resize, selective=selective)
 
 
 def create_inline_button(text: str, callback_data: str = None, url: str = None) -> InlineKeyboardButton:
@@ -34,11 +34,11 @@ def create_inline_keyboard(buttons: list[list[InlineKeyboardButton]]) -> InlineK
 
 # Клавиатуры главного меню (Reply Keyboard)
 main_menu_buttons = [
-    ["Адрес склада", "Бланк Заказа", "Бланк Таможни"],
+    ["Бланк для Заказа", "Бланк для Таможни"],
     ["Где брать трек-номер", "Добавить трек-кода"],
     ["Калькулятор объёма", "Консолидация"],
     ["Проверка трек-кодов", "Проверка товаров"],
-    ["Расчёт страховки", "Тарифы", "Упаковка"]
+    ["Расчёт страховки", "Упаковка"]
 ]
 
 main_keyboard = create_keyboard([[create_keyboard_button(text) for text in row] for row in main_menu_buttons])
@@ -53,10 +53,17 @@ def get_main_inline_keyboard(user_id: int) -> InlineKeyboardMarkup:
             # Кнопка "Админ" либо ведет в админку, либо на контакт админа
             create_inline_button("Админ", callback_data="admin_panel" if is_admin else None,
                                  url="https://t.me/fir2201" if not is_admin else None),
-            create_inline_button("Курс Alipay", url="https://t.me/Alipay_Chat_ru")
+            create_inline_button("Адрес склада", callback_data="warehouse_address")
         ],
         [
+            create_inline_button("Заполнения бланка Таможни", callback_data="customs_form_filling")
+        ],
+        [
+            create_inline_button("Курс Alipay", url="https://t.me/Alipay_Chat_ru"),
             create_inline_button("Мой профиль", callback_data="my_profile"),
+        ],
+        [
+            create_inline_button("Тарифы", callback_data="tariffs"),
             create_inline_button("Чат Карго FS-33", url="https://t.me/cargoFS33")
         ]
     ]
@@ -188,3 +195,13 @@ def get_admin_edit_user_keyboard(internal_user_id: int, has_username: bool, has_
     ]
 
     return create_inline_keyboard(buttons)
+
+
+# --- НОВАЯ ФУНКЦИЯ: Клавиатура для заказа ---
+
+def get_order_keyboard() -> InlineKeyboardMarkup:
+    """Клавиатура для выбора действия после добавления товара в заказ."""
+    return create_inline_keyboard([
+        [create_inline_button("➕ Добавить ещё товар", "order_add_next")],
+        [create_inline_button("✅ Закончить и получить Excel", "order_finish")]
+    ])
