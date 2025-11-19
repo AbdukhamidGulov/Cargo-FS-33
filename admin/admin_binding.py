@@ -54,8 +54,8 @@ async def process_track_codes_for_binding(message: Message, state: FSMContext, b
     Обрабатывает список трек-кодов для массовой привязки, используя extract_text_from_message
     для поддержки текста и файлов.
     """
-    # Используем утилиту для извлечения кодов (поддерживает текст или .txt файл)
-    extraction_result = await extract_text_from_message(message)
+    # ИСПРАВЛЕНИЕ: Передаем bot, который требуется утилите для скачивания файлов.
+    extraction_result = await extract_text_from_message(message, bot)
 
     track_codes = extraction_result.get('items', [])
     error_message = extraction_result.get('error')
@@ -169,10 +169,7 @@ async def process_user_id_for_bulk_binding(message: Message, state: FSMContext, 
     success_count = 0
     failed_track_codes = []
 
-    # *Fix для второго предупреждения*
-    # Поскольку мы уже проверили, что user_data не None,
-    # PyCharm будет знать, что он похож на dict.
-    user_name = user_data.get('name', 'Неизвестно')  # Теперь .get() безопасен
+    user_name = user_data.get('name', 'Неизвестно')
 
     for track_code, _ in valid_track_codes:
         # Убедимся, что user_data['tg_id'] существует

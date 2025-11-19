@@ -56,15 +56,15 @@ def get_main_inline_keyboard(user_id: int) -> InlineKeyboardMarkup:
             create_inline_button("Адрес склада", callback_data="warehouse_address")
         ],
         [
-            create_inline_button("Заполнения бланка Таможни", callback_data="customs_form_filling")
-        ],
-        [
             create_inline_button("Курс Alipay", url="https://t.me/Alipay_Chat_ru"),
             create_inline_button("Мой профиль", callback_data="my_profile"),
         ],
         [
             create_inline_button("Тарифы", callback_data="tariffs"),
             create_inline_button("Чат Карго FS-33", url="https://t.me/cargoFS33")
+        ],
+        [
+            create_inline_button("Заполнение бланка Таможни", callback_data="customs_form_filling")
         ]
     ]
 
@@ -159,7 +159,7 @@ contact_admin_keyboard = create_inline_keyboard(
         [create_inline_button(text="👤 Главный админ (Фируз)", url="https://t.me/fir2201")],
         [create_inline_button(text="Админ (Иван)", url="https://t.me/cargooFS33")],
         [create_inline_button(text="Админ (Дарья)", url="https://t.me/FS_Admin33")],
-        [create_inline_button(text="⚙️ Разработчик бота (Абдулхамид)", url="https://tme/abdulhamidgulov")]
+        [create_inline_button(text="⚙️ Разработчик бота (Абдулхамид)", url="https://t.me/abdulhamidgulov")]
     ]
 )
 

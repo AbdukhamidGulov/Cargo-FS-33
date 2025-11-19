@@ -162,10 +162,13 @@ async def finish_order(callback: CallbackQuery, state: FSMContext, bot: Bot):
     data = await state.get_data()
     items = data.get("items", [])
 
-    # Данные клиента, собранные в user_data_collector (должны быть в FSMContext)
+    # Данные клиента, собранные в user_collector (должны быть в FSMContext)
     client_name = data.get("client_name", "Не указано")
     client_email = data.get("client_email", "Не указано")
-    client_tg = data.get("client_tg", "Не указано")
+
+    # Идентификатор клиента для имени файла (FS0335). Берется из FSM, куда записывается
+    # в user_collector (ID пользователя бота, например FS0335)
+    client_excel_id = data.get("client_excel_id", str(callback.from_user.id))
     form_title = data.get("form_title", "Заказ")
 
     if not items:
@@ -175,7 +178,9 @@ async def finish_order(callback: CallbackQuery, state: FSMContext, bot: Bot):
 
     ensure_temp_folder()
     temp_files = []
-    excel_filename = f"{TEMP_FOLDER}/order_{callback.from_user.id}.xlsx"
+
+    # Имя файла включает FS ID или TG ID
+    excel_filename = f"{TEMP_FOLDER}/order_{client_excel_id}.xlsx"
 
     try:
         wb = Workbook()
@@ -183,20 +188,30 @@ async def finish_order(callback: CallbackQuery, state: FSMContext, bot: Bot):
         ws.title = form_title
 
         # --- Шапка с данными клиента ---
-        ws["A1"] = "Имя клиента:"
-        ws["B1"] = client_name
-        ws["A2"] = "Email:"
-        ws["B2"] = client_email
-        ws["A3"] = "Telegram:"
-        ws["B3"] = client_tg
+        # Название в B, Значение в C
 
+        # 1. ID Клиента (B1, C1)
+        ws["B1"] = "ID Клиента:"
+        ws["C1"] = client_excel_id
+
+        # 2. Имя клиента (B2, C2)
+        ws["B2"] = "Имя клиента:"
+        ws["C2"] = client_name
+
+        # 3. Email (B3, C3)
+        ws["B3"] = "Email:"
+        ws["C3"] = client_email
+
+        # Стиль для заголовков (B1:B3)
         for row in range(1, 4):
-            ws.cell(row=row, column=1).font = Font(bold=True)
+            ws.cell(row=row, column=2).font = Font(bold=True)  # B1, B2, B3
 
         # --- Заголовки таблицы товаров ---
         headers = ["№", "Фото", "Количество", "Трек-номер", "Ссылка/Описание"]
-        header_row_idx = 5
-        ws.append([])
+        # Сдвигаем вниз до 7-й строки
+        header_row_idx = 7
+        ws.append([])  # Пустая строка
+        ws.append([])  # Пустая строка
         ws.append(headers)
 
         # Настройка ширины колонок
@@ -216,11 +231,11 @@ async def finish_order(callback: CallbackQuery, state: FSMContext, bot: Bot):
         for index, item in enumerate(items, start=1):
             row_num = header_row_idx + index
 
-            # 1. Номер
+            # 1. Номер (A)
             cell_num = ws.cell(row=row_num, column=1, value=index)
             cell_num.alignment = Alignment(vertical="center", horizontal="center")
 
-            # 2. ФОТО
+            # 2. ФОТО (B)
             photo_id = item['photo_id']
             if photo_id:
                 try:
@@ -237,7 +252,10 @@ async def finish_order(callback: CallbackQuery, state: FSMContext, bot: Bot):
                         temp_files.append(resized_photo_path)
 
                     excel_img = ExcelImage(resized_photo_path)
-                    anchor = f"B{row_num}"
+
+                    # (Код для центрирования удален, как и просили)
+
+                    anchor = f"B{row_num}"  # Колонка B для фото
                     ws.add_image(excel_img, anchor)
                     ws.row_dimensions[row_num].height = 90
 
@@ -248,21 +266,26 @@ async def finish_order(callback: CallbackQuery, state: FSMContext, bot: Bot):
                 ws.cell(row=row_num, column=2, value="Нет фото")
 
             # Остальные колонки
+            # Количество (C)
             ws.cell(row=row_num, column=3, value=item['quantity']).alignment = Alignment(vertical="center",
                                                                                          horizontal="center")
+            # Трек-номер (D)
             ws.cell(row=row_num, column=4, value=item['track']).alignment = Alignment(vertical="center",
                                                                                       horizontal="center")
+            # Ссылка (E)
             ws.cell(row=row_num, column=5, value=item['link']).alignment = Alignment(vertical="center", wrap_text=True)
 
         wb.save(excel_filename)
 
         # Отправка
-        display_filename = f"{form_title}_{callback.from_user.id}.xlsx"
+        # Имя файла для отображения включает FS ID
+        display_filename = f"{form_title}_{client_excel_id}.xlsx"
         file_doc = FSInputFile(excel_filename, filename=display_filename)
 
         await callback.message.answer_document(
             file_doc,
             caption=f"✅ <b>Ваш документ ({form_title}) готов!</b>\n"
+                    f"Код клиента: <b>{client_excel_id}</b>\n"
                     f"Всего позиций: {len(items)}\n"
                     f"Отправьте этот файл менеджеру.",
             reply_markup=main_keyboard
