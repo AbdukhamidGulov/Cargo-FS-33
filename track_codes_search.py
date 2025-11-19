@@ -6,7 +6,7 @@ from aiogram import Router, F, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 
-from database.db_track_codes import get_track_code_status, get_user_track_codes
+from database.db_track_codes import get_user_track_codes, get_track_code
 from keyboards import main_keyboard, cancel_keyboard, add_track_codes_follow_up_keyboard
 from track_numbers import TRACK_CODE_PATTERN, status_messages, TrackCodeStates
 from utils.message_common import send_chunked_response
@@ -91,7 +91,7 @@ async def process_track_code(message: Message, state: FSMContext, bot: Bot) -> N
         # --- ОДИН КОД (Подробно) ---
         track_code_text = track_codes[0]
         try:
-            track_info = await get_track_code_status(track_code_text)
+            track_info = await get_track_code(track_code_text)
 
             if track_info:
                 status = track_info['status']
@@ -128,7 +128,7 @@ async def process_track_code(message: Message, state: FSMContext, bot: Bot) -> N
 
         for track_code_text in track_codes:
             try:
-                track_info = await get_track_code_status(track_code_text)
+                track_info = await get_track_code(track_code_text)
                 if track_info:
                     status = track_info['status']
                     status_msg = status_messages.get(status, "Статус неизвестен")

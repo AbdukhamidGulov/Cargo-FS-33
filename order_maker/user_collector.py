@@ -1,268 +1,189 @@
 from logging import getLogger
+from typing import Dict, Any
+
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, CallbackQuery
-from typing import Dict, Any
 
 from database.db_users import get_info_profile, update_user_info, get_user_by_id
 from keyboards import cancel_keyboard, main_keyboard
 from filters_and_config import admin_ids
-
-from order_maker.create_order import start_item_collection
 
 user_data_router = Router()
 logger = getLogger(__name__)
 
 
 class UserDataStates(StatesGroup):
-    """Состояния для сбора информации о пользователе."""
     waiting_for_name = State()
     waiting_for_tg_link = State()
     waiting_for_email = State()
     admin_waiting_for_client_code = State()
 
 
+# --- УТИЛИТЫ ---
+
 def format_client_info(user_info: Dict[str, Any], data: Dict[str, Any]) -> str:
-    """Форматирует информацию о клиенте для вывода, используя данные из БД и FSM."""
-    name = user_info.get('name', '❌ Не заполнено') or '❌ Не заполнено'
+    """Формирует сводку данных клиента."""
+    name = data.get('client_name') or user_info.get('name') or '❌ Не заполнено'
+
+    # Определяем контакт
     username = user_info.get('username')
     phone = user_info.get('phone')
-
-    name = data.get('client_name', name)
-    email = data.get('client_email', '❓ Будет запрошен')
-    fs_code = data.get("client_excel_id", "N/A")
-
-    if username:
-        tg_contact = f"@{username}"
-    elif phone:
-        tg_contact = phone
-    else:
-        tg_contact = '❌ Не заполнено'
-
+    tg_contact = f"@{username}" if username else (phone or '❌ Не заполнено')
     tg_contact = data.get('client_tg', tg_contact)
 
     return (
         f"📝 <b>Данные для бланка:</b>\n\n"
-        f"<b>Код клиента:</b> {fs_code}\n"
+        f"<b>Код клиента:</b> {data.get('client_excel_id', 'N/A')}\n"
         f"<b>Имя:</b> {name}\n"
-        f"<b>Контакт (TG/Тел):</b> {tg_contact}\n"
-        f"<b>Email:</b> {email}\n"
+        f"<b>Контакт:</b> {tg_contact}\n"
+        f"<b>Email:</b> {data.get('client_email', '❓ Будет запрошен')}"
     )
-
-
-# --- ТОЧКА ВХОДА (ОБЩАЯ) ---
-
-@user_data_router.callback_query(F.data == "customs_form_filling") 
-async def start_order_process(callback: CallbackQuery, state: FSMContext): 
-    """
-    Точка входа (по инлайн-кнопке "Заполнение бланка Таможни").
-    Разделяет логику для админа и обычного пользователя.
-    """
-    user_id = callback.from_user.id 
-
-    await state.clear()
-
-    is_admin = user_id in admin_ids
-
-    if is_admin:
-        await callback.message.answer( 
-            "💻 <b>Режим Администратора: Заполнение Бланка</b>\n\n"
-            "Пожалуйста, введите <b>ID пользователя</b> (числовой или в формате FSXXXX), для которого заполняете бланк:",
-            reply_markup=cancel_keyboard
-        )
-        await state.set_state(UserDataStates.admin_waiting_for_client_code)
-    else:
-        # Логика для обычного пользователя
-        user_info = await get_info_profile(user_id)
-        if not user_info:
-            await callback.message.answer("Ошибка: Профиль не найден. Пожалуйста, нажмите /start.") 
-            return
-
-        fs_code = f"FS{user_info['id']:04d}"
-
-        await state.update_data(
-            items=[],
-            client_id=user_id,
-            client_excel_id=fs_code,
-            form_title="Таможенный Бланк"
-        )
-
-        await callback.message.answer("📝 Начинаем заполнение Таможенного Бланка...") 
-        await process_client_data_check(callback.message, state, user_id, user_info)
-    
-    await callback.answer() 
-
-
-# --- ЛОГИКА ДЛЯ АДМИНИСТРАТОРА ---
-
-@user_data_router.message(UserDataStates.admin_waiting_for_client_code, F.text)
-async def admin_process_client_code(message: Message, state: FSMContext):
-    if message.text.lower() == "отмена":
-        await cancel_data_collection(message, state)
-        return
-
-    query = message.text.strip()
-    internal_id = None
-
-    # Парсим FSXXXX или XXXX в число
-    if query.startswith("FS") and len(query) == 6 and query[2:].isdigit():
-        internal_id = int(query[2:])
-    elif query.isdigit():
-        internal_id = int(query)
-    else:
-        await message.answer(
-            "❌ Неверный формат. Пожалуйста, введите числовой ID пользователя или в формате FSXXXX.",
-            reply_markup=cancel_keyboard
-        )
-        return
-
-    client_info = await get_user_by_id(internal_id)
-
-    if not client_info:
-        await message.answer(
-            f"❌ Клиент с ID <b>{query}</b> не найден в базе данных.",
-            reply_markup=cancel_keyboard
-        )
-        return
-
-    client_tg_id = client_info.get('tg_id')
-    if not client_tg_id:
-        await message.answer("Ошибка: В данных клиента отсутствует tg_id.")
-        return
-
-    fs_code = f"FS{client_info['id']:04d}"
-
-    await state.update_data(
-        items=[],
-        client_id=client_tg_id,
-        client_excel_id=fs_code,
-        form_title="Таможенный Бланк (Админ)"
-    )
-
-    await process_client_data_check(message, state, client_tg_id, client_info, is_admin_mode=True)
-
-
-# --- ЛОГИКА ПРОВЕРКИ ДАННЫХ (ОБЩАЯ) ---
-
-async def process_client_data_check(message: Message, state: FSMContext, user_id: int, user_info: dict,
-                                    is_admin_mode: bool = False):
-    """
-    Проверяет, какие данные (имя, контакт) отсутствуют, и запрашивает их.
-    """
-    prefix = "📦 <b>Создание Бланка Заказа</b>\n\n" if not is_admin_mode else "✍️ <b>Заполнение данных клиента</b>\n\n"
-
-    # 1. Проверка Имени
-    name = user_info.get('name')
-    if not name:
-        await message.answer(
-            f"{prefix}"
-            "Мне нужно <b>Имя</b> клиента для заполнения бланка.\n"
-            "Пожалуйста, введите его:",
-            reply_markup=cancel_keyboard
-        )
-        await state.set_state(UserDataStates.waiting_for_name)
-        return
-
-    await state.update_data(client_name=name)
-
-    # 2. Проверка Username или Phone
-    username = user_info.get('username')
-    phone = user_info.get('phone')
-
-    if not username and not phone:
-        await message.answer(
-            f"{prefix}"
-            "У клиента не установлен Username и нет телефона. Пожалуйста, отправьте <b>ссылку на Telegram</b> (или номер телефона):",
-            reply_markup=cancel_keyboard
-        )
-        await state.set_state(UserDataStates.waiting_for_tg_link)
-        return
-
-    contact_value = f"@{username}" if username else phone
-    await state.update_data(client_tg=contact_value)
-
-    # 3. Запрос Email (всегда, т.к. его нет в БД)
-    await ask_for_email(message, state)
-
-
-async def ask_for_email(message: Message, state: FSMContext):
-    """Вспомогательная функция запроса почты."""
-    await message.answer(
-        "📧 Введите <b>электронную почту</b> для связи (можно пропустить, введя '-'):",
-        reply_markup=cancel_keyboard
-    )
-    await state.set_state(UserDataStates.waiting_for_email)
 
 
 async def cancel_data_collection(message: Message, state: FSMContext):
-    """Отмена сбора данных."""
     await message.answer("Создание бланка отменено.", reply_markup=main_keyboard)
     await state.clear()
 
 
-# --- ХЕНДЛЕРЫ FSM ---
+async def check_missing_data_and_prompt(message: Message, state: FSMContext, user_info: dict, is_admin: bool = False):
+    """Умная проверка: ищет, чего не хватает, и запрашивает это. Иначе — запрашивает Email."""
+    prefix = "✍️ <b>Данные клиента:</b>\n" if is_admin else "📦 <b>Данные для заказа:</b>\n"
 
-@user_data_router.message(UserDataStates.waiting_for_name, F.text)
-async def process_name_input(message: Message, state: FSMContext):
-    """Сохраняет имя и продолжает проверку."""
-    if message.text.lower() == "отмена":
-        await cancel_data_collection(message, state)
+    # 1. Имя
+    if not user_info.get('name'):
+        await message.answer(f"{prefix}Введите <b>Имя</b> клиента:", reply_markup=cancel_keyboard)
+        await state.set_state(UserDataStates.waiting_for_name)
         return
 
-    new_name = message.text.strip()
-    data = await state.get_data()
-    client_id = data.get('client_id')  # Это TG ID
+    await state.update_data(client_name=user_info['name'])
 
-    await update_user_info(client_id, "name", new_name)
-    await state.update_data(client_name=new_name)
-
-    user_info = await get_info_profile(client_id)
-    await process_client_data_check(message, state, client_id, user_info,
-                                    is_admin_mode=client_id != message.from_user.id)
-
-
-@user_data_router.message(UserDataStates.waiting_for_tg_link, F.text)
-async def process_tg_input(message: Message, state: FSMContext):
-    """Сохраняет контакт (в поле phone) и продолжает проверку."""
-    if message.text.lower() == "отмена":
-        await cancel_data_collection(message, state)
+    # 2. Контакт (Username или Телефон)
+    if not user_info.get('username') and not user_info.get('phone'):
+        await message.answer(f"{prefix}Введите ссылку на <b>Telegram</b> (@username) или номер телефона:",
+                             reply_markup=cancel_keyboard)
+        await state.set_state(UserDataStates.waiting_for_tg_link)
         return
 
-    new_tg_contact = message.text.strip()
-    data = await state.get_data()
-    client_id = data.get('client_id')  # Это TG ID
+    contact = f"@{user_info['username']}" if user_info.get('username') else user_info.get('phone')
+    await state.update_data(client_tg=contact)
 
-    # Сохраняем кастомный контакт в поле 'phone'
-    await update_user_info(client_id, "phone", new_tg_contact)
-    await state.update_data(client_tg=new_tg_contact)
-
-    user_info = await get_info_profile(client_id)
-    await process_client_data_check(message, state, client_id, user_info,
-                                    is_admin_mode=client_id != message.from_user.id)
+    # 3. Email (всегда спрашиваем последним)
+    await message.answer("📧 Введите <b>Email</b> (или '-' чтобы пропустить):", reply_markup=cancel_keyboard)
+    await state.set_state(UserDataStates.waiting_for_email)
 
 
-@user_data_router.message(UserDataStates.waiting_for_email, F.text)
-async def process_email_input(message: Message, state: FSMContext):
-    """Сохраняет Email и переходит к сбору товаров."""
-    if message.text.lower() == "отмена":
-        await cancel_data_collection(message, state)
+# --- ТОЧКА ВХОДА ---
+
+@user_data_router.callback_query(F.data == "customs_form_filling")
+async def start_order_process(callback: CallbackQuery, state: FSMContext):
+    user_id = callback.from_user.id
+    await state.clear()
+
+    # Режим Админа
+    if user_id in admin_ids:
+        await callback.message.answer(
+            "💻 <b>Режим Админа</b>\nВведите ID клиента (число или FSxxxx):",
+            reply_markup=cancel_keyboard
+        )
+        await state.set_state(UserDataStates.admin_waiting_for_client_code)
+        await callback.answer()
         return
 
-    client_email = message.text.strip()
-    if client_email == '-':
-        client_email = "Не указано"
+    # Режим Пользователя
+    user_info = await get_info_profile(user_id)
+    if not user_info:
+        await callback.message.answer("❌ Ошибка профиля. Нажмите /start")
+        await callback.answer()
+        return
 
-    await state.update_data(client_email=client_email)
+    await state.update_data(
+        items=[],
+        client_id=user_id,
+        client_excel_id=f"FS{user_info['id']:04d}",
+        form_title="Таможенный Бланк"
+    )
 
-    # ВСЕ ДАННЫЕ СОБРАНЫ
+    await callback.message.answer("📝 Начинаем заполнение...")
+    await check_missing_data_and_prompt(callback.message, state, user_info)
+    await callback.answer()
+
+
+# --- ОБРАБОТКА ДАННЫХ ---
+
+@user_data_router.message(UserDataStates.admin_waiting_for_client_code)
+async def admin_process_client_code(message: Message, state: FSMContext):
+    if message.text.lower() == "отмена": return await cancel_data_collection(message, state)
+
+    text = message.text.strip().upper().replace("FS", "")
+    if not text.isdigit():
+        await message.answer("❌ Введите корректный ID (например, 1234).")
+        return
+
+    internal_id = int(text)
+    client_info = await get_user_by_id(internal_id)
+
+    if not client_info or not client_info.get('tg_id'):
+        await message.answer(f"❌ Клиент FS{internal_id:04d} не найден или нет tg_id.")
+        return
+
+    await state.update_data(
+        items=[],
+        client_id=client_info['tg_id'],
+        client_excel_id=f"FS{internal_id:04d}",
+        form_title="Таможенный Бланк (Админ)"
+    )
+
+    await check_missing_data_and_prompt(message, state, client_info, is_admin=True)
+
+
+@user_data_router.message(UserDataStates.waiting_for_name)
+async def process_name(message: Message, state: FSMContext):
+    if message.text.lower() == "отмена": return await cancel_data_collection(message, state)
+
     data = await state.get_data()
-    user_info = await get_info_profile(data.get('client_id'))
-    info_text = format_client_info(user_info, data)
+    client_id = data['client_id']
+
+    # Обновляем БД и State
+    await update_user_info(client_id, "name", message.text.strip())
+
+    # Получаем обновленные данные и снова проверяем, чего не хватает
+    updated_info = await get_info_profile(client_id)
+    await check_missing_data_and_prompt(message, state, updated_info, is_admin=(client_id != message.from_user.id))
+
+
+@user_data_router.message(UserDataStates.waiting_for_tg_link)
+async def process_contact(message: Message, state: FSMContext):
+    if message.text.lower() == "отмена": return await cancel_data_collection(message, state)
+
+    data = await state.get_data()
+    client_id = data['client_id']
+
+    await update_user_info(client_id, "phone", message.text.strip())  # Сохраняем как телефон
+
+    updated_info = await get_info_profile(client_id)
+    await check_missing_data_and_prompt(message, state, updated_info, is_admin=(client_id != message.from_user.id))
+
+
+@user_data_router.message(UserDataStates.waiting_for_email)
+async def process_email_final(message: Message, state: FSMContext):
+    if message.text.lower() == "отмена": return await cancel_data_collection(message, state)
+
+    email = message.text.strip()
+    if email == '-': email = "Не указано"
+
+    await state.update_data(client_email=email)
+
+    # Итог
+    data = await state.get_data()
+    user_info = await get_info_profile(data['client_id'])
 
     await message.answer(
-        f"✅ Данные клиента подтверждены:\n\n{info_text}\n\n"
-        "Начинаем сбор товаров..."
+        f"✅ Данные подтверждены:\n\n{format_client_info(user_info, data)}\n\n"
+        "🚀 Переходим к добавлению товаров..."
     )
-    # ПЕРЕХОДИМ К СБОРУ ТОВАРОВ
+
+    # 🔥 ИМПОРТ ВНУТРИ ФУНКЦИИ - Решает проблему циклического импорта и зависания
+    from order_maker.create_order import start_item_collection
     await start_item_collection(message, state)

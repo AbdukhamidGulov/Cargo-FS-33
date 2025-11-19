@@ -1,5 +1,6 @@
 import re
 from logging import getLogger
+from typing import Union
 
 from aiogram import Router, F, Bot
 from aiogram.fsm.context import FSMContext
@@ -13,138 +14,84 @@ from utils.message_common import extract_text_from_message
 track_code_router = Router()
 logger = getLogger(__name__)
 
-# Ищем последовательности из 8 и более символов, состоящие из латинских букв (A-Z) и цифр (0-9).
+# Минимум 8 символов, латиница и цифры
 TRACK_CODE_PATTERN = r'[A-Z0-9]{8,}'
-
-status_messages = {
-    "in_stock": "Ваш товар уже на складе.",
-    "out_of_stock": "Не на складе.",
-    "shipped": "Ваш товар был отправлен.",
-    "arrived": "Ваш товар прибыл в пункт выдачи! Свяжитесь с администратором: @fir2201"
-}
 
 
 class TrackCodeStates(StatesGroup):
-    """Состояния для обработки ввода трек-кодов."""
-    check_single_code = State()
     add_multiple_codes = State()
 
 
-# --- Вспомогательная функция для запуска режима добавления трек-кодов ---
-async def start_add_codes_process(message: Message, state: FSMContext, user_id: int) -> None:
-    """Общая логика запуска процесса добавления трек-кодов, вызываемая как из Message, так и из CallbackQuery."""
+# --- ОБЩАЯ ОТМЕНА ---
+@track_code_router.message(TrackCodeStates.add_multiple_codes, F.text.lower() == "отмена")
+async def cancel_addition(message: Message, state: FSMContext):
+    await state.clear()
+    await message.answer("Добавление трек-кодов отменено.", reply_markup=main_keyboard)
+
+
+# --- ЗАПУСК ПРОЦЕССА (Кнопка меню или Inline) ---
+@track_code_router.message(F.text == "Добавить трек-кода")
+@track_code_router.callback_query(F.data == "add_more_track_codes")
+async def start_add_codes(event: Union[Message, CallbackQuery], state: FSMContext):
+    # Определяем message в зависимости от типа события
+    if isinstance(event, CallbackQuery):
+        message = event.message
+        await event.answer()
+        try:
+            await message.delete()  # Удаляем старое сообщение с inline кнопками, чтобы не захламлять чат
+        except:
+            pass
+    else:
+        message = event
+
     await message.answer(
-        "Отправьте <b>трек-код или список трек-кодов</b> для отслеживания.\n"
-        "Вы можете вставить текст любого формата: бот автоматически извлечет все коды, разделенные пробелом, запятой или новой строкой.\n\n"
-        "Пример:\n"
-        "<code>78948163753575, YT7577043820770 описание</code>\n\n"
-        "Коды будут добавлены в ваш список отслеживания.",
+        "Отправьте <b>трек-код или список</b> (текстом/файлом).\n"
+        "<i>Разделители: пробел, запятая, новая строка.<i>\n\n"
+        "Пример:\n<code>78948163753575, YT7577043820770</code>",
         reply_markup=cancel_keyboard
     )
     await state.set_state(TrackCodeStates.add_multiple_codes)
-    logger.info(f"Пользователь {user_id} начал добавление трек-кодов.")
 
 
-# ************************************************
-# 1. МАССОВОЕ ДОБАВЛЕНИЕ ТРЕК-КОДОВ
-# ************************************************
-
-@track_code_router.message(F.text == "Добавить трек-кода")
-async def add_track_codes(message: Message, state: FSMContext) -> None:
-    """Запускает процесс добавления одного или нескольких трек-кодов (через кнопку ReplyKeyboardMarkup)."""
-    await start_add_codes_process(message, state, message.from_user.id)
-
-
+# --- ОБРАБОТКА КОДОВ ---
 @track_code_router.message(TrackCodeStates.add_multiple_codes)
-async def process_multiple_track_codes(message: Message, state: FSMContext, bot: Bot) -> None:
-    """Обрабатывает список трек-кодов, добавленных пользователем (один или несколько)."""
-    if message.text == "Отмена":
-        await message.answer("Режим добавления трек-кодов завершён.", reply_markup=main_keyboard)
-        await state.clear()
-        logger.info(f"Пользователь {message.from_user.id} завершил добавление трек-кодов.")
-        return
-
-    tg_id: int = message.from_user.id
+async def process_multiple_track_codes(message: Message, state: FSMContext, bot: Bot):
     raw_text = await extract_text_from_message(message, bot)
 
     if not raw_text:
-        # Если функция не смогла извлечь текст (например, ошибка чтения файла),
-        # она сама отправляет пользователю сообщение об ошибке, поэтому просто выходим.
-        return
+        return  # Ошибку уже вывела утилита extract_text_from_message
 
-    # ИСПОЛЬЗУЕМ ПОЗИТИВНУЮ ФИЛЬТРАЦИЮ: Извлекаем только те строки, которые соответствуют шаблону.
-    input_codes = re.findall(TRACK_CODE_PATTERN, raw_text, re.IGNORECASE)
+    # Ищем коды (сразу в верхнем регистре) и убираем дубликаты
+    found_codes = re.findall(TRACK_CODE_PATTERN, raw_text.upper())
+    unique_codes = list(set(found_codes))
 
-    # Удаляем дубликаты
-    input_codes = list(set(input_codes))
-
-    if not input_codes:
+    if not unique_codes:
         await message.answer(
-            "В тексте не удалось найти ни одного трек-кода, пригодного для добавления. "
-            "Пожалуйста, убедитесь, что вы правильно их скопировали.",
+            "❌ В тексте не найдено трек-кодов. Проверьте формат.",
             reply_markup=cancel_keyboard
         )
         return
 
-    try:
-        result = await add_multiple_track_codes(input_codes, tg_id)
+    # Массовое добавление в БД
+    added_count, added_list = await add_multiple_track_codes(unique_codes, message.from_user.id)
 
-        # Проверяем, что возвращаемое значение является кортежем с двумя элементами
-        if isinstance(result, tuple) and len(result) == 2:
-            added_count, added_codes = result
-        else:
-            # Если возвращается только количество, используем его и пустой список для кодов
-            added_count = result
-            added_codes = []
-            logger.warning("add_multiple_track_codes не вернула список добавленных кодов.")
+    # Формирование отчета
+    response = [f"🔎 Обработано кодов: <b>{len(unique_codes)}</b>"]
 
-        # ФУНКЦИЯ ДАЕТ ИНФОРМАЦИЮ О РЕЗУЛЬТАТЕ ДОБАВЛЕНИЯ
-        response_parts = [f"Обработано <b>{len(input_codes)}</b> потенциальных трек-кодов."]
+    if added_count > 0:
+        codes_preview = "\n".join([f"• <code>{code}</code>" for code in added_list])
+        response.append(f"✅ Добавлено: <b>{added_count}</b>\n{codes_preview}")
 
-        if added_count > 0:
-            # Показываем список добавленных кодов
-            added_codes_list_text = "\n".join([f"• <code>{code}</code>" for code in added_codes])
+    skipped = len(unique_codes) - added_count
+    if skipped > 0:
+        response.append(f"\n⏭️ Пропущено (уже есть): <b>{skipped}</b>")
 
-            response_parts.append(
-                f"✅ Успешно добавлены <b>{added_count}</b> трек-коды в ваш список отслеживания:\n"
-                f"{added_codes_list_text}"
-            )
+    # 1. Итог
+    await message.answer("\n".join(response), reply_markup=main_keyboard)
+    await state.clear()
 
-        # Информируем о пропущенных (уже существующих)
-        skipped_count = len(input_codes) - added_count
-        if skipped_count > 0:
-            response_parts.append(
-                f"\n⏭️ <b>{skipped_count}</b> трек-кодов уже отслеживаются вами или другими пользователями и были пропущены."
-            )
-
-        # --- РАЗДЕЛЕНИЕ СООБЩЕНИЙ И ИЗМЕНЕНИЕ КЛАВИАТУРЫ ---
-
-        # 1. Основное сообщение о результате
-        await message.answer("\n".join(response_parts), reply_markup=main_keyboard)
-        logger.info(f"Пользователь {tg_id} добавил {added_count} новых трек-кодов (всего {len(input_codes)}).")
-        await state.clear()
-
-        # 2. Сообщение с дополнительными действиями (inline-клавиатура)
-        await message.answer(
-            "Что вы хотите сделать дальше?",
-            reply_markup=add_track_codes_follow_up_keyboard
-        )
-
-    except Exception as e:
-        logger.error(f"Ошибка при массовом добавлении трек-кодов для пользователя {tg_id}: {e}")
-        await message.answer(
-            "Произошла ошибка при добавлении трек-кодов. Попробуйте позже или обратитесь к администратору.",
-            reply_markup=cancel_keyboard
-        )
-
-
-# ************************************************
-# 2. ДОПОЛНИТЕЛЬНЫЕ ДЕЙСТВИЯ ПОСЛЕ ДОБАВЛЕНИЯ (Inline Handlers)
-# ************************************************
-
-@track_code_router.callback_query(F.data == "add_more_track_codes")
-async def restart_add_track_codes(callback: CallbackQuery, state: FSMContext) -> None:
-    """Перезапускает процесс массового добавления трек-кодов по нажатию inline-кнопки."""
-    await callback.message.delete()
-    await start_add_codes_process(callback.message, state, callback.from_user.id)
-    await callback.answer() # Отключаем "часики" на кнопке
+    # 2. Предложение продолжить
+    await message.answer(
+        "Желаете добавить еще?",
+        reply_markup=add_track_codes_follow_up_keyboard
+    )

@@ -5,7 +5,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, CallbackQuery
 
-from database.db_track_codes import get_track_code_info
+from database.db_track_codes import get_track_code
 from database.db_users import get_info_profile, get_user_by_id, update_user_by_internal_id
 from keyboards import (
     get_admin_edit_user_keyboard,
@@ -96,7 +96,7 @@ async def process_owner_search(message: Message, state: FSMContext):
     track_code = message.text.strip()
     logger.info(f"Поиск владельца для трек-кода: '{track_code}'")
 
-    track_info = await get_track_code_info(track_code)
+    track_info = await get_track_code(track_code)
 
     if track_info:
         user_tg_id = track_info.get('tg_id')
