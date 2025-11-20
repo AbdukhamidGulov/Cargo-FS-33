@@ -7,11 +7,7 @@ from aiogram.types import Message, CallbackQuery
 
 from database.db_track_codes import get_track_code
 from database.db_users import get_info_profile, get_user_by_id, update_user_by_internal_id
-from keyboards import (
-    get_admin_edit_user_keyboard,
-    cancel_keyboard,
-    main_keyboard
-)
+from keyboards import get_admin_edit_user_keyboard, cancel_keyboard, main_keyboard
 from filters_and_config import IsAdmin, admin_ids
 
 admin_search_router = Router()
@@ -19,288 +15,195 @@ logger = getLogger(__name__)
 
 
 class AdminSearchAndEditStates(StatesGroup):
-    """Состояния для поиска владельца трек-кода, пользователя по ID и редактирования."""
-    # Состояния для поиска/редактирования
     waiting_for_owner_search_code = State()
     waiting_for_user_id = State()
     waiting_for_new_username = State()
     waiting_for_new_phone = State()
 
 
-# ************************************************
-# ОБЩАЯ ФУНКЦИЯ ОТОБРАЖЕНИЯ ИНФО О ПОЛЬЗОВАТЕЛЕ
-# ************************************************
+# --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ---
 
-async def _display_user_info_with_controls(message: Message, user_data: dict, prefix_message: str = ""):
-    """
-    Вспомогательная функция для отображения данных пользователя и кнопок редактирования.
-    """
-    no_value = "<i>Не заполнено</i>"
+async def _display_user_info(message: Message, user_data: dict, prefix: str = ""):
+    """Выводит карточку пользователя с кнопками редактирования."""
+    tg_id = user_data.get('tg_id')
+    internal_id = user_data.get('id')
+    name = user_data.get('name') or "Не указано"
     username = user_data.get('username')
     phone = user_data.get('phone')
-    user_tg_id = user_data.get('tg_id')
-    internal_user_id = user_data.get('id')
 
-    # 1. Отправляем основную информацию
-    response = (
-        f"ID: <code>FS{internal_user_id:04d}</code>\n"
-        f"Имя: {user_data.get('name') or no_value}\n"
-        f"Username: @{username or no_value}\n"
-        f"Номер телефона: {phone or no_value}\n"
-        f"Telegram ID: <code>{user_tg_id}</code>\n"
-        f"Ссылка на чат: <a href='tg://user?id={user_tg_id}'>Написать пользователю</a>"
+    info_text = (
+        f"ID: <code>FS{internal_id:04d}</code>\n"
+        f"Имя: {name}\n"
+        f"Username: @{username or 'Не указано'}\n"
+        f"Телефон: {phone or 'Не указано'}\n"
+        f"TG ID: <code>{tg_id}</code>\n"
+        f"<a href='tg://user?id={tg_id}'>Написать пользователю</a>"
     )
 
-    if prefix_message:
-        response = prefix_message + "\n\n" + response
+    if prefix:
+        info_text = f"{prefix}\n\n{info_text}"
 
-    await message.answer(response)
+    await message.answer(info_text)
 
-    # 2. Генерируем клавиатуру редактирования
-    edit_keyboard = get_admin_edit_user_keyboard(
-        internal_user_id=internal_user_id,
-        has_username=bool(username),
-        has_phone=bool(phone)
-    )
-
-    # 3. Отправляем второе сообщение с кнопками
     await message.answer(
-        "Вы можете <b>изменить данные</b> этого пользователя, "
-        "ввести следующий ID/трек-код для поиска или нажать '<b>Отмена</b>'.",
-        reply_markup=edit_keyboard
+        "Выберите действие или введите данные для нового поиска:",
+        reply_markup=get_admin_edit_user_keyboard(
+            internal_user_id=internal_id,
+            has_username=bool(username),
+            has_phone=bool(phone)
+        )
     )
 
 
 # ************************************************
-# ПОИСК ВЛАДЕЛЬЦА (по Трек-коду)
+# 1. ПОИСК ВЛАДЕЛЬЦА ПО ТРЕК-КОДУ
 # ************************************************
 
 @admin_search_router.message(F.text == "Найти владельца трек-кода", IsAdmin(admin_ids))
 async def find_owner_start(message: Message, state: FSMContext):
-    """Начинает процесс поиска владельца по трек-коду."""
-    await message.answer("Пожалуйста, отправьте трек-код для поиска владельца.",
-                         reply_markup=cancel_keyboard)
+    await message.answer("Отправьте трек-код для поиска владельца.", reply_markup=cancel_keyboard)
     await state.set_state(AdminSearchAndEditStates.waiting_for_owner_search_code)
-
-
-@admin_search_router.message(AdminSearchAndEditStates.waiting_for_owner_search_code, F.text.lower() == "отмена")
-async def cancel_owner_search(message: Message, state: FSMContext):
-    """Отменяет режим поиска владельца."""
-    await message.answer("Поиск владельца отменен.", reply_markup=main_keyboard)
-    await state.clear()
 
 
 @admin_search_router.message(AdminSearchAndEditStates.waiting_for_owner_search_code)
 async def process_owner_search(message: Message, state: FSMContext):
-    """Ищет владельца и статус по введенному трек-коду."""
+    if message.text.lower() == "отмена":
+        await message.answer("Поиск отменен.", reply_markup=main_keyboard)
+        await state.clear()
+        return
+
     track_code = message.text.strip()
-    logger.info(f"Поиск владельца для трек-кода: '{track_code}'")
+    info = await get_track_code(track_code)
 
-    track_info = await get_track_code(track_code)
+    if not info:
+        await message.answer(
+            f"❌ Трек-код <code>{track_code}</code> не найден в базе.",
+            reply_markup=cancel_keyboard
+        )
+        return
 
-    if track_info:
-        user_tg_id = track_info.get('tg_id')
-        status = track_info.get('status', 'неизвестен')
+    # Код найден, проверяем владельца
+    owner_tg_id = info.get('tg_id')
+    status = info.get('status', 'неизвестен')
 
-        if user_tg_id:
-            # Используем get_info_profile для получения полной информации
-            user_data = await get_info_profile(user_tg_id)
+    if not owner_tg_id:
+        await message.answer(
+            f"⚠️ <b>Код найден, но не привязан:</b>\n"
+            f"Код: <code>{track_code}</code>\n"
+            f"Статус: <b>{status}</b>\n"
+            f"Владелец: ❌ Не установлен",
+            reply_markup=cancel_keyboard
+        )
+        return
 
-            if user_data:
-                prefix = (
-                    f"✅ <b>Найден владелец для <code>{track_code}</code> (Статус: {status})</b>"
-                )
-                await _display_user_info_with_controls(message, user_data, prefix_message=prefix)
-            else:
-                await message.answer(
-                    f"⚠️ <b>Информация о трек-коде:</b>\n"
-                    f"Код: <code>{track_code}</code> (Статус: <b>{status}</b>)\n"
-                    f"Владелец (TG ID): <code>{user_tg_id}</code>\n"
-                    f"<b>Ошибка:</b> Не удалось найти профиль пользователя с этим TG ID в базе `users`.",
-                    reply_markup=cancel_keyboard
-                )
-        else:
-            await message.answer(
-                f"⚠️ <b>Информация о трек-коде:</b>\n"
-                f"Код: <code>{track_code}</code> (Статус: <b>{status}</b>)\n"
-                f"Владелец: <b>Не привязан к пользователю.</b>\n\n"
-                f"Вы можете ввести следующий трек-код или нажать 'Отмена'.",
-                reply_markup=cancel_keyboard
-            )
+    # Владелец есть, ищем его профиль
+    user_data = await get_info_profile(owner_tg_id)
+
+    if user_data:
+        prefix = f"✅ <b>Владелец найден (Статус кода: {status})</b>"
+        await _display_user_info(message, user_data, prefix)
     else:
-        await message.answer(f"❌ Трек-код <code>{track_code}</code> не найден в базе данных.",
-                             reply_markup=cancel_keyboard)
-
-    # Остаемся в состоянии
+        # Ситуация, когда tg_id есть в таблице треков, но нет в таблице юзеров (редкий баг)
+        await message.answer(
+            f"⚠️ <b>Ошибка целостности данных:</b>\n"
+            f"Код: {track_code}\n"
+            f"Привязан к TG ID: <code>{owner_tg_id}</code>\n"
+            f"❌ Но профиль этого пользователя не найден в базе.",
+            reply_markup=cancel_keyboard
+        )
 
 
 # ************************************************
-# ПОИСК ПОЛЬЗОВАТЕЛЯ (по ID)
+# 2. ПОИСК ПОЛЬЗОВАТЕЛЯ ПО ID (FS...)
 # ************************************************
 
 @admin_search_router.message(F.text == "Искать инфо по ID", IsAdmin(admin_ids))
 async def start_user_search(message: Message, state: FSMContext):
-    """Начинает процесс поиска информации о пользователе по ID, запрашивая ввод ID."""
-    await message.answer("Введите ID пользователя (например, FS0001 или просто 1):",
-                         reply_markup=cancel_keyboard)
+    await message.answer("Введите ID (например: <b>FS1234</b> или <b>1234</b>):", reply_markup=cancel_keyboard)
     await state.set_state(AdminSearchAndEditStates.waiting_for_user_id)
-    logger.info(f"Админ {message.from_user.id} начал поиск пользователя по ID.")
-
-
-@admin_search_router.message(AdminSearchAndEditStates.waiting_for_user_id, F.text.lower() == "отмена")
-async def cancel_user_search(message: Message, state: FSMContext):
-    """Отменяет режим поиска пользователя по ID."""
-    await message.answer("Поиск пользователя по ID отменен.", reply_markup=main_keyboard)
-    await state.clear()
 
 
 @admin_search_router.message(AdminSearchAndEditStates.waiting_for_user_id)
 async def process_user_search_input(message: Message, state: FSMContext):
-    """Обрабатывает введенный ID пользователя, возвращая его данные или сообщение об ошибке."""
-
-    user_id_str = message.text.strip()
-    user_id = None
-
-    if user_id_str.startswith("FS"):
-        numeric_part = user_id_str[2:]
-        if numeric_part.isdigit():
-            user_id = int(numeric_part)
-        else:
-            await message.answer("Пожалуйста, введите корректный ID пользователя в формате FSXXXX, где XXXX — число.",
-                                 reply_markup=cancel_keyboard)
-            return
-
-    elif user_id_str.isdigit():
-        user_id = int(user_id_str)
-
-    else:
-        await message.answer("Пожалуйста, введите числовой ID пользователя или в формате FSXXXX."
-                             "\nИли напишите <code>Отмена</code> чтобы остановить режим поиска по ID",
-                             reply_markup=cancel_keyboard)
+    text = message.text.strip()
+    if text.lower() == "отмена":
+        await message.answer("Поиск отменен.", reply_markup=main_keyboard)
+        await state.clear()
         return
 
+    # Очистка ввода (FS1234 -> 1234)
+    clean_id = text.upper().replace("FS", "")
+
+    if not clean_id.isdigit():
+        await message.answer("❌ Неверный формат. Введите число или FSxxxx.", reply_markup=cancel_keyboard)
+        return
+
+    user_id = int(clean_id)
     user_data = await get_user_by_id(user_id)
 
     if not user_data:
-        await message.answer("Пользователь с таким ID не найден.", reply_markup=cancel_keyboard)
+        await message.answer(f"❌ Пользователь FS{user_id:04d} не найден.", reply_markup=cancel_keyboard)
         return
 
-    await _display_user_info_with_controls(message, user_data, prefix_message=f"✅ <b>Найден пользователь по ID:</b>")
-
-    logger.info(f"Админ {message.from_user.id} получил информацию о пользователе с ID {user_id}.")
-    # Остаемся в состоянии
+    await _display_user_info(message, user_data, prefix="✅ <b>Пользователь найден:</b>")
 
 
-# ************************************************************
-# ОБРАБОТЧИКИ КНОПОК РЕДАКТИРОВАНИЯ
-# ************************************************************
+# ************************************************
+# 3. РЕДАКТИРОВАНИЕ ПОЛЬЗОВАТЕЛЯ
+# ************************************************
 
-@admin_search_router.callback_query(F.data.startswith("admin_edit_username:"))
-async def start_edit_username(callback: CallbackQuery, state: FSMContext):
-    """Начинает FSM для изменения никнейма пользователя."""
-    try:
-        user_id_to_edit = int(callback.data.split(":")[1])
-    except (IndexError, ValueError):
-        await callback.answer("Ошибка: неверный ID пользователя.", show_alert=True)
-        return
+@admin_search_router.callback_query(F.data.startswith("admin_edit_"))
+async def start_edit_field(callback: CallbackQuery, state: FSMContext):
+    """Единый обработчик для начала редактирования (username или phone)."""
+    action, user_id_str = callback.data.replace("admin_edit_", "").split(":")
+    user_id = int(user_id_str)
 
-    await state.clear()
-    await state.set_state(AdminSearchAndEditStates.waiting_for_new_username)
-    await state.update_data(user_id_to_edit=user_id_to_edit)
+    await state.update_data(user_id_to_edit=user_id)
 
-    await callback.message.answer(
-        f"Вы редактируете пользователя <code>FS{user_id_to_edit:04d}</code>.\n"
-        "Отправьте новый никнейм (без @) или '<code>-</code>' (дефис) для удаления никнейма.",
-        reply_markup=cancel_keyboard
-    )
+    msg_text = f"Редактирование <code>FS{user_id:04d}</code>.\n"
+
+    if action == "username":
+        msg_text += "Отправьте новый <b>Username</b> (без @) или '-':"
+        await state.set_state(AdminSearchAndEditStates.waiting_for_new_username)
+    elif action == "phone":
+        msg_text += "Отправьте новый <b>Телефон</b> или '-':"
+        await state.set_state(AdminSearchAndEditStates.waiting_for_new_phone)
+
+    await callback.message.answer(msg_text, reply_markup=cancel_keyboard)
     await callback.answer()
-
-
-@admin_search_router.message(AdminSearchAndEditStates.waiting_for_new_username, F.text.lower() == "отмена")
-async def cancel_edit_username(message: Message, state: FSMContext):
-    """Отменяет редактирование никнейма."""
-    await message.answer("Редактирование отменено.", reply_markup=main_keyboard)
-    await state.clear()
 
 
 @admin_search_router.message(AdminSearchAndEditStates.waiting_for_new_username)
-async def process_edit_username(message: Message, state: FSMContext):
-    """Сохраняет новый никнейм."""
-    if message.text.lower() == "отмена":
-        await message.answer("Редактирование отменено.", reply_markup=main_keyboard)
-        await state.clear()
-        return
-
-    data = await state.get_data()
-    user_id_to_edit = data.get('user_id_to_edit')
-
-    new_username = message.text.strip().replace("@", "")
-
-    if new_username == "-":
-        new_username = None
-
-    success = await update_user_by_internal_id(user_id_to_edit, username=new_username)
-
-    if success:
-        await message.answer(f"✅ Никнейм для <code>FS{user_id_to_edit:04d}</code> успешно обновлен.",
-                             reply_markup=main_keyboard)
-    else:
-        await message.answer("❌ Произошла ошибка при обновлении никнейма.", reply_markup=main_keyboard)
-
-    await state.clear()
-
-
-@admin_search_router.callback_query(F.data.startswith("admin_edit_phone:"))
-async def start_edit_phone(callback: CallbackQuery, state: FSMContext):
-    """Начинает FSM для изменения телефона пользователя."""
-    try:
-        user_id_to_edit = int(callback.data.split(":")[1])
-    except (IndexError, ValueError):
-        await callback.answer("Ошибка: неверный ID пользователя.", show_alert=True)
-        return
-
-    await state.clear()
-    await state.set_state(AdminSearchAndEditStates.waiting_for_new_phone)
-    await state.update_data(user_id_to_edit=user_id_to_edit)
-
-    await callback.message.answer(
-        f"Вы редактируете пользователя <code>FS{user_id_to_edit:04d}</code>.\n"
-        "Отправьте новый номер телефона или '<code>-</code>' (дефис) для удаления номера.",
-        reply_markup=cancel_keyboard
-    )
-    await callback.answer()
-
-
-@admin_search_router.message(AdminSearchAndEditStates.waiting_for_new_phone, F.text.lower() == "отмена")
-async def cancel_edit_phone(message: Message, state: FSMContext):
-    """Отменяет редактирование телефона."""
-    await message.answer("Редактирование отменено.", reply_markup=main_keyboard)
-    await state.clear()
-
-
 @admin_search_router.message(AdminSearchAndEditStates.waiting_for_new_phone)
-async def process_edit_phone(message: Message, state: FSMContext):
-    """Сохраняет новый телефон."""
+async def process_edit_save(message: Message, state: FSMContext):
+    """Единый обработчик сохранения (username или phone)."""
     if message.text.lower() == "отмена":
-        await message.answer("Редактирование отменено.", reply_markup=main_keyboard)
+        await message.answer("Отменено.", reply_markup=main_keyboard)
         await state.clear()
         return
 
     data = await state.get_data()
-    user_id_to_edit = data.get('user_id_to_edit')
+    user_id = data.get('user_id_to_edit')
+    current_state = await state.get_state()
 
-    new_phone = message.text.strip()
+    value = message.text.strip()
+    if value == "-": value = None
 
-    if new_phone == "-":
-        new_phone = None
+    success = False
+    field_name = ""
 
-    success = await update_user_by_internal_id(user_id_to_edit, phone=new_phone)
+    if current_state == AdminSearchAndEditStates.waiting_for_new_username:
+        if value: value = value.replace("@", "")
+        success = await update_user_by_internal_id(user_id, username=value)
+        field_name = "Никнейм"
+
+    elif current_state == AdminSearchAndEditStates.waiting_for_new_phone:
+        success = await update_user_by_internal_id(user_id, phone=value)
+        field_name = "Телефон"
 
     if success:
-        await message.answer(f"✅ Телефон для <code>FS{user_id_to_edit:04d}</code> успешно обновлен.",
-                             reply_markup=main_keyboard)
+        await message.answer(f"✅ {field_name} для FS{user_id:04d} обновлен.", reply_markup=main_keyboard)
     else:
-        await message.answer("❌ Произошла ошибка при обновлении телефона.", reply_markup=main_keyboard)
+        await message.answer("❌ Ошибка обновления БД.", reply_markup=main_keyboard)
 
     await state.clear()
-    

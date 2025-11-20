@@ -5,7 +5,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message
 
-from database.db_track_codes import get_track_code, bulk_assign_track_codes
+from database.db_track_codes import check_track_codes_existence, bulk_assign_track_codes
 from database.db_users import get_user_by_id
 from keyboards import cancel_keyboard, main_keyboard
 from filters_and_config import IsAdmin, admin_ids
@@ -28,73 +28,66 @@ async def cancel_process(message: Message, state: FSMContext):
     await message.answer("Массовая привязка отменена.", reply_markup=main_keyboard)
 
 
-# --- ЛОГИКА ---
+# --- 1. ЗАПРОС СПИСКА КОДОВ ---
 @admin_bulk_router.message(F.text == "Массовая привязка трек-кодов", IsAdmin(admin_ids))
 async def start_bulk_bind(message: Message, state: FSMContext):
     await state.set_state(BindTrackStates.waiting_for_track_codes)
     await message.answer(
         "📦 <b>Массовая привязка</b>\n\n"
-        "Отправьте список трек-кодов (текстом или .txt файлом).\n"
-        "Каждый код с новой строки.",
+        "Отправьте список трек-кодов (текстом или .txt файлом).",
         reply_markup=cancel_keyboard
     )
 
 
+# --- 2. ОБРАБОТКА КОДОВ И ПРОВЕРКА В БД ---
 @admin_bulk_router.message(BindTrackStates.waiting_for_track_codes)
 async def process_track_codes(message: Message, state: FSMContext, bot: Bot):
-    raw_text = await extract_text_from_message(message, bot)
+    # Используем extract_text_from_message с bot
+    raw_content = await extract_text_from_message(message, bot)
 
-    if not raw_text:
-        await message.answer(
-            "❌ Не удалось извлечь данные. Отправьте текст или .txt файл в UTF-8.",
-            reply_markup=cancel_keyboard
-        )
+    if not raw_content:
+        await message.answer("❌ Не удалось извлечь данные.", reply_markup=cancel_keyboard)
         return
 
-    # Превращаем текст в список, убирая пустые строки
-    track_codes = [line.strip() for line in raw_text.splitlines() if line.strip()]
+    # Превращаем текст в список уникальных кодов
+    track_codes = list(set([line.strip() for line in raw_content.splitlines() if line.strip()]))
 
     if not track_codes:
         await message.answer("❌ Список трек-кодов пуст.", reply_markup=cancel_keyboard)
         return
 
-    await message.answer(f"⏳ Проверка {len(track_codes)} кодов в БД...")
+    await message.answer(f"⏳ Проверка <b>{len(track_codes)}</b> кодов в базе данных...")
 
-    valid_codes = []
-    invalid_codes = []
+    existing_list, non_existing_codes = await check_track_codes_existence(track_codes)
 
-    # ⚠️ ВНИМАНИЕ: Цикл for остался, так как функция bulk_assign_track_codes только
-    # привязывает/создает, но не возвращает статусы кодов. Для отображения
-    # найденных/ненайденных кодов перед привязкой, пока используем поэлементную проверку.
-    for code in track_codes:
-        info = await get_track_code(code)
-        if info:
-            valid_codes.append((code, info['status']))
-        else:
-            invalid_codes.append(code)
-
-    if not valid_codes:
-        await message.answer("❌ Ни один код не найден в базе.", reply_markup=cancel_keyboard)
+    if not existing_list and not non_existing_codes:
+        await message.answer("❌ В списке нет кодов для обработки.", reply_markup=cancel_keyboard)
         return
 
-    await state.update_data(valid=valid_codes, invalid=invalid_codes)
-
-    text = (
-        f"✅ <b>Проверка завершена</b>\n"
-        f"Найдено: <b>{len(valid_codes)}</b>\n"
-        f"Не найдено: <b>{len(invalid_codes)}</b>"
+    await state.update_data(
+        codes_to_bind=[item['code'] for item in existing_list],  # Коды, которые существуют и будут привязаны
+        non_existing=non_existing_codes,  # Коды, которые будут созданы (если bulk_assign их не найдет)
+        initial_list_size=len(track_codes)  # Размер оригинального списка
     )
 
-    if invalid_codes:
-        preview = "\n".join(invalid_codes[:10])
-        text += f"\n\n<i>Не найдены (первые 10):</i>\n<code>{preview}</code>"
+    # Подготовка отчета для админа
+    text = (
+        f"✅ <b>Проверка завершена</b> (из {len(track_codes)} уникальных кодов)\n"
+        f"Найдено в базе: <b>{len(existing_list)}</b>\n"
+        f"Не найдено в базе: <b>{len(non_existing_codes)}</b>"
+    )
 
-    text += "\n\nВведите ID пользователя (например: <b>FS1234</b> или просто <b>1234</b>):"
+    if non_existing_codes:
+        preview = "\n".join(non_existing_codes[:5])
+        text += f"\n\n<i>Первые 5 не найденных:</i>\n<code>{preview}</code>"
+
+    text += "\n\nВведите внутренний ID пользователя (например: <b>FS1234</b> или просто <b>1234</b>):"
 
     await state.set_state(BindTrackStates.waiting_for_user_id)
     await message.answer(text, reply_markup=cancel_keyboard)
 
 
+# --- 3. ОБРАБОТКА ID ПОЛЬЗОВАТЕЛЯ И ПРИВЯЗКА ---
 @admin_bulk_router.message(BindTrackStates.waiting_for_user_id)
 async def process_user_binding(message: Message, state: FSMContext):
     user_input = message.text.strip().upper().replace("FS", "")
@@ -104,41 +97,45 @@ async def process_user_binding(message: Message, state: FSMContext):
         return
 
     user_id = int(user_input)
+    # Используем FS-ID для получения TG ID
     user_data = await get_user_by_id(user_id)
 
     if not user_data:
-        await message.answer(f"❌ Пользователь FS{user_id:04d} не найден.")
+        await message.answer(f"❌ Пользователь FS{user_id:04d} не найден в базе пользователей.")
         return
 
     data = await state.get_data()
-    valid_codes = data.get('valid', [])
+    codes_to_bind = data.get('codes_to_bind', [])
+    non_existing_codes = data.get('non_existing', [])
+
+    # Список кодов, которые будут отправлены на массовое обновление/создание
+    all_codes_to_process = codes_to_bind + non_existing_codes
 
     tg_id = user_data.get('tg_id')
     if not tg_id:
-        await message.answer("❌ У пользователя отсутствует Telegram ID для привязки.")
+        await message.answer("❌ У пользователя отсутствует Telegram ID (tg_id) для привязки.")
         return
 
-    await message.answer(f"🔗 Привязываю {len(valid_codes)} кодов к FS{user_id:04d}...")
+    if not all_codes_to_process:
+        await message.answer("❌ Нет кодов для привязки. Отменено.", reply_markup=main_keyboard)
+        await state.clear()
+        return
 
-    # 1. Извлекаем только коды из списка кортежей (code, status)
-    codes_to_bind = [code for code, _ in valid_codes]
+    await message.answer(f"🔗 Привязываю {len(all_codes_to_process)} кодов к FS{user_id:04d}...")
 
-    stats = await bulk_assign_track_codes(codes_to_bind, tg_id)
+    # Массовая привязка/создание в один запрос
+    stats = await bulk_assign_track_codes(all_codes_to_process, tg_id)
 
     success_count = stats['assigned'] + stats['created']
-    invalid_codes_count = len(data.get('invalid', []))
 
     # Итоговый отчет
     res_text = (
-        f"📊 <b>Итог массовой привязки</b>\n"
+        f"📊 <b>Итог массовой привязки</b> (Всего в списке: {data.get('initial_list_size', 0)})\n"
         f"👤 Пользователь: <code>FS{user_id:04d}</code> ({user_data.get('name', '???')})\n"
-        f"✅ Всего успешно обработано: <b>{success_count}</b>\n"
+        f"✅ Всего обработано: <b>{success_count}</b>\n"
         f"   ├ Обновлено (перепривязано): {stats['assigned']}\n"
         f"   └ Создано (новые коды): {stats['created']}"
     )
-
-    if invalid_codes_count > 0:
-        res_text += f"\n\n⚠️ Кодов не найдено в базе: {invalid_codes_count}"
 
     await message.answer(res_text, reply_markup=main_keyboard)
     await state.clear()

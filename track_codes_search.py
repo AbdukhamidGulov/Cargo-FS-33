@@ -1,6 +1,6 @@
-import re
+from re import findall, IGNORECASE
 from logging import getLogger
-from typing import List
+from typing import Union
 
 from aiogram import Router, F, Bot
 from aiogram.fsm.context import FSMContext
@@ -8,189 +8,137 @@ from aiogram.types import Message, CallbackQuery
 
 from database.db_track_codes import get_user_track_codes, get_track_code
 from keyboards import main_keyboard, cancel_keyboard, add_track_codes_follow_up_keyboard
-from track_numbers import TRACK_CODE_PATTERN, status_messages, TrackCodeStates
-from utils.message_common import send_chunked_response
+from utils.message_common import send_chunked_response, extract_text_from_message
+
+from track_numbers import TRACK_CODE_PATTERN, TrackCodeStates
 
 track_code_search_router = Router()
 logger = getLogger(__name__)
 
+STATUS_MESSAGES = {
+    "in_stock": "✅ На складе",
+    "out_of_stock": "⏳ Не на складе",
+    "shipped": "🚚 Отправлен",
+    "arrived": "📍 Прибыл в пункт выдачи! (@fir2201)"
+}
 
-def parse_track_codes(text: str) -> List[str]:
-    """Разделяет введенный текст на список потенциальных трек-кодов."""
-    return re.findall(TRACK_CODE_PATTERN, text, re.IGNORECASE)
 
-
-# ************************************************
-# 1. ПРОВЕРКА ОДНОГО/НЕСКОЛЬКИХ ТРЕК-КОДОВ
-# ************************************************
-
+# --- ТОЧКА ВХОДА ---
 @track_code_search_router.message(F.text.lower() == "проверка трек-кодов")
-async def check_track_code(message: Message, state: FSMContext) -> None:
-    """Запускает процесс проверки статуса трек-кода."""
+@track_code_search_router.callback_query(F.data == "start_check_codes")
+async def start_check_codes(event: Union[Message, CallbackQuery], state: FSMContext):
+    if isinstance(event, CallbackQuery):
+        message = event.message
+        await event.answer()
+        try:
+            await message.delete()
+        except:
+            pass
+    else:
+        message = event
+
     await message.answer(
-        "Отправьте ваш <b>трек-код</b>, <b>список трек-кодов</b> (текстом) или загрузите <b>.txt файл</b> для проверки.",
+        "🔎 <b>Поиск трек-кодов</b>\n\n"
+        "Отправьте <b>трек-код</b>, <b>список</b> или <b>файл</b>.",
         reply_markup=cancel_keyboard
     )
     await state.set_state(TrackCodeStates.check_single_code)
-    logger.info(f"Пользователь {message.from_user.id} начал проверку трек-кодов.")
 
 
+# --- ПОИСК ---
 @track_code_search_router.message(TrackCodeStates.check_single_code)
-async def process_track_code(message: Message, state: FSMContext, bot: Bot) -> None:
-    """Обрабатывает введённые пользователем трек-коды (текст или файл)."""
+async def process_track_code_search(message: Message, state: FSMContext, bot: Bot):
     if message.text and message.text.lower() == "отмена":
-        await message.answer("Режим проверки трек-кодов завершён.", reply_markup=main_keyboard)
+        await message.answer("Поиск завершён.", reply_markup=main_keyboard)
         await state.clear()
         return
 
-    tg_id = message.from_user.id
-    input_text = ""
+    raw_text = await extract_text_from_message(message, bot)
 
-    # --- ОБРАБОТКА ФАЙЛА ИЛИ ТЕКСТА ---
-    if message.document:
-        try:
-            # 1. Получаем информацию о файле по его file_id
-            file_info = await bot.get_file(message.document.file_id)
-            # 2. Скачиваем файл по полученному file_path
-            file_in_io = await bot.download_file(file_info.file_path)
-
-            # Читаем и декодируем (предполагаем UTF-8)
-            input_text = file_in_io.read().decode('utf-8')
-        except UnicodeDecodeError:
-            await message.answer(
-                "Ошибка чтения файла. Пожалуйста, убедитесь, что это текстовый файл в кодировке UTF-8.",
-                reply_markup=cancel_keyboard
-            )
-            return
-        except Exception as e:
-            logger.error(f"Ошибка при загрузке файла для проверки трек-кодов пользователем {tg_id}: {e}")
-            await message.answer("Произошла ошибка при обработке файла. Попробуйте отправить текст.",
-                                 reply_markup=cancel_keyboard)
-            return
-    elif message.text:
-        input_text = message.text.strip()
-    else:
-        await message.answer("Пожалуйста, отправьте текст с трек-кодами или .txt файл.", reply_markup=cancel_keyboard)
+    if not raw_text:
+        if not message.document:
+            await message.answer("Пожалуйста, отправьте текст или .txt файл.", reply_markup=cancel_keyboard)
         return
 
-    # --- ПАРСИНГ И ПРОВЕРКА ---
-    track_codes: List[str] = re.findall(TRACK_CODE_PATTERN, input_text, re.IGNORECASE)
-    # Удаляем дубликаты
-    track_codes = list(dict.fromkeys(track_codes))
+    track_codes = list(set(findall(TRACK_CODE_PATTERN, raw_text.upper(), flags=IGNORECASE)))
 
     if not track_codes:
-        await message.answer(
-            "Не найдено корректных трек-кодов. Пожалуйста, убедитесь в правильности данных.",
-            reply_markup=cancel_keyboard
-        )
+        await message.answer("❌ Не найдено корректных трек-кодов.", reply_markup=cancel_keyboard)
         return
 
-    is_single_code = len(track_codes) == 1
+    user_id = message.from_user.id
 
-    if is_single_code:
-        # --- ОДИН КОД (Подробно) ---
-        track_code_text = track_codes[0]
-        try:
-            track_info = await get_track_code(track_code_text)
+    # Один код - подробно
+    if len(track_codes) == 1:
+        code = track_codes[0]
+        info = await get_track_code(code)
 
-            if track_info:
-                status = track_info['status']
-                owner_tg_id = track_info.get('tg_id')
-                status_message = status_messages.get(status, "Статус неизвестен")
+        if info:
+            status_text = STATUS_MESSAGES.get(info['status'], info['status'])
+            owner = info.get('tg_id')
 
-                if owner_tg_id == tg_id:
-                    ownership_status = "✅ Вы отслеживаете этот код"
-                elif owner_tg_id is not None:
-                    ownership_status = "👤 Отслеживается другим пользователем"
-                else:
-                    ownership_status = "⚪️ Никем не отслеживается"
-
-                response = (
-                    f"🔎 <b>Результат поиска:</b>\n\n"
-                    f"📦 Код: <code>{track_code_text}</code>\n"
-                    f"ℹ️ Статус: <b>{status_message}</b>\n"
-                    f"🔐 {ownership_status}\n"
-                )
-                await send_chunked_response(message, response)  # Используем функцию для отправки больших сообщений
+            if owner == user_id:
+                ownership = "✅ <b>Это ваш код</b>"
+            elif owner:
+                ownership = "👤 Привязан к другому пользователю"
             else:
-                await message.answer(
-                    f"❌ Трек-код <code>{track_code_text}</code> не найден в системе.\n"
-                    f"Используйте <code>Добавить трек-коды</code>, чтобы начать отслеживание."
-                )
+                ownership = "⚪️ <b>Никем не отслеживается</b>"
 
-        except Exception as e:
-            logger.error(f"Ошибка при проверке трек-кода {track_code_text}: {e}")
-            await message.answer("Произошла ошибка при проверке. Попробуйте позже.")
+            response = (
+                f"🔎 <b>Результат поиска</b>\n"
+                f"📦 Код: <code>{code}</code>\n"
+                f"ℹ️ Статус: <b>{status_text}</b>\n"
+                f"🔐 {ownership}"
+            )
+        else:
+            response = (
+                f"❌ Трек-код <code>{code}</code> не найден в базе.\n"
+                f"Хотите добавить его в свой список?"
+            )
 
+        await message.answer(response, reply_markup=cancel_keyboard)
+
+    # Много кодов - списком
     else:
-        # --- МНОГО КОДОВ (Кратко с разбивкой) ---
-        response_lines = [f"📦 <b>Результаты проверки ({len(track_codes)} шт.):</b>\n"]
+        result_lines = [f"📦 <b>Проверка {len(track_codes)} кодов:</b>\n"]
 
-        for track_code_text in track_codes:
-            try:
-                track_info = await get_track_code(track_code_text)
-                if track_info:
-                    status = track_info['status']
-                    status_msg = status_messages.get(status, "Статус неизвестен")
-                    response_lines.append(f"• <code>{track_code_text}</code> — ✅ <b>{status_msg}</b>")
-                else:
-                    response_lines.append(f"• <code>{track_code_text}</code> — ❌ Не найден")
-            except Exception:
-                response_lines.append(f"• <code>{track_code_text}</code> — ⚠️ Ошибка")
+        for code in track_codes:
+            info = await get_track_code(code)
+            if info:
+                status_text = STATUS_MESSAGES.get(info['status'], "Неизв.")
+                is_mine = " (Ваш)" if info.get('tg_id') == user_id else ""
+                result_lines.append(f"• <code>{code}</code>: {status_text}{is_mine}")
+            else:
+                result_lines.append(f"• <code>{code}</code>: ❌ Нет в базе")
 
-        await send_chunked_response(message, "\n".join(response_lines))
-
-    # Предлагаем продолжить
-    await message.answer(
-        "Отправьте следующий трек-код (список или файл) или нажмите '<b>Отмена</b>'.",
-        reply_markup=cancel_keyboard
-    )
+        await send_chunked_response(message, "\n".join(result_lines))
+        await message.answer("Готово! Отправьте еще или нажмите Отмена.", reply_markup=cancel_keyboard)
 
 
-# ************************************************
-# 2. ПРОСМОТР СВОИХ ТРЕК-КОДОВ
-# ************************************************
-
+# --- МОИ КОДЫ ---
 @track_code_search_router.callback_query(F.data == "my_track_codes")
 async def view_my_track_codes(callback: CallbackQuery):
-    """Отправляет пользователю список его трек-кодов (с разбивкой на части)."""
     await callback.message.delete()
-    user_tg_id = callback.from_user.id
-    track_codes = await get_user_track_codes(user_tg_id)
 
-    if track_codes:
-        response_lines = ["📋 <b>Ваши отслеживаемые трек-коды:</b>\n"]
-        for my_track_code, status in track_codes:
-            status_message = status_messages.get(status, "Неизвестный статус")
-            response_lines.append(f"• <code>{my_track_code}</code> — <i>{status_message}</i>")
+    my_codes = await get_user_track_codes(callback.from_user.id)
 
-        await send_chunked_response(callback, "\n".join(response_lines))
-
+    if not my_codes:
         await callback.message.answer(
-            "Что хотите сделать дальше?",
+            "📭 Ваш список отслеживания пуст.",
             reply_markup=add_track_codes_follow_up_keyboard
         )
-    else:
-        await callback.message.answer(
-            "У вас нет отслеживаемых трек-кодов.\n"
-            "Используйте <b>Добавить трек-коды</b>, чтобы они появились здесь.",
-            reply_markup=add_track_codes_follow_up_keyboard
-        )
+        await callback.answer()
+        return
 
-    await callback.answer()
+    response_lines = [f"📋 <b>Ваши трек-коды ({len(my_codes)} шт.):</b>\n"]
 
+    for code, status in my_codes:
+        status_text = STATUS_MESSAGES.get(status, status)
+        response_lines.append(f"• <code>{code}</code> — {status_text}")
 
-# ************************************************
-# 3. ПЕРЕХОД К ПРОВЕРКЕ ТРЕК-КОДА (Через Inline-кнопку)
-# ************************************************
+    await send_chunked_response(callback, "\n".join(response_lines))
 
-@track_code_search_router.callback_query(F.data == "start_check_codes")
-async def start_check_codes_from_follow_up(callback: CallbackQuery, state: FSMContext) -> None:
-    """Запускает процесс проверки статуса трек-кода по нажатию Inline-кнопки."""
-    await callback.message.delete()
     await callback.message.answer(
-        "Вы перешли в режим проверки. Отправьте <b>трек-код</b> (список или файл) для проверки.",
-        reply_markup=cancel_keyboard
+        "Меню управления:",
+        reply_markup=add_track_codes_follow_up_keyboard
     )
-    await state.set_state(TrackCodeStates.check_single_code)
-    await callback.answer()
