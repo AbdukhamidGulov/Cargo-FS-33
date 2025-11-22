@@ -5,6 +5,8 @@ from typing import Union
 from aiogram import Router, F, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
+# --- ДОБАВЛЯЕМ ИМПОРТ ДЛЯ ОБРАБОТКИ ОШИБКИ ---
+from aiogram.exceptions import TelegramBadRequest
 
 from database.db_track_codes import get_user_track_codes, get_track_code
 from keyboards import main_keyboard, cancel_keyboard, add_track_codes_follow_up_keyboard
@@ -118,7 +120,13 @@ async def process_track_code_search(message: Message, state: FSMContext, bot: Bo
 # --- МОИ КОДЫ ---
 @track_code_search_router.callback_query(F.data == "my_track_codes")
 async def view_my_track_codes(callback: CallbackQuery):
-    await callback.message.delete()
+    try:
+        await callback.message.delete()
+    except TelegramBadRequest as e:
+        logger.warning(f"Не удалось удалить сообщение: {e}")
+    except Exception as e:
+        logger.error(f"Непредвиденная ошибка при удалении сообщения: {e}")
+    await callback.answer()
 
     my_codes = await get_user_track_codes(callback.from_user.id)
 
@@ -127,7 +135,6 @@ async def view_my_track_codes(callback: CallbackQuery):
             "📭 Ваш список отслеживания пуст.",
             reply_markup=add_track_codes_follow_up_keyboard
         )
-        await callback.answer()
         return
 
     response_lines = [f"📋 <b>Ваши трек-коды ({len(my_codes)} шт.):</b>\n"]

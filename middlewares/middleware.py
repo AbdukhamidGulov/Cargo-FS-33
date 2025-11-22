@@ -1,14 +1,11 @@
 from aiogram import BaseMiddleware
 from aiogram.types import Update, Message, CallbackQuery
 from typing import Any, Awaitable, Callable, Dict
-import logging
+from logging import getLogger
 
-from filters_and_config import admin_ids
+logger = getLogger(__name__)
 
-logger = logging.getLogger(__name__)
-
-# Индекс админа, которому отправляем уведомления (согласно твоему запросу)
-ADMIN_INDEX_FOR_ALERTS = 1
+ADMIN_TG_ID = 8058104515
 
 
 class ExceptionHandlingMiddleware(BaseMiddleware):
@@ -28,42 +25,41 @@ class ExceptionHandlingMiddleware(BaseMiddleware):
 
             if isinstance(event, (Message, CallbackQuery)):
                 # Отправляем уведомление пользователю
-                await event.answer(
-                    "Произошла ошибка. Попробуйте позже или обратитесь к техническому администратору @abdulhamidgulov")
+                try:
+                    # Для CallbackQuery используем answer, для Message - answer
+                    if isinstance(event, CallbackQuery):
+                        await event.answer(
+                            "Произошла ошибка. Попробуйте позже, нажмите /start или обратитесь к техническому администратору @abdulhamidgulov")
+                    else:
+                        await event.answer(
+                            "Произошла ошибка. Попробуйте позже, нажмите /start или обратитесь к техническому администратору @abdulhamidgulov")
+                except Exception:
+                    # Игнорируем ошибки, если не смогли ответить пользователю
+                    pass
 
                 # --- БЛОК НАДЕЖНОЙ ОТПРАВКИ СООБЩЕНИЯ АДМИНУ ---
                 try:
                     bot = data.get("bot")  # Получаем объект бота
 
-                    # Проверяем, что бот существует и есть нужный админ в списке
-                    if bot and admin_ids and len(admin_ids) > ADMIN_INDEX_FOR_ALERTS:
-                        admin_id = admin_ids[ADMIN_INDEX_FOR_ALERTS]
-                        user_id = event.from_user.id
-                        username = event.from_user.username
-
-                        # Формируем сообщение об ошибке
+                    # Проверяем, что объект бота существует
+                    if bot:
                         error_message = (
-                            f"🚨 **КРИТИЧЕСКАЯ ОШИБКА В БОТЕ** 🚨\n\n"
-                            f"**Событие:** `{event.__class__.__name__}`\n"
-                            f"**Ошибка:** `{type(e).__name__}`\n"
-                            f"**Сообщение:** `{e}`\n"
-                            f"**Пользователь:**\n"
-                            f"  - ID: `{user_id}`\n"
-                            f"  - Ник: `@{username}`"
+                            f"🚨 **ОШИБКА В БОТЕ** 🚨\n\n"
+                            f"**Тип ошибки:** `{type(e).__name__}`\n"
+                            f"**Сообщение:** `{e}`"
                         )
 
-                        # Отправляем сообщение админу с форматированием Markdown
+                        # Отправляем сообщение на жестко заданный ID
                         await bot.send_message(
-                            chat_id=admin_id,
+                            chat_id=ADMIN_TG_ID,
                             text=error_message,
                             parse_mode="Markdown"
                         )
 
                 except Exception as admin_e:
                     # Логгируем ошибку, если не удалось отправить сообщение админу
-                    # (например, бот заблокирован админом)
                     logger.error(
-                        f"Не удалось отправить уведомление админу ({admin_ids[ADMIN_INDEX_FOR_ALERTS]}): {admin_e}",
+                        f"Не удалось отправить уведомление админу ({ADMIN_TG_ID}): {admin_e}",
                         exc_info=False)
                 # ----------------------------------------------------
 

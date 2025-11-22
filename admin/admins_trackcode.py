@@ -70,7 +70,7 @@ async def extract_parsed_codes(content: str, status: str) -> List[Tuple[str, Opt
 
 # --- ДОБАВЛЕНИЕ ТРЕК-КОДОВ ---
 
-@admin_tc_router.message(F.text == "️Добавить пребывшие на склад трек-коды", IsAdmin(admin_ids))
+@admin_tc_router.message(F.text == "️Добавить прибывшие на склад трек-коды", IsAdmin(admin_ids))
 async def add_in_stock_track_codes(message: Message, state: FSMContext):
     await message.answer("Отправьте список кодов (текст/файл) для статуса <b>На складе</b>.",
                          reply_markup=cancel_keyboard)
