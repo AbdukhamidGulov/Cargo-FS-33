@@ -62,9 +62,6 @@ def get_main_inline_keyboard(user_id: int) -> InlineKeyboardMarkup:
         [
             create_inline_button("Тарифы", callback_data="tariffs"),
             create_inline_button("Чат Карго FS-33", url="https://t.me/cargoFS33")
-        ],
-        [
-            create_inline_button("Заполнение бланка Таможни", callback_data="customs_form_filling")
         ]
     ]
 

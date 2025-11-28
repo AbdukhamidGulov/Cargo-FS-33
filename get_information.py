@@ -72,7 +72,7 @@ async def send_order_form(message: Message):
         await message.answer("Информация о бланке не найдена.")
 
 
-@get_info_router.message(F.text == "Бланк для Таможни")
+@get_info_router.message(F.text == "Бланк Таможни")
 async def send_customs_form(message: Message):
     """Отправляет текст и файл-образец 'Бланка Таможни'."""
     customs_text = await get_info_content("customs_form_text")

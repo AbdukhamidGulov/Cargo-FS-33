@@ -4,7 +4,7 @@ from typing import Dict, Any
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message
 
 from database.db_users import get_info_profile, update_user_info, get_user_by_id
 from keyboards import cancel_keyboard, main_keyboard
@@ -75,27 +75,24 @@ async def check_missing_data_and_prompt(message: Message, state: FSMContext, use
 
 
 # --- ТОЧКА ВХОДА ---
-
-@user_data_router.callback_query(F.data == "customs_form_filling")
-async def start_order_process(callback: CallbackQuery, state: FSMContext):
-    user_id = callback.from_user.id
+@user_data_router.message(F.text == "Бланк для Таможни")
+async def start_order_process(message: Message, state: FSMContext):
+    user_id = message.from_user.id
     await state.clear()
 
     # Режим Админа
     if user_id in admin_ids:
-        await callback.message.answer(
-            "💻 <b>Режим Админа</b>\nВведите ID клиента (число или FSxxxx):",
+        await message.answer(
+            "💻 <b>Режим админа для заполнения Бланка Таможни</b>\nВведите ID клиента (число или FSxxxx):",
             reply_markup=cancel_keyboard
         )
         await state.set_state(UserDataStates.admin_waiting_for_client_code)
-        await callback.answer()
         return
 
     # Режим Пользователя
     user_info = await get_info_profile(user_id)
     if not user_info:
-        await callback.message.answer("❌ Ошибка профиля. Нажмите /start")
-        await callback.answer()
+        await message.answer("❌ Ошибка профиля. Нажмите /start")
         return
 
     await state.update_data(
@@ -105,9 +102,8 @@ async def start_order_process(callback: CallbackQuery, state: FSMContext):
         form_title="Таможенный Бланк"
     )
 
-    await callback.message.answer("📝 Начинаем заполнение...")
-    await check_missing_data_and_prompt(callback.message, state, user_info)
-    await callback.answer()
+    await message.answer("📝 Начинаем заполнение...")
+    await check_missing_data_and_prompt(message, state, user_info)
 
 
 # --- ОБРАБОТКА ДАННЫХ ---
