@@ -34,11 +34,11 @@ def create_inline_keyboard(buttons: list[list[InlineKeyboardButton]]) -> InlineK
 
 # Клавиатуры главного меню (Reply Keyboard)
 main_menu_buttons = [
-    ["Бланк для Заказа", "Бланк для Таможни"],
-    ["Где брать трек-номер", "Добавить трек-кода"],
-    ["Калькулятор объёма", "Консолидация"],
-    ["Проверка трек-кодов", "Проверка товаров"],
-    ["Расчёт страховки", "Упаковка"]
+    ["Адрес склада", "Бланк для Заказа"],
+    ["Бланк для Таможни", "Где брать трек-номер"],
+    ["Добавить трек-кода", "Калькулятор объёма"],
+    ["Консолидация", "Проверка трек-кодов"],
+    ["Проверка товаров", "Тарифы"]
 ]
 
 main_keyboard = create_keyboard([[create_keyboard_button(text) for text in row] for row in main_menu_buttons])
@@ -53,14 +53,14 @@ def get_main_inline_keyboard(user_id: int) -> InlineKeyboardMarkup:
             # Кнопка "Админ" либо ведет в админку, либо на контакт админа
             create_inline_button("Админ", callback_data="admin_panel" if is_admin else None,
                                  url="https://t.me/fir2201" if not is_admin else None),
-            create_inline_button("Адрес склада", callback_data="warehouse_address")
+            create_inline_button("Курс Alipay", url="https://t.me/Alipay_Chat_ru")
         ],
         [
-            create_inline_button("Курс Alipay", url="https://t.me/Alipay_Chat_ru"),
             create_inline_button("Мой профиль", callback_data="my_profile"),
+            create_inline_button("Страхование", callback_data="insurance"),
         ],
         [
-            create_inline_button("Тарифы", callback_data="tariffs"),
+            create_inline_button("Упаковка", callback_data="packing"),
             create_inline_button("Чат Карго FS-33", url="https://t.me/cargoFS33")
         ]
     ]

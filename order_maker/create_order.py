@@ -185,11 +185,18 @@ async def process_link(message: Message, state: FSMContext):
 
 @order_router.callback_query(OrderItemsStates.confirm_next_step, F.data == "order_add_next")
 async def add_next_item(callback: CallbackQuery, state: FSMContext):
-    await callback.message.delete()
+    if isinstance(callback.message, Message):
+        try:
+            await callback.message.delete()
+        except Exception:
+            pass
+
     data = await state.get_data()
     next_num = len(data.get("items", [])) + 1
 
-    await callback.message.answer(f"📦 <b>Товар №{next_num}</b>\n📸 <b>Отправьте фото:</b>")
+    await callback.message.answer(
+        f"📦 <b>Товар №{next_num}</b>\n📸 <b>Отправьте фото:</b>"
+    )
     await state.set_state(OrderItemsStates.waiting_for_photo)
 
 

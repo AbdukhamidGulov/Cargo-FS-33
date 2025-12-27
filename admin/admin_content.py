@@ -23,7 +23,7 @@ class ContentEdit(StatesGroup):
 CONTENT_TYPES = {
     "text": [
         "warehouse_address", "blank_text", "tariffs_text", "goods_check_text", "consolidation_text",
-        "forbidden_goods", "packing_text", "prices_text", "customs_form_text"
+        "forbidden_goods", "packing_text", "prices_text", "customs_form_text", "insurance_info"
     ],
     "photo": [
         "main_menu_photo", "sample_1688", "sample_Taobao", "sample_Pinduoduo", "sample_Poizon",
@@ -59,6 +59,7 @@ KEY_NAMES = {
     "packing_text": "Текст 'Упаковка'",
     "prices_text": "Текст 'Цены'",
     "customs_form_text": "Текст 'Бланк Таможни'",
+    "insurance_info": "Текст 'Страхование'",
 
     # Фото
     "main_menu_photo": "Фото 'Главное меню'",

@@ -12,22 +12,21 @@ get_info_router = Router()
 
 
 # ВСЯ ОБРАБОТКА ДЛЯ АДРЕСА СКЛАДА И ОБРАЗЦОВ
-@get_info_router.callback_query(F.data == "warehouse_address")
-async def address(callback: CallbackQuery):
+@get_info_router.message(F.text == "Адрес склада")
+async def address(message: Message):
     """Отправляет адрес склада пользователю."""
-    await callback.message.delete()
-    id_from_user = await get_user_by_tg_id(callback.from_user.id)
+    id_from_user = await get_user_by_tg_id(message.from_user.id)
     if not id_from_user:
-        await callback.message.answer(
+        await message.answer(
             "❌ Вы не зарегистрированы!\n\nХотите зарегистрироваться?", reply_markup=reg_keyboard)
         return
     fs = f"{id_from_user:04d}"
     warehouse_address_template = await get_info_content("warehouse_address")
     if warehouse_address_template:
-        await callback.message.answer(warehouse_address_template.format(fs))
-        await callback.message.answer("Нажмите чтобы увидеть образцы", reply_markup=create_samples_keyboard())
+        await message.answer(warehouse_address_template.format(fs))
+        await message.answer("Нажмите чтобы увидеть образцы", reply_markup=create_samples_keyboard())
     else:
-        await callback.message.answer("Адрес склада не найден. Обратитесь к техническому администратору @abdulhamidgulov")
+        await message.answer("Адрес склада не найден. Обратитесь к техническому администратору @abdulhamidgulov")
 
 
 @get_info_router.callback_query(F.data.startswith("simple_"))
@@ -109,18 +108,31 @@ async def handle_track_info(callback: CallbackQuery):
         await callback.message.answer("Информация о трек-номерах не найдена.")
 
 
-@get_info_router.callback_query(F.data == "tariffs")
-async def send_tariffs(callback: CallbackQuery):
+@get_info_router.message(F.text == "Тарифы")
+async def send_tariffs(message: Message):
     """Отправляет информацию о тарифах."""
-    await callback.message.delete()
     tariffs_text = await get_info_content("tariffs_text")
     tariffs_document = await get_info_content("tariffs_document")
     if tariffs_text:
-        await callback.message.answer(tariffs_text)
+        await message.answer(tariffs_text)
     if tariffs_document:
-        await callback.message.answer_document(document=tariffs_document)
+        await message.answer_document(document=tariffs_document)
     else:
-        await callback.message.answer("Информация о тарифах не найдена.")
+        await message.answer("Информация о тарифах не найдена.")
+
+
+@get_info_router.callback_query(F.data == "insurance")
+async def send_insurance_info(callback: CallbackQuery):
+    """Отправляет информацию о страховании."""
+    await callback.message.delete()
+    await callback.answer()
+
+    insurance_text = await get_info_content("insurance_info")
+    if insurance_text:
+        await callback.message.answer(insurance_text)
+    else:
+        await callback.message.answer("Информация о страховании не найдена. "
+                                      "Обратитесь к техническому администратору @abdulhamidgulov")
 
 
 @get_info_router.message(F.text == "Проверка товаров")
@@ -173,6 +185,18 @@ async def send_consolidation(message: Message):
         await message.answer("Информация о консолидации не найдена.")
 
 
+@get_info_router.callback_query(F.data == "packing")
+async def send_packing(callback: CallbackQuery):
+    """Отправляет фото и текст об упаковке."""
+    await callback.message.delete()
+    packing_photo_id = await get_info_content("packing_photo")
+    packing_text = await get_info_content("packing_text")
+    if packing_photo_id and packing_text:
+        await callback.message.answer_photo(packing_photo_id, packing_text)
+    else:
+        await callback.message.answer("Информация об упаковке не найдена.")
+
+
 @get_info_router.message(F.text == "Запрещённые товары")
 async def send_forbidden_goods(message: Message):
     """Отправляет информацию о запрещённых товарах."""
@@ -181,17 +205,6 @@ async def send_forbidden_goods(message: Message):
         await message.answer(forbidden_goods_text)
     else:
         await message.answer("Информация о запрещённых товарах не найдена.")
-
-
-@get_info_router.message(F.text == "Упаковка")
-async def send_packing(message: Message):
-    """Отправляет фото и текст об упаковке."""
-    packing_photo_id = await get_info_content("packing_photo")
-    packing_text = await get_info_content("packing_text")
-    if packing_photo_id and packing_text:
-        await message.answer_photo(packing_photo_id, packing_text)
-    else:
-        await message.answer("Информация об упаковке не найдена.")
 
 
 @get_info_router.message(F.text == "️Цены")
