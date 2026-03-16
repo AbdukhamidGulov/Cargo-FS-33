@@ -23,11 +23,16 @@ from calculator.calculate_shipping import calc_shipping_router
 from middlewares.middleware import ExceptionHandlingMiddleware
 from filters_and_config import TELEGRAM_BOT_TOKEN
 
-bot = Bot(token=TELEGRAM_BOT_TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
+bot = Bot(
+    token=TELEGRAM_BOT_TOKEN,
+    default=DefaultBotProperties(parse_mode='HTML')
+)
 dp = Dispatcher()
-dp.include_routers(commands_router, admin_router, get_info_router, states_router, profile_router, text,
-                   track_code_router, track_code_search_router, user_data_router, order_router, request_router,
-                   calc_volume_router, calc_ins_router, calc_shipping_router)
+dp.include_routers(
+    commands_router, admin_router, get_info_router, states_router, profile_router, text, track_code_router,
+    track_code_search_router, user_data_router, order_router, request_router, calc_volume_router, calc_ins_router,
+    calc_shipping_router
+)
 dp.update.outer_middleware(ExceptionHandlingMiddleware())
 
 basicConfig(level=WARNING, stream=stdout)

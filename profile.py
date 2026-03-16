@@ -7,7 +7,7 @@ from aiogram.types import CallbackQuery, Message
 
 from database.db_users import get_info_profile, update_user_info
 from keyboards import my_profile_keyboard, change_data_keyboard, main_keyboard
-from registration_process import PHONE_VALIDATION_ERROR, ERROR_MESSAGE
+from registration_process import PHONE_VALIDATION_ERROR, ERROR_MESSAGE, validate_email, EMAIL_VALIDATION_ERROR
 
 profile_router = Router()
 logger = getLogger(__name__)
@@ -20,12 +20,16 @@ async def profile(callback: CallbackQuery):
     if not inf:
         await callback.message.answer("Профиль не найден.")
         return
+
     no = "<i>Не заполнено</i>"
+
     await callback.message.answer(
         f"Номер для заказов: <code>FS{inf.get('id'):04d}</code>\n"
         f"Имя: {inf.get('name') or no}\n"
         f"Номер: {inf.get('phone') or no}\n"
+        f"Email: {inf.get('email') or no}\n"
     )
+
     await callback.message.answer("Что нужно сделать ещё?", reply_markup=my_profile_keyboard)
 
 
@@ -45,18 +49,28 @@ class UpdateInfoStates(StatesGroup):
 async def start_field_update(callback: CallbackQuery, state: FSMContext):
     """Запускает процесс изменения данных пользователя, запрашивая новое значение."""
     await callback.message.delete()
-    target_field = callback.data.split("_")[-1]  # "name" или "phone"
+    target_field = callback.data.replace("change_", "")
+
     field_prompts = {
         "name": "Введите новое имя:",
-        "phone": "Введите новый номер телефона:"
+        "phone": "Введите новый номер телефона:",
+        "email": "Введите новый email:"
     }
+
     await state.update_data(field=target_field)
     await state.set_state(UpdateInfoStates.waiting_for_new_value)
     await callback.message.answer(field_prompts[target_field])
 
+
 @profile_router.message(UpdateInfoStates.waiting_for_new_value)
 async def process_new_value(message: Message, state: FSMContext):
     """Обрабатывает введённое пользователем новое значение и обновляет данные."""
+
+    if message.text.lower() == "отмена":
+        await state.clear()
+        await message.answer("Изменение данных отменено.", reply_markup=main_keyboard)
+        return
+
     new_value = message.text.strip()
     state_data = await state.get_data()
     target_field = state_data.get("field")
@@ -66,12 +80,25 @@ async def process_new_value(message: Message, state: FSMContext):
         if not all(c.isdigit() or c in "+-" for c in new_value):
             await message.answer(PHONE_VALIDATION_ERROR)
             return
+
+    # Валидация email
+    if target_field == "email":
+        if not validate_email(new_value):
+            await message.answer(EMAIL_VALIDATION_ERROR)
+            return
+
     try:
         await update_user_info(tg_id=message.from_user.id, field=target_field, value=new_value)
-        field_names = {"name": "Имя", "phone": "Номер телефона"}
+        field_names = {
+            "name": "Имя",
+            "phone": "Номер телефона",
+            "email": "Email"
+        }
         await message.answer(f"{field_names[target_field]} успешно обновлено.", reply_markup=main_keyboard)
+
     except ValueError as e:
         logger.error(f"Ошибка при обновлении {target_field} для пользователя {message.from_user.id}: {e}")
         await message.answer(ERROR_MESSAGE)
+
     finally:
         await state.clear()

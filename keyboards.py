@@ -12,9 +12,17 @@ def create_keyboard_button(text: str) -> KeyboardButton:
     return KeyboardButton(text=text)
 
 
-def create_keyboard(buttons: list[list[KeyboardButton]], resize: bool = True, selective: bool = False) -> ReplyKeyboardMarkup:
+def create_keyboard(
+        buttons: list[list[KeyboardButton]],
+        resize: bool = True,
+        selective: bool = False
+) -> ReplyKeyboardMarkup:
     """Создаёт обычную клавиатуру с заданными кнопками."""
-    return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=resize, selective=selective)
+    return ReplyKeyboardMarkup(
+        keyboard=buttons,
+        resize_keyboard=resize,
+        selective=selective
+    )
 
 
 def create_inline_button(text: str, callback_data: str = None, url: str = None) -> InlineKeyboardButton:
@@ -41,7 +49,9 @@ main_menu_buttons = [
     ["Проверка товаров", "Тарифы"]
 ]
 
-main_keyboard = create_keyboard([[create_keyboard_button(text) for text in row] for row in main_menu_buttons])
+main_keyboard = create_keyboard([
+    [create_keyboard_button(text) for text in row] for row in main_menu_buttons
+])
 
 
 # Инлайн кнопки главного меню (Админ/Профиль/Чаты)
@@ -71,17 +81,27 @@ def get_main_inline_keyboard(user_id: int) -> InlineKeyboardMarkup:
 # Кнопки регистрации
 skip_registration_btn = create_inline_button("️Пропустить", "pass_reg")
 start_registration_btn = create_inline_button("️Пройти регистрацию", "do_reg")
-reg_keyboard = create_inline_keyboard([[skip_registration_btn, start_registration_btn]])
+reg_keyboard = create_inline_keyboard([
+    [skip_registration_btn, start_registration_btn]
+])
 
 # Кнопки профиля
 my_track_codes_btn = create_inline_button("️Мои трек коды", "my_track_codes")
 edit_profile_data_btn = create_inline_button("️Изменить данные", "change_profile_data")
-my_profile_keyboard = create_inline_keyboard([[edit_profile_data_btn, my_track_codes_btn]])
+my_profile_keyboard = create_inline_keyboard([
+    [edit_profile_data_btn, my_track_codes_btn]
+])
 
 # Кнопки изменений данных профиля
 change_name_btn = create_inline_button("Имя и фамилию", "change_name")
 change_phone_btn = create_inline_button("Телефон", "change_phone")
-change_data_keyboard = create_inline_keyboard([[change_name_btn], [change_phone_btn]])
+change_email_btn = create_inline_button("Email", "change_email")
+
+change_data_keyboard = create_inline_keyboard([
+    [change_name_btn],
+    [change_phone_btn],
+    [change_email_btn]
+])
 
 # Кнопки образцов (Inline)
 sample_buttons = {
@@ -121,7 +141,9 @@ item_type_buttons = [
     ["Электроника", "Хозтовары"],
     ["Сборный груз", "Мебель"]
 ]
-item_type_keyboard = create_keyboard([[create_keyboard_button(text) for text in row] for row in item_type_buttons])
+item_type_keyboard = create_keyboard([
+    [create_keyboard_button(text) for text in row] for row in item_type_buttons
+])
 
 # Кнопки после успешного добавления трек-кодов (Inline)
 add_more_codes_btn = create_inline_button("➕ Добавить ещё трек-коды", "add_more_track_codes")
@@ -168,7 +190,12 @@ confirm_keyboard = create_inline_keyboard([[yes_btn, no_btn]])
 
 
 # Функция для редактирования пользователя (Inline)
-def get_admin_edit_user_keyboard(internal_user_id: int, has_username: bool, has_phone: bool) -> InlineKeyboardMarkup:
+def get_admin_edit_user_keyboard(
+        internal_user_id: int,
+        has_username: bool,
+        has_phone: bool
+) -> InlineKeyboardMarkup:
+
     """
     Создает инлайн-клавиатуру для админа для редактирования данных пользователя.
     """
@@ -181,6 +208,7 @@ def get_admin_edit_user_keyboard(internal_user_id: int, has_username: bool, has_
         text=f"👤 {username_text}",
         callback_data=f"admin_edit_username:{internal_user_id}"
     )
+
     phone_btn = create_inline_button(
         text=f"📞 {phone_text}",
         callback_data=f"admin_edit_phone:{internal_user_id}"

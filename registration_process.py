@@ -1,3 +1,4 @@
+import re
 from logging import getLogger
 
 from aiogram import Router, F
@@ -30,25 +31,49 @@ async def start_registration(callback: CallbackQuery, state: FSMContext):
 
 
 ERROR_MESSAGE = "Произошла ошибка при обновлении данных. Попробуйте позже или обратитесь к администратору."
+
 PHONE_VALIDATION_ERROR = ("Пожалуйста, введите корректный номер телефона. Используйте только цифры, "
                           "знак '+' в начале (если нужно) или '-' для разделения (например, +79991234567 или 8-999-123-45-67).")
+
+EMAIL_REGEX = r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
+EMAIL_VALIDATION_ERROR = "Введите корректный email (пример: example@mail.com)"
+
+
+def validate_email(email: str) -> bool:
+    """Проверяет корректность email."""
+    return re.match(EMAIL_REGEX, email) is not None
 
 
 @states_router.message(Registration.name)
 async def process_user_name(message: Message, state: FSMContext):
-    """Обрабатывает введённое имя пользователя и запрашивает номер телефона. """
+    """Обрабатывает введённое имя пользователя и запрашивает номер телефона."""
+
+    if message.text.lower() == "отмена":
+        await state.clear()
+        await message.answer("Регистрация отменена.", reply_markup=main_keyboard)
+        return
+
     user_name = message.text.title()
+
     await state.update_data(name=user_name)
     await state.set_state(Registration.number)
+
     await message.answer("Напишите номер вашего телефона пожалуйста:")
+
 
 @states_router.message(Registration.number)
 async def process_user_number(message: Message, state: FSMContext):
     """Обрабатывает введённый номер телефона и завершает регистрацию."""
+
+    if message.text.lower() == "отмена":
+        await state.clear()
+        await message.answer("Регистрация отменена.", reply_markup=main_keyboard)
+        return
+
     phone_number = message.text.strip()
-    # Базовая проверка номера телефона
+
     if not all(c.isdigit() or c in "+-" for c in phone_number):
-        await message.answer("Пожалуйста, введите корректный номер телефона (только цифры, + или -).")
+        await message.answer(PHONE_VALIDATION_ERROR)
         return
 
     await state.update_data(number=phone_number)
@@ -61,6 +86,7 @@ async def process_user_number(message: Message, state: FSMContext):
         name=user_data["name"],
         phone=user_data["number"]
     )
+
     await send_welcome_messages(message, new_user["id"])
 
 
