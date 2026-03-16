@@ -7,8 +7,9 @@ from aiogram.types import Message, CallbackQuery
 
 from database.db_track_codes import get_track_code
 from database.db_users import get_info_profile, get_user_by_id, update_user_by_internal_id
-from keyboards import get_admin_edit_user_keyboard, cancel_keyboard, main_keyboard
 from filters_and_config import IsAdmin, admin_ids
+from keyboards.admin_keyboards import get_admin_edit_user_keyboard
+from keyboards.user_keyboards import cancel_keyboard, main_keyboard
 
 admin_search_router = Router()
 logger = getLogger(__name__)

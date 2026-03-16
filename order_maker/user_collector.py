@@ -7,7 +7,7 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message
 
 from database.db_users import get_info_profile, update_user_info, get_user_by_id
-from keyboards import cancel_keyboard, main_keyboard
+from keyboards.user_keyboards import cancel_keyboard, main_keyboard
 from filters_and_config import admin_ids
 
 user_data_router = Router()

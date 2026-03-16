@@ -15,7 +15,7 @@ from openpyxl.drawing.image import Image as ExcelImage
 from openpyxl.styles import Alignment, Font, Border, Side
 from PIL import Image as PilImage
 
-from keyboards import cancel_keyboard, main_keyboard, get_order_keyboard
+from keyboards.user_keyboards import cancel_keyboard, main_keyboard, get_order_keyboard
 
 order_router = Router()
 logger = getLogger(__name__)

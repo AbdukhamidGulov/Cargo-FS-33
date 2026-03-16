@@ -5,7 +5,7 @@ from aiogram import F, Router
 
 from database.db_info_content import get_info_content
 from database.db_users import get_info_profile, get_user_by_tg_id
-from keyboards import main_keyboard, where_get_keyboard, reg_keyboard, create_samples_keyboard
+from keyboards.user_keyboards import main_keyboard, where_get_keyboard, reg_keyboard, create_samples_keyboard
 
 logger = getLogger(__name__)
 get_info_router = Router()

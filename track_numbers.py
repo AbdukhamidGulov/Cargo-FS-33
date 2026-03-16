@@ -1,21 +1,19 @@
 from re import findall, IGNORECASE
 from logging import getLogger
-from typing import Union, List, Tuple
+from typing import Union, List
 
 from aiogram import Router, F, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, CallbackQuery
 
-# Импортируем восстановленную функцию из db_track_codes
 from database.db_track_codes import add_multiple_track_codes
-from keyboards import main_keyboard, cancel_keyboard, add_track_codes_follow_up_keyboard
+from keyboards.user_keyboards import main_keyboard, cancel_keyboard, add_track_codes_follow_up_keyboard
 from utils.message_common import extract_text_from_message
 
 track_code_router = Router()
 logger = getLogger(__name__)
 
-# Этот шаблон используется и здесь, и в поиске
 TRACK_CODE_PATTERN = r'[A-Z0-9]{8,}'
 
 
@@ -57,7 +55,6 @@ async def start_add_codes(event: Union[Message, CallbackQuery], state: FSMContex
 # --- ОБРАБОТКА ---
 @track_code_router.message(TrackCodeStates.add_multiple_codes)
 async def process_multiple_track_codes(message: Message, state: FSMContext, bot: Bot):
-    # Обновление: extract_text_from_message теперь принимает bot
     raw_text = await extract_text_from_message(message, bot)
 
     if not raw_text:

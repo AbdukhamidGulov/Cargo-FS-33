@@ -4,7 +4,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message
 
-from keyboards import main_keyboard, item_type_keyboard,  get_main_inline_keyboard
+from keyboards.user_keyboards import item_type_keyboard, get_main_inline_keyboard, main_keyboard
 
 calc_ins_router = Router()
 item_types = [

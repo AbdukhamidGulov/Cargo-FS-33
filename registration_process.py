@@ -7,7 +7,7 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, CallbackQuery
 
 from database.db_users import add_user_info
-from keyboards import main_keyboard
+from keyboards.user_keyboards import main_keyboard
 
 states_router = Router()
 logger = getLogger(__name__)

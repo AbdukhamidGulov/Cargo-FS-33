@@ -6,7 +6,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, Message
 
 from filters_and_config import admin_ids
-from keyboards import get_main_inline_keyboard
+from keyboards.user_keyboards import get_main_inline_keyboard
 
 request_router = Router()
 logger = getLogger(__name__)

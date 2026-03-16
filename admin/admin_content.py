@@ -7,7 +7,8 @@ from aiogram.fsm.state import StatesGroup, State
 
 from database.db_info_content import get_info_content, update_info_content
 from filters_and_config import IsAdmin, admin_ids
-from keyboards import create_inline_button, create_inline_keyboard, main_keyboard, cancel_keyboard
+from keyboards.common_keyboards import create_inline_button, create_inline_keyboard
+from keyboards.user_keyboards import cancel_keyboard, main_keyboard
 
 admin_content_router = Router()
 logger = getLogger(__name__)

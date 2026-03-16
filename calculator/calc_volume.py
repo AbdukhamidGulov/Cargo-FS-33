@@ -4,7 +4,7 @@ from aiogram.types import Message
 from aiogram.fsm.state import State, StatesGroup
 
 from database.db_info_content import get_info_content
-from keyboards import main_keyboard, get_main_inline_keyboard
+from keyboards.user_keyboards import get_main_inline_keyboard, main_keyboard
 
 calc_volume_router = Router()
 

@@ -5,11 +5,10 @@ from typing import Union
 from aiogram import Router, F, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
-# --- ДОБАВЛЯЕМ ИМПОРТ ДЛЯ ОБРАБОТКИ ОШИБКИ ---
 from aiogram.exceptions import TelegramBadRequest
 
 from database.db_track_codes import get_user_track_codes, get_track_code
-from keyboards import main_keyboard, cancel_keyboard, add_track_codes_follow_up_keyboard
+from keyboards.user_keyboards import main_keyboard, cancel_keyboard, add_track_codes_follow_up_keyboard
 from utils.message_common import send_chunked_response, extract_text_from_message
 
 from track_numbers import TRACK_CODE_PATTERN, TrackCodeStates

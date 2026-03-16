@@ -6,7 +6,7 @@ from aiogram.types import Message, BotCommand, BotCommandScopeAllPrivateChats
 
 from database.db_info_content import get_info_content
 from database.db_users import get_user_by_tg_id
-from keyboards import main_keyboard, get_main_inline_keyboard, reg_keyboard
+from keyboards.user_keyboards import main_keyboard, get_main_inline_keyboard, reg_keyboard
 
 commands_router = Router()
 logger = getLogger(__name__)
