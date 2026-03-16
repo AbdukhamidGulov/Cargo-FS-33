@@ -1,5 +1,4 @@
 from logging import getLogger
-from aiocache import cached
 from sqlalchemy import select, update, BigInteger, VARCHAR
 from sqlalchemy.orm import Mapped, mapped_column
 from .db_base import async_session, Base, engine
@@ -41,7 +40,6 @@ async def add_user_info(tg_id: int, username: str, name: str, phone: str = None)
             return user.to_dict()
 
 
-@cached(ttl=300)  # Кэш на 5 минут
 async def get_user_by_tg_id(tg_id: int):
     """Возвращает ID пользователя из таблицы users по его Telegram ID."""
     async with async_session() as session:
