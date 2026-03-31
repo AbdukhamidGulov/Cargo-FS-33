@@ -134,3 +134,12 @@ def get_order_keyboard() -> InlineKeyboardMarkup:
         [create_inline_button("➕ Добавить ещё товар", "order_add_next")],
         [create_inline_button("✅ Закончить и получить Excel", "order_finish")]
     ])
+
+# Клавиатура для подтверждение отмены
+cancel_form_yes_btn = create_inline_button("✅ Да, отменить", "order_cancel_confirm")
+cancel_form_no_btn = create_inline_button("↩️ Нет, продолжить", "order_cancel_continue")
+
+order_cancel_confirm_keyboard = create_inline_keyboard([
+    [cancel_form_yes_btn],
+    [cancel_form_no_btn]
+])

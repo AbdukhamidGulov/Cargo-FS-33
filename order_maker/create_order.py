@@ -8,20 +8,26 @@ from uuid import uuid4
 from aiogram import Router, F, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
-from aiogram.types import Message, CallbackQuery, FSInputFile
+from aiogram.types import Message, CallbackQuery, FSInputFile, ReplyKeyboardRemove
 
 from openpyxl import Workbook
 from openpyxl.drawing.image import Image as ExcelImage
 from openpyxl.styles import Alignment, Font, Border, Side
 from PIL import Image as PilImage
 
-from keyboards.user_keyboards import cancel_keyboard, main_keyboard, get_order_keyboard
+from keyboards.user_keyboards import main_keyboard, get_order_keyboard
+from .order_cancel_flow import (
+    ask_order_cancel_confirmation,
+    confirm_order_cancel,
+    continue_order_after_cancel,
+)
 
 order_router = Router()
 logger = getLogger(__name__)
 
 TEMP_FOLDER = "temp_orders"
 IMAGE_SIZE = (120, 120)
+CANCEL_TEXTS = {"/cancel", "/Cancel", "отмена", "Отмена", "ОТМЕНА"}
 
 
 class OrderItemsStates(StatesGroup):
@@ -30,6 +36,7 @@ class OrderItemsStates(StatesGroup):
     waiting_for_track_code = State()
     waiting_for_link = State()
     confirm_next_step = State()
+    confirm_cancel = State()
 
 
 def generate_excel_sync(
@@ -152,25 +159,62 @@ async def start_item_collection(message: Message, state: FSMContext):
 
     await message.answer(
         "✅ Данные подтверждены.\n\n"
-        "📦 <b>Товар №1</b>\n📸 <b>Отправьте фото товара</b>:",
-        reply_markup=cancel_keyboard
+        "📦 <b>Товар №1</b>\n"
+        "📸 <b>Отправьте фото товара</b>:\n\n"
+        "Для отмены напишите: <code>/cancel</code>",
+        reply_markup=ReplyKeyboardRemove()
     )
     await state.set_state(OrderItemsStates.waiting_for_photo)
 
 
-async def cancel_order_handler(message: Message, state: FSMContext):
-    logger.info("Пользователь отменил заполнение бланка. tg_id=%s", message.from_user.id)
+@order_router.message(F.text.in_(CANCEL_TEXTS))
+async def order_cancel_request(message: Message, state: FSMContext):
+    current_state = await state.get_state()
 
-    await state.clear()
-    await message.answer("Действие отменено.", reply_markup=main_keyboard)
+    active_states = {
+        OrderItemsStates.waiting_for_photo.state,
+        OrderItemsStates.waiting_for_quantity.state,
+        OrderItemsStates.waiting_for_track_code.state,
+        OrderItemsStates.waiting_for_link.state,
+        OrderItemsStates.confirm_next_step.state,
+    }
+
+    if current_state in active_states:
+        await ask_order_cancel_confirmation(
+            message=message,
+            state=state,
+            confirm_state=OrderItemsStates.confirm_cancel,
+            logger=logger,
+        )
+
+
+@order_router.callback_query(OrderItemsStates.confirm_cancel, F.data == "order_cancel_confirm")
+async def confirm_order_cancel_handler(callback: CallbackQuery, state: FSMContext):
+    await confirm_order_cancel(
+        callback=callback,
+        state=state,
+        logger=logger,
+    )
+
+
+@order_router.callback_query(OrderItemsStates.confirm_cancel, F.data == "order_cancel_continue")
+async def continue_order_after_cancel_handler(callback: CallbackQuery, state: FSMContext):
+    await continue_order_after_cancel(
+        callback=callback,
+        state=state,
+        logger=logger,
+        state_ids={
+            "waiting_for_photo": OrderItemsStates.waiting_for_photo.state,
+            "waiting_for_quantity": OrderItemsStates.waiting_for_quantity.state,
+            "waiting_for_track_code": OrderItemsStates.waiting_for_track_code.state,
+            "waiting_for_link": OrderItemsStates.waiting_for_link.state,
+            "confirm_next_step": OrderItemsStates.confirm_next_step.state,
+        },
+    )
 
 
 @order_router.message(OrderItemsStates.waiting_for_photo)
 async def process_photo(message: Message, state: FSMContext):
-    if message.text and message.text.lower() == "отмена":
-        await cancel_order_handler(message, state)
-        return
-
     if not message.photo:
         await message.answer("Пожалуйста, отправьте <b>сжатое фото</b>, а не файл.")
         return
@@ -189,10 +233,6 @@ async def process_photo(message: Message, state: FSMContext):
 
 @order_router.message(OrderItemsStates.waiting_for_quantity, F.text)
 async def process_quantity(message: Message, state: FSMContext):
-    if message.text.lower() == "отмена":
-        await cancel_order_handler(message, state)
-        return
-
     await state.update_data(current_quantity=message.text)
 
     logger.info(
@@ -207,10 +247,6 @@ async def process_quantity(message: Message, state: FSMContext):
 
 @order_router.message(OrderItemsStates.waiting_for_track_code, F.text)
 async def process_track(message: Message, state: FSMContext):
-    if message.text.lower() == "отмена":
-        await cancel_order_handler(message, state)
-        return
-
     await state.update_data(current_track=message.text)
 
     logger.info(
@@ -225,10 +261,6 @@ async def process_track(message: Message, state: FSMContext):
 
 @order_router.message(OrderItemsStates.waiting_for_link, F.text)
 async def process_link(message: Message, state: FSMContext):
-    if message.text.lower() == "отмена":
-        await cancel_order_handler(message, state)
-        return
-
     data = await state.get_data()
     items = data.get("items", [])
 
@@ -278,8 +310,10 @@ async def add_next_item(callback: CallbackQuery, state: FSMContext):
             logger.warning("Не удалось удалить сообщение после order_add_next: %s", e)
 
         await callback.message.answer(
-            f"📦 <b>Товар №{next_num}</b>\n📸 <b>Отправьте фото:</b>",
-            reply_markup=cancel_keyboard
+            f"📦 <b>Товар №{next_num}</b>\n"
+            "📸 <b>Отправьте фото</b>:\n\n"
+            "Для отмены напишите: <code>/cancel</code>",
+            reply_markup=ReplyKeyboardRemove()
         )
 
     await state.set_state(OrderItemsStates.waiting_for_photo)
