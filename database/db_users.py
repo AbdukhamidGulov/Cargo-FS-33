@@ -1,17 +1,22 @@
 from logging import getLogger
+
 from sqlalchemy import select, update, BigInteger, VARCHAR
 from sqlalchemy.orm import Mapped, mapped_column
+
 from .db_base import async_session, Base, engine
 
 logger = getLogger(__name__)
 
+
 class User(Base):
-    __tablename__ = 'users'
+    __tablename__ = "users"
+
     id: Mapped[int] = mapped_column(primary_key=True)
     tg_id: Mapped[int] = mapped_column(BigInteger, unique=True, nullable=False)
     name: Mapped[str] = mapped_column(VARCHAR(255), nullable=False)
     username: Mapped[str] = mapped_column(VARCHAR(255), nullable=True)
     phone: Mapped[str] = mapped_column(VARCHAR(20), nullable=True)
+    email: Mapped[str] = mapped_column(VARCHAR(255), nullable=True)
 
     def to_dict(self) -> dict:
         """Преобразует объект пользователя в словарь."""
@@ -20,21 +25,34 @@ class User(Base):
             "tg_id": self.tg_id,
             "name": self.name,
             "username": self.username,
-            "phone": self.phone
+            "phone": self.phone,
+            "email": self.email
         }
 
 
 async def drop_users_table():
     """Удаляет таблицу users из базы данных."""
     async with engine.begin() as conn:
-        await conn.run_sync(lambda sync_conn: Base.metadata.tables['users'].drop(sync_conn))
+        await conn.run_sync(lambda sync_conn: Base.metadata.tables["users"].drop(sync_conn))
 
 
-async def add_user_info(tg_id: int, username: str, name: str, phone: str = None) -> dict:
+async def add_user_info(
+    tg_id: int,
+    username: str,
+    name: str,
+    phone: str = None,
+    email: str = None,
+) -> dict:
     """Добавляет нового пользователя в таблицу users с указанными данными."""
     async with async_session() as session:
         async with session.begin():
-            user = User(tg_id=tg_id, username=username, name=name, phone=phone)
+            user = User(
+                tg_id=tg_id,
+                username=username,
+                name=name,
+                phone=phone,
+                email=email,
+            )
             session.add(user)
             await session.commit()
             return user.to_dict()
@@ -64,7 +82,7 @@ async def get_info_profile(tg_id: int):
 
 async def update_user_info(tg_id: int, field: str, value: str) -> None:
     """Обновляет указанное поле пользователя в таблице users по его Telegram ID."""
-    allowed_fields = {'name', 'username', 'phone'}
+    allowed_fields = {"name", "username", "phone", "email"}
     if field not in allowed_fields:
         raise ValueError(f"Недопустимое поле: {field}")
 
@@ -96,7 +114,7 @@ async def update_user_by_internal_id(internal_id: int, **kwargs) -> bool:
             stmt = update(User).where(User.id == internal_id).values(**kwargs)
             result = await session.execute(stmt)
             await session.commit()
-            return result.rowcount > 0  # Возвращает True, если строка была обновлена
+            return result.rowcount > 0
         except Exception as e:
             logger.error(f"Ошибка при обновлении пользователя по ID {internal_id}: {e}")
             await session.rollback()
