@@ -68,7 +68,7 @@ async def find_owner_start(message: Message, state: FSMContext):
 
 @admin_search_router.message(AdminSearchAndEditStates.waiting_for_owner_search_code)
 async def process_owner_search(message: Message, state: FSMContext):
-    if message.text.lower() == "отмена":
+    if message.text and message.text.lower() == "отмена":
         await message.answer("Поиск отменен.", reply_markup=main_keyboard)
         await state.clear()
         return
@@ -178,7 +178,7 @@ async def start_edit_field(callback: CallbackQuery, state: FSMContext):
 @admin_search_router.message(AdminSearchAndEditStates.waiting_for_new_phone)
 async def process_edit_save(message: Message, state: FSMContext):
     """Единый обработчик сохранения (username или phone)."""
-    if message.text.lower() == "отмена":
+    if message.text and message.text.lower() == "отмена":
         await message.answer("Отменено.", reply_markup=main_keyboard)
         await state.clear()
         return

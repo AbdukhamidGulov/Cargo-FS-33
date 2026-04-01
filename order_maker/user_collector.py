@@ -110,7 +110,7 @@ async def start_order_process(message: Message, state: FSMContext):
 
 @user_data_router.message(UserDataStates.admin_waiting_for_client_code)
 async def admin_process_client_code(message: Message, state: FSMContext):
-    if message.text.lower() == "отмена": return await cancel_data_collection(message, state)
+    if message.text and message.text.lower() == "отмена": return await cancel_data_collection(message, state)
 
     text = message.text.strip().upper().replace("FS", "")
     if not text.isdigit():
@@ -136,7 +136,7 @@ async def admin_process_client_code(message: Message, state: FSMContext):
 
 @user_data_router.message(UserDataStates.waiting_for_name)
 async def process_name(message: Message, state: FSMContext):
-    if message.text.lower() == "отмена": return await cancel_data_collection(message, state)
+    if message.text and message.text.lower() == "отмена": return await cancel_data_collection(message, state)
 
     data = await state.get_data()
     client_id = data['client_id']
@@ -151,7 +151,7 @@ async def process_name(message: Message, state: FSMContext):
 
 @user_data_router.message(UserDataStates.waiting_for_tg_link)
 async def process_contact(message: Message, state: FSMContext):
-    if message.text.lower() == "отмена": return await cancel_data_collection(message, state)
+    if message.text and message.text.lower() == "отмена": return await cancel_data_collection(message, state)
 
     data = await state.get_data()
     client_id = data['client_id']
@@ -164,7 +164,7 @@ async def process_contact(message: Message, state: FSMContext):
 
 @user_data_router.message(UserDataStates.waiting_for_email)
 async def process_email_final(message: Message, state: FSMContext):
-    if message.text.lower() == "отмена": return await cancel_data_collection(message, state)
+    if message.text and message.text.lower() == "отмена": return await cancel_data_collection(message, state)
 
     email = message.text.strip()
     if email == '-': email = "Не указано"

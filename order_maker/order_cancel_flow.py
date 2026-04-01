@@ -1,5 +1,5 @@
 from logging import Logger
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional
 
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message, ReplyKeyboardRemove
@@ -11,7 +11,11 @@ from keyboards.user_keyboards import (
 )
 
 
-def _build_restore_prompt(previous_state: str | None, items_count: int, state_ids: Dict[str, str]) -> Tuple[str, object]:
+def _build_restore_prompt(
+        previous_state: Optional[str],
+        items_count: int,
+        state_ids: Dict[str, str]
+) -> Tuple[str, object]:
     if previous_state == state_ids["waiting_for_photo"]:
         return (
             "Продолжаем заполнение.\n\n"

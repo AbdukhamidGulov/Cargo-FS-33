@@ -90,6 +90,10 @@ async def process_track_codes(message: Message, state: FSMContext, bot: Bot):
 # --- 3. ОБРАБОТКА ID ПОЛЬЗОВАТЕЛЯ И ПРИВЯЗКА ---
 @admin_bulk_router.message(BindTrackStates.waiting_for_user_id)
 async def process_user_binding(message: Message, state: FSMContext):
+    if not message.text:
+        await message.answer("Пожалуйста, введите значение текстом.")
+        return
+
     user_input = message.text.strip().upper().replace("FS", "")
 
     if not user_input.isdigit():

@@ -238,7 +238,7 @@ async def select_key(callback: CallbackQuery, state: FSMContext):
 @admin_content_router.message(ContentEdit.input_content, F.text, IsAdmin(admin_ids))
 async def process_text(message: Message, state: FSMContext):
     """Обновляет текстовое значение с сохранением HTML-разметки."""
-    if message.text.lower() == "отмена":
+    if message.text and message.text.lower() == "отмена":
         await cancel_edit_process(message, state)
         return
 

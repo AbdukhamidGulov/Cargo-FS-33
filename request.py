@@ -27,6 +27,10 @@ async def start_verification_request(callback: CallbackQuery, state: FSMContext)
 @request_router.message(RequestVerification.waiting_for_track_codes)
 async def receive_track_codes(message: Message, state: FSMContext, bot: Bot):
     """Обрабатывает введённые пользователем трек-коды и отправляет их администратору."""
+    if not message.text:
+        await message.answer("Пожалуйста, введите значение текстом.")
+        return
+
     track_code_list = message.text.strip().split()  # Получаем список трек-кодов
 
     if not track_code_list:

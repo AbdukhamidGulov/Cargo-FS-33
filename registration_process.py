@@ -48,7 +48,7 @@ def validate_email(email: str) -> bool:
 async def process_user_name(message: Message, state: FSMContext):
     """Обрабатывает введённое имя пользователя и запрашивает номер телефона."""
 
-    if message.text.lower() == "отмена":
+    if message.text and message.text.lower() == "отмена":
         await state.clear()
         await message.answer("Регистрация отменена.", reply_markup=main_keyboard)
         return
@@ -65,9 +65,13 @@ async def process_user_name(message: Message, state: FSMContext):
 async def process_user_number(message: Message, state: FSMContext):
     """Обрабатывает введённый номер телефона и завершает регистрацию."""
 
-    if message.text.lower() == "отмена":
+    if message.text and message.text.lower() == "отмена":
         await state.clear()
         await message.answer("Регистрация отменена.", reply_markup=main_keyboard)
+        return
+
+    if not message.text:
+        await message.answer("Пожалуйста, введите номер телефона текстом.")
         return
 
     phone_number = message.text.strip()

@@ -66,9 +66,13 @@ async def start_field_update(callback: CallbackQuery, state: FSMContext):
 async def process_new_value(message: Message, state: FSMContext):
     """Обрабатывает введённое пользователем новое значение и обновляет данные."""
 
-    if message.text.lower() == "отмена":
+    if message.text and message.text.lower() == "отмена":
         await state.clear()
         await message.answer("Изменение данных отменено.", reply_markup=main_keyboard)
+        return
+
+    if not message.text:
+        await message.answer("Пожалуйста, введите новое значение текстом.")
         return
 
     new_value = message.text.strip()
