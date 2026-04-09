@@ -10,6 +10,7 @@ from aiogram.exceptions import TelegramBadRequest
 from database.db_track_codes import get_user_track_codes, get_track_code
 from keyboards.user_keyboards import main_keyboard, cancel_keyboard, add_track_codes_follow_up_keyboard
 from utils.message_common import send_chunked_response, extract_text_from_message
+from utils.fsm_guard import warn_if_user_is_inside_fsm
 
 from track_numbers import TRACK_CODE_PATTERN, TrackCodeStates
 
@@ -24,7 +25,6 @@ STATUS_MESSAGES = {
 }
 
 
-# --- ТОЧКА ВХОДА ---
 @track_code_search_router.message(F.text.lower() == "проверка трек-кодов")
 @track_code_search_router.callback_query(F.data == "start_check_codes")
 async def start_check_codes(event: Union[Message, CallbackQuery], state: FSMContext):
@@ -33,25 +33,29 @@ async def start_check_codes(event: Union[Message, CallbackQuery], state: FSMCont
         await event.answer()
         try:
             await message.delete()
-        except:
+        except Exception:
             pass
     else:
         message = event
 
     await message.answer(
         "🔎 <b>Поиск трек-кодов</b>\n\n"
-        "Отправьте <b>трек-код</b>, <b>список</b> или <b>файл</b>.",
+        "Отправьте <b>трек-код</b>, <b>список</b> или <b>файл</b>.\n"
+        "Чтобы выйти, нажмите <b>Отмена</b> или используйте <code>/start</code>.",
         reply_markup=cancel_keyboard
     )
     await state.set_state(TrackCodeStates.check_single_code)
 
 
-# --- ПОИСК ---
 @track_code_search_router.message(TrackCodeStates.check_single_code)
 async def process_track_code_search(message: Message, state: FSMContext, bot: Bot):
     if message.text and message.text.lower() == "отмена":
         await message.answer("Поиск завершён.", reply_markup=main_keyboard)
         await state.clear()
+        return
+
+    interrupted = await warn_if_user_is_inside_fsm(message, state)
+    if interrupted:
         return
 
     raw_text = await extract_text_from_message(message, bot)
@@ -69,14 +73,13 @@ async def process_track_code_search(message: Message, state: FSMContext, bot: Bo
 
     user_id = message.from_user.id
 
-    # Один код - подробно
     if len(track_codes) == 1:
         code = track_codes[0]
         info = await get_track_code(code)
 
         if info:
-            status_text = STATUS_MESSAGES.get(info['status'], info['status'])
-            owner = info.get('tg_id')
+            status_text = STATUS_MESSAGES.get(info["status"], info["status"])
+            owner = info.get("tg_id")
 
             if owner == user_id:
                 ownership = "✅ <b>Это ваш код</b>"
@@ -94,29 +97,27 @@ async def process_track_code_search(message: Message, state: FSMContext, bot: Bo
         else:
             response = (
                 f"❌ Трек-код <code>{code}</code> не найден в базе.\n"
-                f"Хотите добавить его в свой список?"
+                "Хотите добавить его в свой список?"
             )
 
         await message.answer(response, reply_markup=cancel_keyboard)
 
-    # Много кодов - списком
     else:
         result_lines = [f"📦 <b>Проверка {len(track_codes)} кодов:</b>\n"]
 
         for code in track_codes:
             info = await get_track_code(code)
             if info:
-                status_text = STATUS_MESSAGES.get(info['status'], "Неизв.")
-                is_mine = " (Ваш)" if info.get('tg_id') == user_id else ""
+                status_text = STATUS_MESSAGES.get(info["status"], "Неизв.")
+                is_mine = " (Ваш)" if info.get("tg_id") == user_id else ""
                 result_lines.append(f"• <code>{code}</code>: {status_text}{is_mine}")
             else:
                 result_lines.append(f"• <code>{code}</code>: ❌ Нет в базе")
 
         await send_chunked_response(message, "\n".join(result_lines))
-        await message.answer("Готово! Отправьте еще или нажмите Отмена.", reply_markup=cancel_keyboard)
+        await message.answer("Готово! Отправьте ещё или нажмите Отмена.", reply_markup=cancel_keyboard)
 
 
-# --- МОИ КОДЫ ---
 @track_code_search_router.callback_query(F.data == "my_track_codes")
 async def view_my_track_codes(callback: CallbackQuery):
     try:
