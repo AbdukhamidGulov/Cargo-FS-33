@@ -65,6 +65,12 @@ async def get_user_by_tg_id(tg_id: int):
         return result.scalar_one_or_none()
 
 
+async def get_all_user_tg_ids() -> list:
+    async with async_session() as session:
+        result = await session.execute(select(User.tg_id).where(User.tg_id.is_not(None)))
+        return [row[0] for row in result.all()]
+
+
 async def get_users_tg_info() -> dict:
     """Возвращает словарь с Telegram ID и usernames всех пользователей."""
     async with async_session() as session:
